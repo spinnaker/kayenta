@@ -20,7 +20,6 @@ import com.google.common.base.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -43,12 +42,11 @@ public class SampleAtlasController {
 
   private static final Map<String, String> queryMap = createQueryMap();
 
-  private static Map<String, String> createQueryMap()
-  {
-    Map<String,String> temp = new HashMap<String,String>();
+  private static Map<String, String> createQueryMap() {
+    Map<String, String> temp = new HashMap<String, String>();
 
     temp.put("nf.app,app_mocha,:eq,name,CpuRawSystem,:eq,:and,(,nf.cluster,),:by",
-             "com/netflix/kayenta/controllers/sample00.sse");
+            "com/netflix/kayenta/controllers/sample00.sse");
 
     temp.put("nf.app,app_wesley,:eq,name,CpuRawSystem,:eq,:and",
             "com/netflix/kayenta/controllers/sample01.sse");
@@ -64,12 +62,13 @@ public class SampleAtlasController {
 
   @RequestMapping(method = RequestMethod.GET, produces = "text/event-stream")
   public String queryMetrics(@RequestParam final String q) throws IOException {
-    return getSSEContent(queryMap.getOrDefault(q, "com/netflix/kayenta/controllers/empty.sse"));
+    return getFileContent(queryMap.getOrDefault(q, "com/netflix/kayenta/controllers/empty.sse"));
   }
 
-  private String getSSEContent(String sseFilename) throws IOException {
-    try (InputStream jsonInputStream = resourceLoader.getResource("classpath:" + sseFilename).getInputStream()) {
-      return IOUtils.toString(jsonInputStream, Charsets.UTF_8.name());
+  private String getFileContent(String filename) throws IOException {
+    try (InputStream inputStream = resourceLoader.getResource("classpath:" + filename).getInputStream()) {
+      return IOUtils.toString(inputStream, Charsets.UTF_8.name());
     }
   }
+
 }
