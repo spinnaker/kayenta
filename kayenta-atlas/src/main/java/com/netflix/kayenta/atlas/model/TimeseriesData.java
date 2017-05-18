@@ -43,7 +43,7 @@ public class TimeseriesData {
   @Getter
   private List<Double> values;
 
-  public static TimeseriesData dummy(String type, int count) {
+  public static TimeseriesData dummy(String type, long count) {
     List<Double> values = DoubleStream.iterate(1.0, d -> d + 1.0).limit(count).boxed().collect(Collectors.toList());
     return TimeseriesData.builder().type(type).values(values).build();
   }

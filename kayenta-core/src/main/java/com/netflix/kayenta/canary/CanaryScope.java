@@ -40,6 +40,10 @@ public class CanaryScope {
     @Getter
     private Long end;
 
+    @NotNull
+    @Getter
+    private Long step;
+
     public String cq() {
         switch (type) {
             case "application":
