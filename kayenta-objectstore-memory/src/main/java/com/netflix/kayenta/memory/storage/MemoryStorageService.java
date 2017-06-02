@@ -69,7 +69,7 @@ public class MemoryStorageService implements StorageService {
     @Override
     public <T> T loadObject(String accountName, ObjectType objectType, String objectKey) throws IllegalArgumentException {
         String key = makekey(accountName, objectType, objectKey);
-        log.debug("Getting key {}", key);
+        log.info("Getting key {}", key);
         String json = entries.get(key);
         if (json == null)
             throw new IllegalArgumentException("No such object named " + key);
@@ -85,7 +85,7 @@ public class MemoryStorageService implements StorageService {
     @Override
     public <T> void storeObject(String accountName, ObjectType objectType, String objectKey, T obj) {
         String key = makekey(accountName, objectType, objectKey);
-        log.debug("Writing key {}", key);
+        log.info("Writing key {}", key);
         try {
             String json = objectMapper.writeValueAsString(obj);
             entries.put(key, json);
@@ -98,6 +98,7 @@ public class MemoryStorageService implements StorageService {
     @Override
     public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
         String key = makekey(accountName, objectType, objectKey);
+        log.info("Deleting key {}", key);
         String oldValue = entries.remove(key);
         if (oldValue == null) {
             log.error("Object named {} does not exist", key);
