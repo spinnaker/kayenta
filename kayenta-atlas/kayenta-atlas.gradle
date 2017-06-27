@@ -22,5 +22,6 @@ dependencies {
 
   compile "org.apache.commons:commons-io:1.3.2"
 
-  testCompile spinnaker.dependency('groovy')
+  // testCompile spinnaker.dependency('groovy')
+  testCompile "org.codehaus.groovy:groovy-all:2.4.7"
 }
