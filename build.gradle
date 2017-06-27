@@ -45,7 +45,7 @@ allprojects {
 
 subprojects { project ->
   dependencies {
-    spinnaker.group('test')
+    // spinnaker.group('test')
     testCompile "org.springframework.boot:spring-boot-starter-test:1.2.8.RELEASE"
     testCompile "org.spockframework:spock-core:1.1-groovy-2.4-rc-2"
     testCompile "org.spockframework:spock-spring:1.1-groovy-2.4-rc-2"
