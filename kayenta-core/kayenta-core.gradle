@@ -8,6 +8,9 @@ dependencies {
   // compile spinnaker.dependency("korkSwagger")
   compile "com.netflix.spinnaker.kork:kork-swagger:1.93.0"
 
+  // this was magically pulled in before, not sure how...
+  compile "com.netflix.spinnaker.kork:kork-web:1.93.0"
+
   // compile spinnaker.dependency('lombok')
   compile "org.projectlombok:lombok:1.16.10"
 
