@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.canary;
 
+import com.netflix.kayenta.canary.results.CanaryJudgeResult;
+import com.netflix.kayenta.canary.results.CanaryJudgeScore;
 import com.netflix.kayenta.metrics.MetricSetPair;
 import org.springframework.stereotype.Component;
 
@@ -27,8 +29,11 @@ import java.util.Random;
 public class CanaryJudge {
   private Random random = new Random();
 
-  public float judge(CanaryConfig canaryConfig, List<MetricSetPair> metricSetPairList) {
+  public CanaryJudgeResult judge(CanaryConfig canaryConfig, List<MetricSetPair> metricSetPairList) {
     // TODO: "You're the judge; so judge!"
-    return random.nextFloat() * 100;
+
+    CanaryJudgeScore score = CanaryJudgeScore.builder().score(random.nextDouble() * 100).build();
+    CanaryJudgeResult result = CanaryJudgeResult.builder().score(score).build();
+    return result;
   }
 }
