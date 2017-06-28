@@ -17,23 +17,10 @@
 package com.netflix.kayenta.canary;
 
 import com.netflix.kayenta.canary.results.CanaryJudgeResult;
-import com.netflix.kayenta.canary.results.CanaryJudgeScore;
 import com.netflix.kayenta.metrics.MetricSetPair;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Random;
 
-@Component
-// TODO(duftler): Make the canary judge a pluggable component.
-public class CanaryJudge {
-  private Random random = new Random();
-
-  public CanaryJudgeResult judge(CanaryConfig canaryConfig, List<MetricSetPair> metricSetPairList) {
-    // TODO: "You're the judge; so judge!"
-
-    CanaryJudgeScore score = CanaryJudgeScore.builder().score(random.nextDouble() * 100).build();
-    CanaryJudgeResult result = CanaryJudgeResult.builder().score(score).build();
-    return result;
-  }
+public interface CanaryJudge {
+  CanaryJudgeResult judge(CanaryConfig canaryConfig, List<MetricSetPair> metricSetPairList);
 }
