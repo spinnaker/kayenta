@@ -1,7 +1,8 @@
 apply plugin: 'scala'
 
 dependencies {
-  compile project(":kayenta-core")
+  compile project(':kayenta-core')
+  compile project(':kayenta-r-mannwhitney')
 
   // compile spinnaker.dependency('lombok')
   compile "org.projectlombok:lombok:1.16.10"
