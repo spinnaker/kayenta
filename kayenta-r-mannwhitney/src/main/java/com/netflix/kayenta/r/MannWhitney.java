@@ -28,6 +28,12 @@ public class MannWhitney {
     re = new RConnection("127.0.0.1", 8283);
   }
 
+  synchronized public void disconnect() {
+    if (re != null)
+      re.close();
+    re = null;
+  }
+
   synchronized public MannWhitneyResult eval(MannWhitneyParams params) throws RExecutionException {
     if (re == null) {
       try {
