@@ -28,22 +28,33 @@ public class MannWhitney {
     re = new RConnection("127.0.0.1", 8283);
   }
 
-  synchronized public MannWhitneyResult eval(MannWhitneyParams params) throws REngineException, REXPMismatchException {
-    if (re == null)
-      connect();
-
-    re.assign("controlData", params.getControlData());
-    re.assign("experimentData", params.getExperimentData());
-    String command = params.toCommandString("controlData", "experimentData");
-    REXP result = re.eval(command);
-    if (result == null) {
-      throw new RuntimeException("Failed to get a result from R for Mann-Whitney test");
+  synchronized public MannWhitneyResult eval(MannWhitneyParams params) throws RExecutionException {
+    if (re == null) {
+      try {
+        connect();
+      } catch (RserveException e) {
+        throw new RExecutionException("Unable to connect to RServe", e);
+      }
     }
 
-    RList list = result.asList();
-    REXPDouble pValue = (REXPDouble)list.get("p.value");
-    REXPDouble confInt = (REXPDouble)list.get("conf.int");
+    try {
+      re.assign("controlData", params.getControlData());
+      re.assign("experimentData", params.getExperimentData());
+      String command = params.toCommandString("controlData", "experimentData");
+      REXP result = re.eval(command);
+      if (result == null) {
+        throw new RExecutionException("Failed to get a result from R for Mann-Whitney test");
+      }
 
-    return MannWhitneyResult.builder().pValue(pValue.asDouble()).confidenceInterval(confInt.asDoubles()).build();
+      RList list = result.asList();
+      REXPDouble pValue = (REXPDouble)list.get("p.value");
+      REXPDouble confInt = (REXPDouble)list.get("conf.int");
+
+      return MannWhitneyResult.builder().pValue(pValue.asDouble()).confidenceInterval(confInt.asDoubles()).build();
+    } catch (REXPMismatchException e) {
+      throw new RExecutionException("Could not parse result type from R", e);
+    } catch (REngineException e) {
+      throw new RExecutionException("Unable to communicate with R", e);
+    }
   }
 }
