@@ -55,8 +55,13 @@ public class MannWhitney {
       RList list = result.asList();
       REXPDouble pValue = (REXPDouble)list.get("p.value");
       REXPDouble confInt = (REXPDouble)list.get("conf.int");
+      REXPDouble estimate = (REXPDouble)list.get("estimate");
 
-      return MannWhitneyResult.builder().pValue(pValue.asDouble()).confidenceInterval(confInt.asDoubles()).build();
+      return MannWhitneyResult.builder()
+              .pValue(pValue.asDouble())
+              .confidenceInterval(confInt.asDoubles())
+              .estimate(estimate.asDouble())
+              .build();
     } catch (REXPMismatchException e) {
       throw new RExecutionException("Could not parse result type from R", e);
     } catch (REngineException e) {

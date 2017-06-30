@@ -27,4 +27,6 @@ public class MannWhitneyResult {
   @Getter
   private double pValue;
 
+  @Getter
+  private double estimate;
 }
