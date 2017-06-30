@@ -16,12 +16,50 @@
 
 package com.netflix.kayenta.judge.netflix
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
+import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.common.base.Charsets
+import com.netflix.kayenta.canary.CanaryConfig
+import com.netflix.kayenta.metrics.MetricSet
+import org.apache.commons.io.IOUtils
 import org.scalatest.FunSuite
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ResourceLoader
+import org.springframework.test.context.ContextConfiguration
 
-class NetflixJudgeSuite extends FunSuite {
+@Configuration
+class TestConfig {}
 
-  test("foo") {
-    println("Yep!")
-    assert(true)
+@ContextConfiguration(classes = Array(classOf[TestConfig]))
+class NetflixJudgeSuite extends FunSuite with TestContextManagement {
+  @Autowired
+  private val resourceLoader: ResourceLoader = _
+
+  private val objectMapper = new ObjectMapper()
+    .setSerializationInclusion(NON_NULL)
+    .disable(FAIL_ON_UNKNOWN_PROPERTIES)
+
+  private def getFileContent(filename: String) = try {
+    val inputStream = resourceLoader.getResource("classpath:" + filename).getInputStream
+    try
+      IOUtils.toString(inputStream, Charsets.UTF_8.name)
+    finally if (inputStream != null)
+      inputStream.close()
+  }
+
+  private def getConfig(filename: String) = {
+    val contents = getFileContent(filename)
+    objectMapper.readValue(contents, classOf[CanaryConfig])
+  }
+
+  private def getMetricSet(filename: String) = {
+    val contents = getFileContent(filename)
+    objectMapper.readValue(contents, classOf[MetricSet])
+  }
+
+  test("Load object, confirm output matches") {
+    val item = getConfig("foo.json")
   }
 }
