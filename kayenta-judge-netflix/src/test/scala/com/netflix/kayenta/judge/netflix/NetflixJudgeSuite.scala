@@ -21,13 +21,15 @@ import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PRO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Charsets
 import com.netflix.kayenta.canary.CanaryConfig
-import com.netflix.kayenta.metrics.MetricSet
+import com.netflix.kayenta.metrics.{MetricSet, MetricSetPair}
 import org.apache.commons.io.IOUtils
 import org.scalatest.FunSuite
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ResourceLoader
 import org.springframework.test.context.ContextConfiguration
+
+import scala.collection.JavaConverters._
 
 @Configuration
 class TestConfig {}
@@ -59,7 +61,43 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     objectMapper.readValue(contents, classOf[MetricSet])
   }
 
-  test("Load object, confirm output matches") {
-    val item = getConfig("foo.json")
+  test("Interquartile Range Test"){
+    val judge = new NetflixJudge()
+    val inputData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+    val result = judge.iqr(inputData)
+    val expected = (1.0, 20.0)
+
+    assert(expected === result)
   }
+
+  test("Interquartile Range Empty Array Test"){
+    val judge = new NetflixJudge()
+    val inputData = Array[Double]()
+    val (lower, upper) = judge.iqr(inputData)
+
+    assert(lower.isNaN)
+    assert(upper.isNaN)
+  }
+
+  test("Judge Integration Test"){
+    val judge = new NetflixJudge()
+
+    val config = CanaryConfig.builder().build()
+    val tags = Map("x"->"x").asJava
+    val experimentValues = List[java.lang.Double](10.0,20.0,30.0,40.0).asJava
+    val controlValues = List[java.lang.Double](1.0,2.0,3.0,4.0).asJava
+
+    val metricPair = MetricSetPair.builder()
+      .name("test-metric")
+      .tags(tags)
+      .value("control", controlValues)
+      .value("experiment", experimentValues)
+      .build()
+
+    val metricPairs = List(metricPair).asJava
+    val result = judge.judge(config, metricPairs)
+
+  }
+
+
 }
