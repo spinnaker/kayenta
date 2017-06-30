@@ -5,3 +5,9 @@ dependencies {
   // Rserve
   compile group: 'org.rosuda.REngine', name: 'Rserve', version: '1.8.1'
 }
+
+test {
+  useJUnit {
+    excludeCategories 'com.netflix.kayenta.r.CIIgnoreTest'
+  }
+}

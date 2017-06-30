@@ -35,7 +35,7 @@ class TestConfig {}
 @ContextConfiguration(classes = Array(classOf[TestConfig]))
 class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   @Autowired
-  private val resourceLoader: ResourceLoader = _
+  private val resourceLoader: ResourceLoader = null
 
   private val objectMapper = new ObjectMapper()
     .setSerializationInclusion(NON_NULL)
