@@ -57,8 +57,6 @@ class NetflixJudge extends CanaryJudge {
     */
   def classifyMetric(canaryConfig: CanaryConfig, metric: MetricSetPair): CanaryAnalysisResult ={
 
-    val x = 1.0
-
     val metricConfig = canaryConfig.getMetrics.asScala.find(m => m.getName == metric.getName) match {
       case Some(config) => config
       case None => throw new IllegalArgumentException(s"Could not find metric config for ${metric.getName}")
