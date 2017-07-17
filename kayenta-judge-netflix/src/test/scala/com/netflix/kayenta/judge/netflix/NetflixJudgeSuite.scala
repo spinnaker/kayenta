@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PRO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Charsets
 import com.netflix.kayenta.canary.CanaryConfig
+import com.netflix.kayenta.judge.netflix.detectors.{IQRDetector, KSigmaDetector}
+import com.netflix.kayenta.judge.netflix.Transforms.{removeNaNs, removeOutliers}
 import com.netflix.kayenta.metrics.{MetricSet, MetricSetPair}
 import org.apache.commons.io.IOUtils
 import org.scalatest.FunSuite
@@ -61,34 +63,16 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     objectMapper.readValue(contents, classOf[MetricSet])
   }
 
-  test("Interquartile Range Test"){
-    val judge = new NetflixJudge()
-    val inputData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
-    val result = judge.iqr(inputData)
-    val expected = (1.0, 20.0)
-
-    assert(expected === result)
-  }
-
-  test("Interquartile Range Empty Array Test"){
-    val judge = new NetflixJudge()
-    val inputData = Array[Double]()
-    val (lower, upper) = judge.iqr(inputData)
-
-    assert(lower.isNaN)
-    assert(upper.isNaN)
-  }
-
   test("Judge Integration Test"){
     val judge = new NetflixJudge()
 
-    val config = CanaryConfig.builder().build()
+    val config = getConfig("test-config.json")
     val tags = Map("x"->"x").asJava
     val experimentValues = List[java.lang.Double](10.0,20.0,30.0,40.0).asJava
     val controlValues = List[java.lang.Double](1.0,2.0,3.0,4.0).asJava
 
     val metricPair = MetricSetPair.builder()
-      .name("test-metric")
+      .name("cpu")
       .tags(tags)
       .value("control", controlValues)
       .value("experiment", experimentValues)
@@ -98,6 +82,105 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     val result = judge.judge(config, metricPairs)
 
   }
+
+  test("KSigma Detection"){
+
+    val testData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+    val truth = Array(false, false, false, false, false, true, false, false, false, false, false)
+
+    val detector = new KSigmaDetector(k = 3.0)
+    val result = detector.detect(testData)
+    assert(result === truth)
+  }
+
+  test("KSigma Two Sided"){
+
+    val testData = Array(1.0, 1.0, 1.0, 5.0, -1.0, -1.0, -1.0, -5.0)
+    val truth = Array(false, false, false, true, false, false, false, true)
+
+    val detector = new KSigmaDetector(1.0)
+    val result = detector.detect(testData)
+    assert(result === truth)
+  }
+
+  test("IQR Detection"){
+
+    val testData = Array(21.0, 23.0, 24.0, 25.0, 50.0, 29.0, 23.0, 21.0)
+    val truth = Array(false, false, false, false, true, false, false, false)
+
+    val detector = new IQRDetector(factor = 1.5)
+    val result = detector.detect(testData)
+    assert(result === truth)
+  }
+
+  test("IQR Detect Two Sided"){
+
+    val testData = Array(1.0, 1.0, 1.0, 5.0, -1.0, -1.0, -1.0, -5.0)
+    val truth = Array(false, false, false, true, false, false, false, true)
+
+    val detector = new IQRDetector(factor = 1.5)
+    val result = detector.detect(testData)
+    assert(result === truth)
+  }
+
+  test("IQR Reduce Sensitivity"){
+
+    val testData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+    val truth = Array(false, false, false, false, false, false, false, false, false, false, false)
+
+    val detector = new IQRDetector(factor = 3.0, reduceSensitivity=true)
+    val result = detector.detect(testData)
+    assert(result === truth)
+  }
+
+  test("IQR Empty Data"){
+
+    val testData = Array[Double]()
+    val truth = Array[Boolean]()
+
+    val detector = new IQRDetector(factor = 1.5)
+    val result = detector.detect(testData)
+    assert(result === truth)
+  }
+
+  test("NaN Removal Single"){
+
+    val testData = Array(0.0, 1.0, Double.NaN, 1.0, 0.0)
+    val truth = Array(0.0, 1.0, 1.0, 0.0)
+
+    val result = Transforms.removeNaNs(testData)
+    assert(result === truth)
+  }
+
+  test("NaN Remove Multiple"){
+
+    val testData = Array(Double.NaN, Double.NaN, Double.NaN)
+    val truth = Array[Double]()
+
+    val result = removeNaNs(testData)
+    assert(result === truth)
+  }
+
+  test("IQR Outlier Removal"){
+
+    val testData = Array(21.0, 23.0, 24.0, 25.0, 50.0, 29.0, 23.0, 21.0)
+    val truth = Array(21.0, 23.0, 24.0, 25.0, 29.0, 23.0, 21.0)
+
+    val detector = new IQRDetector(factor = 1.5)
+    val result = removeOutliers(testData, detector)
+    assert(result === truth)
+  }
+
+  test("KSigma Outlier Removal"){
+
+    val testData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+    val truth = Array(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+
+    val detector = new KSigmaDetector(k = 3.0)
+    val result = removeOutliers(testData, detector)
+    assert(result === truth)
+  }
+
 
 
 }

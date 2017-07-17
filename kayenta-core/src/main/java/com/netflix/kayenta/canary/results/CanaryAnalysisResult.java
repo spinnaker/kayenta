@@ -44,7 +44,7 @@ public class CanaryAnalysisResult {
 
   @NotNull
   @Getter
-  private CanaryJudgeMetricsScore score;
+  private CanaryJudgeMetricClassification classification;
 
   @NotNull
   @Getter
@@ -52,13 +52,13 @@ public class CanaryAnalysisResult {
 
   @NotNull
   @Getter
-  private Map<String, String> experimentMetrics;
+  private Map<String, Object> experimentMetadata;
 
   @NotNull
   @Getter
-  private Map<String, String> controlMetrics;
+  private Map<String, Object> controlMetadata;
 
   @NotNull
   @Getter
-  private Map<String, String> resultMetrics;
+  private Map<String, Object> resultMetadata;
 }
