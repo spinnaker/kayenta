@@ -26,13 +26,12 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CanaryJudgeMetricsScore {
+public class CanaryJudgeMetricClassification {
 
   @NotNull
   @Getter
   private String classification;
 
-  @NotNull
   @Getter
   private String classificationReason;
 }

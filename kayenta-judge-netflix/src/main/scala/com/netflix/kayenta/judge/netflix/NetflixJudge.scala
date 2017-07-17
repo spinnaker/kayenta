@@ -18,10 +18,12 @@ package com.netflix.kayenta.judge.netflix
 
 import java.util
 
-import com.netflix.kayenta.canary.results.CanaryJudgeResult
 import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CanaryJudge}
+import com.netflix.kayenta.canary.results.{CanaryAnalysisResult, CanaryJudgeMetricClassification, CanaryJudgeResult}
+import com.netflix.kayenta.judge.netflix.classifiers.MannWhitneyClassifier
+import com.netflix.kayenta.judge.netflix.detectors.IQRDetector
 import com.netflix.kayenta.metrics.MetricSetPair
-import com.netflix.kayenta.r.{MannWhitney, MannWhitneyParams}
+import com.netflix.kayenta.r.MannWhitney
 import org.apache.commons.math3.stat.StatUtils
 
 import scala.collection.JavaConverters._
@@ -34,57 +36,11 @@ class NetflixJudge extends CanaryJudge {
 
     val result = CanaryJudgeResult.builder().build()
 
-    //todo: check to ensure the data is aligned (i.e., the same length)
+    //Metric Classification
+    val metricResults = metricSetPairList.asScala.toList.map{ metricPair => classifyMetric(canaryConfig, metricPair)}
 
-    for(metric <- metricSetPairList.asScala){
-
-      val experimentValues = metric.getValues.get("experiment").asScala.map(_.toDouble).toArray
-      val controlValues = metric.getValues.get("control").asScala.map(_.toDouble).toArray
-
-      val experiment = Metric(metric.getName, experimentValues, label = "canary")
-      val control = Metric(metric.getName, controlValues, label = "baseline")
-      val metricPair = MetricPair(experiment, control)
-
-      val validateNoData = checkNoData(metricPair)
-      val validateAllNaNs = checkAllNaNs(metricPair)
-
-      //=============================================
-      // Metric Validation
-      // ============================================
-      //Validate the input data for empty data arrays
-      if (!validateNoData.valid){
-        //todo: return metric result
-        //validateNoData.reason
-      }
-
-      //Validate the input data and check for all NaN values
-      if (!validateAllNaNs.valid){
-        //todo: return metric result
-        //validateNoData.reason
-      }
-
-      //=============================================
-      // Metric Transformation
-      // ============================================
-      //Remove NaN Values
-      val transformedMetricPair = removeNaNs(metricPair)
-
-      //Remove Anomalies
-      val cleanedMetricPair = removeAnomalies(transformedMetricPair)
-
-      //=============================================
-      // Metric Statistics
-      // ============================================
-      val experimentStats = calculateStatistics(cleanedMetricPair.experiment.values)
-      val controlStats = calculateStatistics(cleanedMetricPair.control.values)
-
-      //=============================================
-      // Metric Classification
-      // ============================================
-      //Use the Mann-Whitney MCA Algorithm to compare the experiment and control populations
-      val metricClassification = mcaMannWhitney(cleanedMetricPair)
-
-    }
+    //Metric Group Scoring
+    val groupResults = calculateGroupScore(canaryConfig, metricResults)
 
     //Disconnect from RServe
     mw.disconnect()
@@ -92,113 +48,108 @@ class NetflixJudge extends CanaryJudge {
     result
   }
 
-  /** Metric Comparison Algorithm (MCA)
-    *
-    * Uses the Mann-Whitney U test to compare metrics from the canary and control groups
-    */
-  def mcaMannWhitney(metricPair: MetricPair, fraction: Double = 0.25): MetricClassification ={
-
-    //todo(csanden): classification label should not be a string
-
-    val experiment = metricPair.experiment
-    val control = metricPair.control
-
-    //Check if the experiment and control data are equal
-    if (experiment.values.sameElements(control.values)){
-      MetricClassification(Pass, None, 0.0)
-    }
-
-    //Perform Mann-Whitney U Test
-    val mwResult = MannWhitneyUTest(experiment.values, control.values)
-
-    //todo(csanden): use the Hodge Lehmann estimate
-    val delta = math.abs(StatUtils.mean(experiment.values) - StatUtils.mean(control.values))
-    val criticalValue = fraction * delta
-
-    val ratio = StatUtils.mean(experiment.values)/StatUtils.mean(control.values)
-
-    val lowerBound = -1 * criticalValue
-    val upperBound = criticalValue
-
-    //todo(csanden): improve the reason
-    if(mwResult.lowerConfidence > upperBound){
-      val reason = "The metric was classified as High ..."
-      return MetricClassification(High, Some(reason), ratio)
-
-    }else if(mwResult.upperConfidence < lowerBound){
-      val reason = "The metric was classified as Low"
-      return MetricClassification(Low, Some(reason), ratio)
-    }
-
-    MetricClassification(Pass, None, ratio)
-
-  }
-
-
   /**
-    * Mann-Whitney U Test
-    *
-    * An implementation of the Mann-Whitney U test (also called Wilcoxon rank-sum test).
+    * Metric Classification
+    * @param canaryConfig
+    * @param metric
+    * @return
     */
-  def MannWhitneyUTest(experimentValues: Array[Double], controlValues: Array[Double]): MannWhitneyResult ={
+  def classifyMetric(canaryConfig: CanaryConfig, metric: MetricSetPair): CanaryAnalysisResult ={
 
-    val params = MannWhitneyParams.builder()
-      .mu(0)
-      .confidenceLevel(0.99)
-      .controlData(controlValues)
-      .experimentData(experimentValues)
+    val x = 1.0
+
+    val metricConfig = canaryConfig.getMetrics.asScala.find(m => m.getName == metric.getName) match {
+      case Some(config) => config
+      case None => throw new IllegalArgumentException(s"Could not find metric config for ${metric.getName}")
+    }
+
+    val experimentValues = metric.getValues.get("experiment").asScala.map(_.toDouble).toArray
+    val controlValues = metric.getValues.get("control").asScala.map(_.toDouble).toArray
+
+    val experiment = Metric(metric.getName, experimentValues, label = "canary")
+    val control = Metric(metric.getName, controlValues, label = "baseline")
+    val metricPair = MetricPair(experiment, control)
+
+    val validateNoData = checkNoData(metricPair)
+    val validateAllNaNs = checkAllNaNs(metricPair)
+
+    //=============================================
+    // Metric Validation
+    // ============================================
+    //Validate the input data for empty data arrays
+    if (!validateNoData.valid){
+      //todo: return metric result
+      //validateNoData.reason
+    }
+
+    //Validate the input data and check for all NaN values
+    if (!validateAllNaNs.valid){
+      //todo: return metric result
+      //validateNoData.reason
+    }
+
+    //=============================================
+    // Metric Transformation
+    // ============================================
+    //Remove NaN Values
+    val transformedMetricPair = Transforms.removeNaNs(metricPair)
+
+    //Remove Outliers
+    val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
+    val cleanedMetricPair = Transforms.removeOutliers(transformedMetricPair, detector)
+
+    //=============================================
+    // Metric Statistics
+    // ============================================
+    val experimentStats = calculateStatistics(cleanedMetricPair.experiment)
+    val controlStats = calculateStatistics(cleanedMetricPair.control)
+
+    //=============================================
+    // Metric Classification
+    // ============================================
+    //Use the Mann-Whitney MCA Algorithm to compare the experiment and control populations
+    val mannWhitney = new MannWhitneyClassifier(fraction = 0.25, confLevel = 0.99, mw)
+    val metricClassification = mannWhitney.classify(cleanedMetricPair)
+
+    //Construct metric classification
+    val classification = CanaryJudgeMetricClassification.builder()
+      .classification(metricClassification.classification.toString)
+      .classificationReason(metricClassification.reason.orNull)
       .build()
 
-    val mwResult = mw.eval(params)
-    val confInterval = mwResult.getConfidenceInterval
-    val pValue = mwResult.getPValue
-    val estimate = mwResult.getEstimate
-
-    MannWhitneyResult(pValue, confInterval(0), confInterval(1), estimate)
+    //Construct metric result
+    CanaryAnalysisResult.builder()
+      .name(metric.getName)
+      .tags(metric.getTags)
+      .classification(classification)
+      .groups(metricConfig.getGroups)
+      .experimentMetadata(Map("stats" -> experimentStats.asInstanceOf[Object]).asJava)
+      .controlMetadata(Map("stats" -> controlStats.asInstanceOf[Object]).asJava)
+      .resultMetadata(Map("ratio" -> metricClassification.ratio.asInstanceOf[Object]).asJava)
+      .build()
   }
 
-  def calculateStatistics(data: Array[Double]): Unit ={
+  /**
+    * Metric Group Scoring
+    * @param config
+    * @param metricResults
+    */
+  def calculateGroupScore(config: CanaryConfig, metricResults: List[CanaryAnalysisResult]): Unit ={
+
+  }
+
+  def calculateStatistics(metric: Metric): MetricStatistics ={
 
     //todo: before calculating statistics, check for empty array
 
     //Calculate summary statistics
-    val mean = StatUtils.mean(data)
-    val median = StatUtils.percentile(data, 50)
-    val min = StatUtils.min(data)
-    val max = StatUtils.max(data)
-    val count = data.length
+    val mean = StatUtils.mean(metric.values)
+    val median = StatUtils.percentile(metric.values, 50)
+    val min = StatUtils.min(metric.values)
+    val max = StatUtils.max(metric.values)
+    val count = metric.values.length
 
     MetricStatistics(min, max, mean, median, count)
-  }
-
-  def removeAnomalies(metricPair: MetricPair): MetricPair ={
-
-    val experiment = metricPair.experiment
-    val control = metricPair.control
-
-    //Remove Anomalous Values
-    val transformedExperiment = removeAnomalousValues(experiment.values)
-    val transformedControl = removeAnomalousValues(control.values)
-
-    val transformedExperimentMetric = Metric(experiment.name, transformedExperiment, label = experiment.label)
-    val transformedControlMetric = Metric(control.name, transformedControl, label = control.label)
-
-    MetricPair(transformedExperimentMetric, transformedControlMetric)
-  }
-
-  def removeNaNs(metricPair: MetricPair): MetricPair ={
-
-    val experiment = metricPair.experiment
-    val control = metricPair.control
-
-    //Remove NaN Values
-    val transformedExperiment = removeNaNValues(experiment.values)
-    val transformedControl = removeNaNValues(control.values)
-
-    val transformedExperimentMetric = Metric(experiment.name, transformedExperiment, label = experiment.label)
-    val transformedControlMetric = Metric(control.name, transformedControl, label = control.label)
-
-    MetricPair(transformedExperimentMetric, transformedControlMetric)
   }
 
   def checkNoData(metricPair: MetricPair): ValidationResult ={
@@ -249,43 +200,8 @@ class NetflixJudge extends CanaryJudge {
     }else {
       ValidationResult(valid=true)
     }
-
   }
 
-  def removeNaNValues(values: Array[Double]): Array[Double] ={
-    values.filter(x => !x.isNaN)
-  }
-
-  def removeAnomalousValues(values: Array[Double]): Array[Double] ={
-    val (lower, upper) = iqr(values)
-    values.filter(x => x >= lower && x <= upper)
-  }
-
-  def iqr(values: Array[Double], multiplier: Double = 3.0): (Double, Double) ={
-    // Calculate the interquartile range (IQR)
-    // To reduce sensitivity, take the max of the IQR or the 99th percentile
-
-    //Calculate the 25th and 75th percentiles
-    val p75 = StatUtils.percentile(values, 75)
-    val p25 = StatUtils.percentile(values, 25)
-
-    //Calculate the 1st and 99th percentiles
-    val p01 = StatUtils.percentile(values, 1)
-    val p99 = StatUtils.percentile(values, 99)
-
-    //Calculate the Interquartile Range (IQR)
-    val iqr = p75-p25
-
-    //Calculate the lower fence
-    val lowerIQR = p25 - (multiplier * iqr)
-    val lowerFence = math.min(p01, lowerIQR)
-
-    //Calculate the upper fence
-    val upperIQR = p75 + (multiplier * iqr)
-    val upperFence = math.max(p99, upperIQR)
-
-    (lowerFence, upperFence)
-  }
 
 }
 
