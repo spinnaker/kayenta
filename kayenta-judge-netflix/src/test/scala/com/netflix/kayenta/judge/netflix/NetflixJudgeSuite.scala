@@ -65,20 +65,33 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
 
   test("Judge Integration Test"){
     val judge = new NetflixJudge()
-
     val config = getConfig("test-config.json")
-    val tags = Map("x"->"x").asJava
     val experimentValues = List[java.lang.Double](10.0,20.0,30.0,40.0).asJava
     val controlValues = List[java.lang.Double](1.0,2.0,3.0,4.0).asJava
 
-    val metricPair = MetricSetPair.builder()
+    val cpuMetric = MetricSetPair.builder()
       .name("cpu")
-      .tags(tags)
+      .tags(Map("x"->"1").asJava)
       .value("control", controlValues)
       .value("experiment", experimentValues)
       .build()
 
-    val metricPairs = List(metricPair).asJava
+    val requestMetric = MetricSetPair.builder()
+      .name("requests")
+      .tags(Map("y"->"1").asJava)
+      .value("control", controlValues)
+      .value("experiment", experimentValues)
+      .build()
+
+    val noDataMetric = MetricSetPair.builder()
+      .name("foo")
+      .tags(Map("z"->"1").asJava)
+      .value("control", List[java.lang.Double]().asJava)
+      .value("experiment", List[java.lang.Double]().asJava)
+      .build()
+
+
+    val metricPairs = List(cpuMetric, requestMetric, noDataMetric).asJava
     val result = judge.judge(config, metricPairs)
 
   }

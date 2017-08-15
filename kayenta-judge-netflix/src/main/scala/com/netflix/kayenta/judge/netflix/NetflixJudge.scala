@@ -18,15 +18,20 @@ package com.netflix.kayenta.judge.netflix
 
 import java.util
 
-import com.netflix.kayenta.canary.results.{CanaryAnalysisResult, CanaryJudgeMetricClassification, CanaryJudgeResult}
+import com.netflix.kayenta.canary.results._
 import com.netflix.kayenta.canary.{CanaryConfig, CanaryJudge}
-import com.netflix.kayenta.judge.netflix.classifiers.MannWhitneyClassifier
+import com.netflix.kayenta.judge.netflix.classifiers.metric.MannWhitneyClassifier
+import com.netflix.kayenta.judge.netflix.classifiers.score.ThresholdScoreClassifier
 import com.netflix.kayenta.judge.netflix.detectors.IQRDetector
+import com.netflix.kayenta.judge.netflix.scorers.WeightedSumScorer
+import com.netflix.kayenta.judge.netflix.stats.DescriptiveStatistics
 import com.netflix.kayenta.metrics.MetricSetPair
 import com.netflix.kayenta.r.MannWhitney
-import org.apache.commons.math3.stat.StatUtils
 
 import scala.collection.JavaConverters._
+
+case class Metric(name: String, values: Array[Double], label: String)
+case class MetricPair(experiment: Metric, control: Metric)
 
 class NetflixJudge extends CanaryJudge {
 
@@ -35,18 +40,58 @@ class NetflixJudge extends CanaryJudge {
 
   override def judge(canaryConfig: CanaryConfig, metricSetPairList: util.List[MetricSetPair]): CanaryJudgeResult = {
 
-    val result = CanaryJudgeResult.builder().build()
-
     //Metric Classification
     val metricResults = metricSetPairList.asScala.toList.map{ metricPair => classifyMetric(canaryConfig, metricPair)}
 
-    //Metric Group Scoring
-    val groupResults = calculateGroupScore(canaryConfig, metricResults)
+    //Get the group weights from the canary configuration
+    val groupWeights = Option(canaryConfig.getClassifier.getGroupWeights) match {
+      case Some(groups) => groups.asScala.mapValues(_.toDouble).toMap
+      case None => Map[String, Double]()
+    }
+
+    //Get the score thresholds from the canary configuration
+    val scoreThresholds = canaryConfig.getClassifier.getScoreThresholds
+
+    //Calculate the summary and group scores
+    val weightedSumScorer = new WeightedSumScorer(groupWeights)
+    val scores = weightedSumScorer.score(metricResults)
+
+    //Classify the summary score
+    val scoreClassifier = new ThresholdScoreClassifier(95, 75)
+    val scoreResult = scoreClassifier.classify(scores)
 
     //Disconnect from RServe
     mw.disconnect()
 
-    result
+    //todo (csanden) CanaryJudgeGroupScore should define a numeric score
+    //todo (csanden) CanaryJudgeGroupScore should define a weight
+    //todo (csanden) Remove Group Classification and Reason
+    val groupScores = scores.groupScores match {
+      case Some(groups) => groups.map{ group =>
+        CanaryJudgeGroupScore.builder()
+          .name(group.name)
+          .score(
+            CanaryJudgeMetricClassification.builder()
+              .classification("")
+              .classificationReason("")
+              .build())
+          .build()
+      }
+      case None => List(CanaryJudgeGroupScore.builder().build())
+    }
+
+    val results = metricResults.map( metric => metric.getName -> metric).toMap.asJava
+    val score = CanaryJudgeScore.builder()
+        .score(scoreResult.score)
+        .classification(scoreResult.classification.toString)
+        .classificationReason(scoreResult.reason.getOrElse(""))
+        .build()
+
+    CanaryJudgeResult.builder()
+        .score(score)
+        .results(results)
+        .groupScores(groupScores.asJava)
+        .build()
   }
 
   /**
@@ -56,6 +101,7 @@ class NetflixJudge extends CanaryJudge {
     * @return
     */
   def classifyMetric(canaryConfig: CanaryConfig, metric: MetricSetPair): CanaryAnalysisResult ={
+    // Todo (csanden) Should group be removed from CanaryAnalysisResult?
 
     val metricConfig = canaryConfig.getMetrics.asScala.find(m => m.getName == metric.getName) match {
       case Some(config) => config
@@ -69,8 +115,8 @@ class NetflixJudge extends CanaryJudge {
     val control = Metric(metric.getName, controlValues, label = "baseline")
     val metricPair = MetricPair(experiment, control)
 
-    val validateNoData = checkNoData(metricPair)
-    val validateAllNaNs = checkAllNaNs(metricPair)
+    val validateNoData = Validators.checkNoData(metricPair)
+    val validateAllNaNs = Validators.checkAllNaNs(metricPair)
 
     //=============================================
     // Metric Validation
@@ -100,8 +146,8 @@ class NetflixJudge extends CanaryJudge {
     //=============================================
     // Metric Statistics
     // ============================================
-    val experimentStats = calculateStatistics(cleanedMetricPair.experiment)
-    val controlStats = calculateStatistics(cleanedMetricPair.control)
+    val experimentStats = DescriptiveStatistics.summary(cleanedMetricPair.experiment)
+    val controlStats = DescriptiveStatistics.summary(cleanedMetricPair.control)
 
     //=============================================
     // Metric Classification
@@ -110,117 +156,18 @@ class NetflixJudge extends CanaryJudge {
     val mannWhitney = new MannWhitneyClassifier(fraction = 0.25, confLevel = 0.99, mw)
     val metricClassification = mannWhitney.classify(cleanedMetricPair)
 
-    //Construct metric classification
-    val classification = CanaryJudgeMetricClassification.builder()
-      .classification(metricClassification.classification.toString)
-      .classificationReason(metricClassification.reason.orNull)
-      .build()
-
     //Construct metric result
     CanaryAnalysisResult.builder()
       .name(metric.getName)
       .tags(metric.getTags)
-      .classification(classification)
+      .classification(metricClassification.classification.toString)
+      .classificationReason(metricClassification.reason.orNull)
       .groups(metricConfig.getGroups)
       .experimentMetadata(Map("stats" -> experimentStats.asInstanceOf[Object]).asJava)
       .controlMetadata(Map("stats" -> controlStats.asInstanceOf[Object]).asJava)
       .resultMetadata(Map("ratio" -> metricClassification.ratio.asInstanceOf[Object]).asJava)
       .build()
-  }
-
-  /**
-    * Metric Group Scoring
-    * @param config
-    * @param metricResults
-    */
-  def calculateGroupScore(config: CanaryConfig, metricResults: List[CanaryAnalysisResult]): Unit ={
 
   }
-
-  def calculateStatistics(metric: Metric): MetricStatistics ={
-
-    //todo: before calculating statistics, check for empty array
-
-    //Calculate summary statistics
-    val mean = StatUtils.mean(metric.values)
-    val median = StatUtils.percentile(metric.values, 50)
-    val min = StatUtils.min(metric.values)
-    val max = StatUtils.max(metric.values)
-    val count = metric.values.length
-
-    MetricStatistics(min, max, mean, median, count)
-  }
-
-  def checkNoData(metricPair: MetricPair): ValidationResult ={
-    //todo (csanden): use the metric label instead of hard coding the names
-
-    val experiment = metricPair.experiment
-    val control = metricPair.control
-
-    if(experiment.values.isEmpty && control.values.isEmpty){
-      val reason = "Empty data array for Baseline and Canary"
-      return ValidationResult(valid=false, reason=Some(reason))
-
-    }else if(experiment.values.isEmpty){
-      val reason = "Empty data array for Canary"
-      return ValidationResult(valid=false, reason=Some(reason))
-
-    } else if(control.values.isEmpty) {
-      val reason = "Empty data array for Baseline"
-      return ValidationResult(valid = false, reason = Some(reason))
-    }
-
-    ValidationResult(valid=true)
-
-  }
-
-  //todo(csanden): fix return statements
-  def checkAllNaNs(metricPair: MetricPair): ValidationResult = {
-    //todo: refactor out the check for all NaNs
-
-    val experiment = metricPair.experiment
-    val control = metricPair.control
-
-    val experimentAllNaNs = experiment.values.forall(_.isNaN)
-    val controlAllNaNs = control.values.forall(_.isNaN)
-
-    if (experimentAllNaNs && controlAllNaNs){
-      val reason = "No data for Canary and Baseline"
-      ValidationResult(valid=false, reason=Some(reason))
-
-    }else if (controlAllNaNs){
-      val reason = "No data for Baseline"
-      ValidationResult(valid=false, reason=Some(reason))
-
-    }else if (experimentAllNaNs){
-      val reason = "No data for Canary"
-      ValidationResult(valid=false, reason=Some(reason))
-
-    }else {
-      ValidationResult(valid=true)
-    }
-  }
-
 
 }
-
-case class Metric(name: String, values: Array[Double], label: String)
-
-case class MetricPair(experiment: Metric, control: Metric)
-
-case class ValidationResult(valid: Boolean, reason: Option[String]=None)
-
-case class MetricStatistics(min: Double, max: Double, mean: Double, median: Double, count: Int)
-
-case class MannWhitneyResult(pValue: Double, lowerConfidence: Double, upperConfidence: Double, estimate: Double)
-
-//todo(csanden): rename?
-//todo (csanden): report deviation instead of ratio?
-case class MetricClassification(classification: ClassificationLabel, reason: Option[String], ratio: Double)
-
-//todo(csanden): define string name
-sealed trait ClassificationLabel
-case object Pass extends ClassificationLabel
-case object High extends ClassificationLabel
-case object Low extends ClassificationLabel
-case object Error extends ClassificationLabel
