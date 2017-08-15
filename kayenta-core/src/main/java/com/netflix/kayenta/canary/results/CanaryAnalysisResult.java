@@ -44,7 +44,10 @@ public class CanaryAnalysisResult {
 
   @NotNull
   @Getter
-  private CanaryJudgeMetricClassification classification;
+  private String classification;
+
+  @Getter
+  private String classificationReason;
 
   @NotNull
   @Getter

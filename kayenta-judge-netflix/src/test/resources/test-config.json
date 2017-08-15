@@ -12,19 +12,31 @@
       "extensions": {
         "canary": { }
       },
-      "groups": ["system"]
+      "groups": ["system", "example"]
     },
     {
       "service": "atlas",
       "name": "requests",
       "query": {
         "type": "atlas",
-        "q": "name,apache.http.requests,:eq,(,requestCode,),:by,:sum"
+        "q": "name,apache.http.requests,:eq,:sum"
       },
       "extensions": {
         "canary": { }
       },
-      "groups": ["requests"]
+      "groups": ["requests", "example"]
+    },
+    {
+      "service": "atlas",
+      "name": "foo",
+      "query": {
+        "type": "atlas",
+        "q": "name,foo,:eq"
+      },
+      "extensions": {
+        "canary": { }
+      },
+      "groups": ["bar"]
     }
   ],
   "services": {

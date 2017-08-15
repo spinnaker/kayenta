@@ -1,7 +1,8 @@
-package com.netflix.kayenta.judge.netflix.classifiers
+package com.netflix.kayenta.judge.netflix.classifiers.metric
+
 import com.netflix.kayenta.judge.netflix.MetricPair
 
-class MeanRatio() extends MetricClassifier{
+class MeanRatioClassifier() extends BaseMetricClassifier{
 
   override def classify(metrics: MetricPair): MetricClassification = {
     MetricClassification(Pass, None, 1.0)
