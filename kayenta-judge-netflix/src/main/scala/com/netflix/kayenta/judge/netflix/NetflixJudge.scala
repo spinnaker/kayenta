@@ -51,16 +51,14 @@ class NetflixJudge extends CanaryJudge {
     //Get the score thresholds from the canary configuration
     val scoreThresholds = canaryConfig.getClassifier.getScoreThresholds
 
-    //Calculate the summary and group scores
+    //Calculate the summary and group scores based on the metric results
     val weightedSumScorer = new WeightedSumScorer(groupWeights)
     val scores = weightedSumScorer.score(metricResults)
 
     //Classify the summary score
+    //todo (csanden) use the score thresholds defined at runtime or from the config
     val scoreClassifier = new ThresholdScoreClassifier(95, 75)
     val scoreResult = scoreClassifier.classify(scores)
-
-    //Disconnect from RServe
-    mw.disconnect()
 
     //todo (csanden) CanaryJudgeGroupScore should define a numeric score
     //todo (csanden) CanaryJudgeGroupScore should define a weight
@@ -79,6 +77,9 @@ class NetflixJudge extends CanaryJudge {
       case None => List(CanaryJudgeGroupScore.builder().build())
     }
 
+    //Disconnect from RServe
+    mw.disconnect()
+
     val results = metricResults.map( metric => metric.getName -> metric).toMap.asJava
     val score = CanaryJudgeScore.builder()
         .score(scoreResult.score)
@@ -93,6 +94,21 @@ class NetflixJudge extends CanaryJudge {
         .build()
   }
 
+
+  /**
+    * Metric Transformation
+    * @param metricPair
+    * @return
+    */
+  def transformMetric(metricPair: MetricPair): MetricPair ={
+    //Remove NaN Values
+    val transformedMetricPair = Transforms.removeNaNs(metricPair)
+
+    //Remove Outliers
+    val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
+    Transforms.removeOutliers(transformedMetricPair, detector)
+  }
+
   /**
     * Metric Classification
     * @param canaryConfig
@@ -100,7 +116,6 @@ class NetflixJudge extends CanaryJudge {
     * @return
     */
   def classifyMetric(canaryConfig: CanaryConfig, metric: MetricSetPair): CanaryAnalysisResult ={
-    // Todo (csanden) Should group be removed from CanaryAnalysisResult?
 
     val metricConfig = canaryConfig.getMetrics.asScala.find(m => m.getName == metric.getName) match {
       case Some(config) => config
@@ -110,52 +125,37 @@ class NetflixJudge extends CanaryJudge {
     val experimentValues = metric.getValues.get("experiment").asScala.map(_.toDouble).toArray
     val controlValues = metric.getValues.get("control").asScala.map(_.toDouble).toArray
 
-    val experiment = Metric(metric.getName, experimentValues, label = "canary")
-    val control = Metric(metric.getName, controlValues, label = "baseline")
+    val experiment = Metric(metric.getName, experimentValues, label="canary")
+    val control = Metric(metric.getName, controlValues, label="baseline")
     val metricPair = MetricPair(experiment, control)
-
-    val validateNoData = Validators.checkNoData(metricPair)
-    val validateAllNaNs = Validators.checkAllNaNs(metricPair)
 
     //=============================================
     // Metric Validation
     // ============================================
-    //Validate the input data for empty data arrays
-    if (!validateNoData.valid){
-      //todo: return metric result
-      //validateNoData.reason
-    }
-
-    //Validate the input data and check for all NaN values
-    if (!validateAllNaNs.valid){
-      //todo: return metric result
-      //validateNoData.reason
-    }
+    //todo (csanden) Implement metric validation
+    val validateNoData = Validators.checkNoData(metricPair)
+    val validateAllNaNs = Validators.checkAllNaNs(metricPair)
 
     //=============================================
     // Metric Transformation
     // ============================================
-    //Remove NaN Values
-    val transformedMetricPair = Transforms.removeNaNs(metricPair)
-
-    //Remove Outliers
-    val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
-    val cleanedMetricPair = Transforms.removeOutliers(transformedMetricPair, detector)
+    //Transform the metrics (remove NaN values, remove outliers, etc)
+    val cleanedMetricPair = transformMetric(metricPair)
 
     //=============================================
-    // Metric Statistics
+    // Calculate metric statistics
     // ============================================
+    //Calculate summary statistics such as mean, median, max, etc.
     val experimentStats = DescriptiveStatistics.summary(cleanedMetricPair.experiment)
     val controlStats = DescriptiveStatistics.summary(cleanedMetricPair.control)
 
     //=============================================
     // Metric Classification
     // ============================================
-    //Use the Mann-Whitney MCA Algorithm to compare the experiment and control populations
-    val mannWhitney = new MannWhitneyClassifier(fraction = 0.25, confLevel = 0.99, mw)
+    //Use the Mann-Whitney algorithm to compare the experiment and control populations
+    val mannWhitney = new MannWhitneyClassifier(fraction = 0.25, confLevel = 0.98, mw)
     val metricClassification = mannWhitney.classify(cleanedMetricPair)
 
-    //Construct metric result
     CanaryAnalysisResult.builder()
       .name(metric.getName)
       .tags(metric.getTags)
