@@ -8,29 +8,27 @@ case class MetricStatistics(min: Double, max: Double, mean: Double, median: Doub
 object DescriptiveStatistics {
 
   def mean(metric: Metric): Double = {
-    StatUtils.mean(metric.values)
+    if(metric.values.isEmpty) 0.0 else StatUtils.mean(metric.values)
   }
 
   def median(metric: Metric): Double = {
-    StatUtils.percentile(metric.values, 50)
+    if(metric.values.isEmpty) 0.0 else StatUtils.percentile(metric.values, 50)
   }
 
   def min(metric: Metric): Double = {
-    StatUtils.min(metric.values)
+    if(metric.values.isEmpty) 0.0 else StatUtils.min(metric.values)
   }
 
   def max(metric: Metric): Double = {
-    StatUtils.max(metric.values)
+    if(metric.values.isEmpty) 0.0 else StatUtils.max(metric.values)
   }
 
   def summary(metric: Metric): MetricStatistics = {
-    //todo (csanden) validate input before calculating statistics
     val mean = this.mean(metric)
     val median = this.median(metric)
     val min = this.min(metric)
     val max = this.max(metric)
     val count = metric.values.length
-
     MetricStatistics(min, max, mean, median, count)
   }
 

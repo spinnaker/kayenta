@@ -23,6 +23,7 @@ import com.google.common.base.Charsets
 import com.netflix.kayenta.canary.CanaryConfig
 import com.netflix.kayenta.judge.netflix.detectors.{IQRDetector, KSigmaDetector}
 import com.netflix.kayenta.judge.netflix.Transforms.{removeNaNs, removeOutliers}
+import com.netflix.kayenta.judge.netflix.stats.{DescriptiveStatistics, MetricStatistics}
 import com.netflix.kayenta.metrics.{MetricSet, MetricSetPair}
 import org.apache.commons.io.IOUtils
 import org.scalatest.FunSuite
@@ -90,14 +91,12 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
       .value("experiment", List[java.lang.Double]().asJava)
       .build()
 
-
     val metricPairs = List(cpuMetric, requestMetric, noDataMetric).asJava
     val result = judge.judge(config, metricPairs)
 
   }
 
   test("KSigma Detection"){
-
     val testData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     val truth = Array(false, false, false, false, false, true, false, false, false, false, false)
 
@@ -117,7 +116,6 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   }
 
   test("IQR Detection"){
-
     val testData = Array(21.0, 23.0, 24.0, 25.0, 50.0, 29.0, 23.0, 21.0)
     val truth = Array(false, false, false, false, true, false, false, false)
 
@@ -127,7 +125,6 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   }
 
   test("IQR Detect Two Sided"){
-
     val testData = Array(1.0, 1.0, 1.0, 5.0, -1.0, -1.0, -1.0, -5.0)
     val truth = Array(false, false, false, true, false, false, false, true)
 
@@ -137,7 +134,6 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   }
 
   test("IQR Reduce Sensitivity"){
-
     val testData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     val truth = Array(false, false, false, false, false, false, false, false, false, false, false)
 
@@ -147,7 +143,6 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   }
 
   test("IQR Empty Data"){
-
     val testData = Array[Double]()
     val truth = Array[Boolean]()
 
@@ -156,8 +151,7 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     assert(result === truth)
   }
 
-  test("NaN Removal Single"){
-
+  test("Remove Single NaN (Transform)"){
     val testData = Array(0.0, 1.0, Double.NaN, 1.0, 0.0)
     val truth = Array(0.0, 1.0, 1.0, 0.0)
 
@@ -165,8 +159,7 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     assert(result === truth)
   }
 
-  test("NaN Remove Multiple"){
-
+  test("Remove Multiple NaN (Transform)"){
     val testData = Array(Double.NaN, Double.NaN, Double.NaN)
     val truth = Array[Double]()
 
@@ -175,7 +168,6 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   }
 
   test("IQR Outlier Removal"){
-
     val testData = Array(21.0, 23.0, 24.0, 25.0, 50.0, 29.0, 23.0, 21.0)
     val truth = Array(21.0, 23.0, 24.0, 25.0, 29.0, 23.0, 21.0)
 
@@ -185,7 +177,6 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
   }
 
   test("KSigma Outlier Removal"){
-
     val testData = Array(1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     val truth = Array(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
 
@@ -194,6 +185,18 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     assert(result === truth)
   }
 
+  test("Summary Statistics"){
+    val metric = Metric("test", Array[Double](1.0), "test")
+    val result = DescriptiveStatistics.summary(metric)
+    val truth = MetricStatistics(1, 1, 1, 1, 1)
+    assert(result === truth)
+  }
 
+  test("Summary Statistics No Data"){
+    val metric = Metric("testNoData", Array[Double](), "test")
+    val result = DescriptiveStatistics.summary(metric)
+    val truth = MetricStatistics(0, 0, 0, 0, 0)
+    assert(result === truth)
+  }
 
 }
