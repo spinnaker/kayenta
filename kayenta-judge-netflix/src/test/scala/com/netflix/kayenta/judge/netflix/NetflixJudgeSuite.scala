@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL
 import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.Charsets
-import com.netflix.kayenta.canary.CanaryConfig
+import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CombinedCanaryResultStrategy}
 import com.netflix.kayenta.judge.netflix.detectors.{IQRDetector, KSigmaDetector}
 import com.netflix.kayenta.judge.netflix.Transforms.{removeNaNs, removeOutliers}
 import com.netflix.kayenta.judge.netflix.stats.{DescriptiveStatistics, MetricStatistics}
@@ -70,6 +70,9 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
     val experimentValues = List[java.lang.Double](10.0,20.0,30.0,40.0).asJava
     val controlValues = List[java.lang.Double](1.0,2.0,3.0,4.0).asJava
 
+    val resultStrategy = CombinedCanaryResultStrategy.AVERAGE
+    val thresholds = CanaryClassifierThresholdsConfig.builder().marginal(75.0).pass(95.0).build()
+
     val cpuMetric = MetricSetPair.builder()
       .name("cpu")
       .tags(Map("x"->"1").asJava)
@@ -92,7 +95,7 @@ class NetflixJudgeSuite extends FunSuite with TestContextManagement {
       .build()
 
     val metricPairs = List(cpuMetric, requestMetric, noDataMetric).asJava
-    val result = judge.judge(config, metricPairs)
+    val result = judge.judge(config, resultStrategy, thresholds, metricPairs)
 
   }
 
