@@ -18,7 +18,7 @@ package com.netflix.kayenta.judge.netflix
 
 import java.util
 
-import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CanaryJudge}
+import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CanaryJudge, CombinedCanaryResultStrategy}
 import com.netflix.kayenta.canary.results.{CanaryAnalysisResult, CanaryJudgeMetricClassification, CanaryJudgeResult}
 import com.netflix.kayenta.judge.netflix.classifiers.metric.MannWhitneyClassifier
 import com.netflix.kayenta.judge.netflix.classifiers.score.ThresholdScoreClassifier
@@ -35,9 +35,18 @@ case class MetricPair(experiment: Metric, control: Metric)
 
 class NetflixJudge extends CanaryJudge {
 
-  val mw = new MannWhitney()
+  //Open a connection with RServe for the Mann-Whitney U Test
+  private final val mw = new MannWhitney()
+  private final val judgeName = "doom-v1.0"
 
-  override def judge(canaryConfig: CanaryConfig, orchestratorScoreThresholds: CanaryClassifierThresholdsConfig, metricSetPairList: util.List[MetricSetPair]): CanaryJudgeResult = {
+  override def getName: String = {
+    judgeName
+  }
+
+  override def judge(canaryConfig: CanaryConfig,
+                     resultStrategy: CombinedCanaryResultStrategy,
+                     scoreThreshold: CanaryClassifierThresholdsConfig,
+                     metricSetPairList: util.List[MetricSetPair]): CanaryJudgeResult = {
 
     //Metric Classification
     val metricResults = metricSetPairList.asScala.toList.map{ metricPair => classifyMetric(canaryConfig, metricPair)}
@@ -93,7 +102,6 @@ class NetflixJudge extends CanaryJudge {
         .groupScores(groupScores.asJava)
         .build()
   }
-
 
   /**
     * Metric Transformation
