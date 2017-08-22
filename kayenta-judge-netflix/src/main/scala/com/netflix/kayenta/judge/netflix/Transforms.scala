@@ -70,7 +70,7 @@ object Transforms {
   def removeOutliers(metrics: MetricPair,  detector: OutlierDetector): MetricPair = {
     metrics.copy(
       experiment = removeOutliers(metrics.experiment, detector),
-      control = removeOutliers(metrics.experiment, detector)
+      control = removeOutliers(metrics.control, detector)
     )
   }
 
