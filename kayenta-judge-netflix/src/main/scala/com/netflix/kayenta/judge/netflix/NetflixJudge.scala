@@ -104,9 +104,9 @@ class NetflixJudge extends CanaryJudge {
     * @param metric
     * @return
     */
-  def transformMetric(metric: MetricPair): MetricPair = {
+  def transformMetric(metric: Metric): Metric = {
     val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
-    val transform = Function.chain[MetricPair](Seq(
+    val transform = Function.chain[Metric](Seq(
       Transforms.removeNaNs,
       Transforms.removeOutliers(_, detector)))
     transform(metric)
@@ -136,6 +136,7 @@ class NetflixJudge extends CanaryJudge {
     // Metric Validation
     // ============================================
     //todo (csanden) Implement metric validation
+    //todo (csanden) Move away from using metricPair
     val validateNoData = Validators.checkNoData(metricPair)
     val validateAllNaNs = Validators.checkAllNaNs(metricPair)
 
@@ -143,21 +144,22 @@ class NetflixJudge extends CanaryJudge {
     // Metric Transformation
     // ============================================
     //Transform the metrics (remove NaN values, remove outliers, etc)
-    val cleanedMetricPair = transformMetric(metricPair)
+    val transformedExperiment = transformMetric(experiment)
+    val transformedControl = transformMetric(control)
 
     //=============================================
     // Calculate metric statistics
     // ============================================
     //Calculate summary statistics such as mean, median, max, etc.
-    val experimentStats = DescriptiveStatistics.summary(cleanedMetricPair.experiment)
-    val controlStats = DescriptiveStatistics.summary(cleanedMetricPair.control)
+    val experimentStats = DescriptiveStatistics.summary(transformedExperiment)
+    val controlStats = DescriptiveStatistics.summary(transformedControl)
 
     //=============================================
     // Metric Classification
     // ============================================
     //Use the Mann-Whitney algorithm to compare the experiment and control populations
     val mannWhitney = new MannWhitneyClassifier(fraction = 0.25, confLevel = 0.98, mw)
-    val metricClassification = mannWhitney.classify(cleanedMetricPair)
+    val metricClassification = mannWhitney.classify(transformedControl, transformedExperiment)
 
     CanaryAnalysisResult.builder()
       .name(metric.getName)

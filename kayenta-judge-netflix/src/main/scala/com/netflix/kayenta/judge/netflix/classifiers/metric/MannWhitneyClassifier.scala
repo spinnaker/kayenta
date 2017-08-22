@@ -1,12 +1,12 @@
 package com.netflix.kayenta.judge.netflix.classifiers.metric
 
-import com.netflix.kayenta.judge.netflix.MetricPair
+import com.netflix.kayenta.judge.netflix.Metric
 import com.netflix.kayenta.r.{MannWhitney, MannWhitneyParams}
 import org.apache.commons.math3.stat.StatUtils
 
 case class MannWhitneyResult(pValue: Double, lowerConfidence: Double, upperConfidence: Double, estimate: Double)
 
-//todo: rename this classifier
+//todo (csanden) rename this classifier
 class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.99, mw: MannWhitney) extends BaseMetricClassifier{
 
   /**
@@ -33,20 +33,17 @@ class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.99, mw: M
     MannWhitneyResult(pValue, confInterval(0), confInterval(1), estimate)
   }
 
-  def calculateBounds(metrics: MetricPair):  (Double, Double)={
-    //todo(csanden): use the Hodge Lehmann estimate
-    val delta = math.abs(StatUtils.mean(metrics.experiment.values) - StatUtils.mean(metrics.control.values))
+  def calculateBounds(control: Metric, experiment: Metric):  (Double, Double)={
+    //todo(csanden): use the Hodges–Lehmann estimate
+    val delta = math.abs(StatUtils.mean(experiment.values) - StatUtils.mean(control.values))
     val criticalValue = fraction * delta
     val lowerBound = -1 * criticalValue
     val upperBound = criticalValue
     (lowerBound, upperBound)
   }
 
-  override def classify(metricPair: MetricPair): MetricClassification = {
+  override def classify(control: Metric, experiment: Metric): MetricClassification = {
     //todo(csanden): classification label should not be a string
-
-    val experiment = metricPair.experiment
-    val control = metricPair.control
 
     //Check if there is no-data for the experiment or control
     if(experiment.values.isEmpty || control.values.isEmpty){
@@ -61,7 +58,7 @@ class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.99, mw: M
     //Perform Mann-Whitney U Test
     val mwResult = MannWhitneyUTest(experiment.values, control.values)
     val ratio = StatUtils.mean(experiment.values)/StatUtils.mean(control.values)
-    val (lowerBound, upperBound) = calculateBounds(metricPair)
+    val (lowerBound, upperBound) = calculateBounds(control, experiment)
 
     //todo(csanden): improve the reason
     if(mwResult.lowerConfidence > upperBound){
