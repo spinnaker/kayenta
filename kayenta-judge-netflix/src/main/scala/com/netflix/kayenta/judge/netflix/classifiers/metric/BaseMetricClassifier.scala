@@ -1,6 +1,6 @@
 package com.netflix.kayenta.judge.netflix.classifiers.metric
 
-import com.netflix.kayenta.judge.netflix.MetricPair
+import com.netflix.kayenta.judge.netflix.Metric
 
 sealed trait MetricClassificationLabel
 case object Pass extends MetricClassificationLabel
@@ -13,5 +13,5 @@ case object Error extends MetricClassificationLabel
 case class MetricClassification(classification: MetricClassificationLabel, reason: Option[String], ratio: Double)
 
 abstract class BaseMetricClassifier {
-  def classify(metrics: MetricPair): MetricClassification
+  def classify(control: Metric, experiment: Metric): MetricClassification
 }

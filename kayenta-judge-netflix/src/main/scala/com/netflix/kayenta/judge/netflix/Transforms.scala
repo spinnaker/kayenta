@@ -23,15 +23,6 @@ object Transforms {
   }
 
   /**
-    * Remove NaN values from the input metric pair
-    * @param metrics
-    * @return
-    */
-  def removeNaNs(metrics: MetricPair): MetricPair = {
-    metrics.copy(experiment = removeNaNs(metrics.experiment), control = removeNaNs(metrics.control))
-  }
-
-  /**
     * Replace NaN values from the input array
     * @param data
     * @param value
@@ -60,19 +51,5 @@ object Transforms {
   def removeOutliers(metric: Metric, detector: OutlierDetector): Metric = {
     metric.copy(values = removeOutliers(metric.values, detector))
   }
-
-  /**
-    * Remove outliers from the input metric pair
-    * @param metrics
-    * @param detector
-    * @return
-    */
-  def removeOutliers(metrics: MetricPair,  detector: OutlierDetector): MetricPair = {
-    metrics.copy(
-      experiment = removeOutliers(metrics.experiment, detector),
-      control = removeOutliers(metrics.control, detector)
-    )
-  }
-
 
 }
