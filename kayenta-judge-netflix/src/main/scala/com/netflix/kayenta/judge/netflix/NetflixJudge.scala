@@ -101,16 +101,15 @@ class NetflixJudge extends CanaryJudge {
 
   /**
     * Metric Transformation
-    * @param metricPair
+    * @param metric
     * @return
     */
-  def transformMetric(metricPair: MetricPair): MetricPair ={
-    //Remove NaN Values
-    val transformedMetricPair = Transforms.removeNaNs(metricPair)
-
-    //Remove Outliers
+  def transformMetric(metric: MetricPair): MetricPair = {
     val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
-    Transforms.removeOutliers(transformedMetricPair, detector)
+    val transform = Function.chain[MetricPair](Seq(
+      Transforms.removeNaNs,
+      Transforms.removeOutliers(_, detector)))
+    transform(metric)
   }
 
   /**
