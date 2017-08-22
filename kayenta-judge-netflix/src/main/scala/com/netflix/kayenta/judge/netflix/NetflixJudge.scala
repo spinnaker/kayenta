@@ -27,25 +27,25 @@ import com.netflix.kayenta.judge.netflix.scorers.WeightedSumScorer
 import com.netflix.kayenta.judge.netflix.stats.DescriptiveStatistics
 import com.netflix.kayenta.metrics.MetricSetPair
 import com.netflix.kayenta.r.MannWhitney
+import org.springframework.stereotype.Component
 
 import scala.collection.JavaConverters._
 
 case class Metric(name: String, values: Array[Double], label: String)
 case class MetricPair(experiment: Metric, control: Metric)
 
+@Component
 class NetflixJudge extends CanaryJudge {
 
   //Open a connection with RServe for the Mann-Whitney U Test
   private final val mw = new MannWhitney()
   private final val judgeName = "doom-v1.0"
 
-  override def getName: String = {
-    judgeName
-  }
+  override def getName: String = judgeName
 
   override def judge(canaryConfig: CanaryConfig,
                      resultStrategy: CombinedCanaryResultStrategy,
-                     scoreThreshold: CanaryClassifierThresholdsConfig,
+                     scoreThresholds: CanaryClassifierThresholdsConfig,
                      metricSetPairList: util.List[MetricSetPair]): CanaryJudgeResult = {
 
     //Metric Classification
@@ -57,16 +57,12 @@ class NetflixJudge extends CanaryJudge {
       case None => Map[String, Double]()
     }
 
-    //Get the score thresholds from the canary configuration
-    val scoreThresholds = canaryConfig.getClassifier.getScoreThresholds
-
     //Calculate the summary and group scores based on the metric results
     val weightedSumScorer = new WeightedSumScorer(groupWeights)
     val scores = weightedSumScorer.score(metricResults)
 
     //Classify the summary score
-    //todo (csanden) use the score thresholds defined at runtime or from the config
-    val scoreClassifier = new ThresholdScoreClassifier(95, 75)
+    val scoreClassifier = new ThresholdScoreClassifier(scoreThresholds.getPass, scoreThresholds.getMarginal)
     val scoreResult = scoreClassifier.classify(scores)
 
     //todo (csanden) CanaryJudgeGroupScore should define a numeric score
