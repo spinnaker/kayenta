@@ -35,9 +35,6 @@ case class Metric(name: String, values: Array[Double], label: String)
 
 @Component
 class NetflixJudge extends CanaryJudge {
-
-  //Open a connection with RServe for the Mann-Whitney U Test
-  private final val mw = new MannWhitney()
   private final val judgeName = "doom-v1.0"
 
   override def getName: String = judgeName
@@ -47,8 +44,15 @@ class NetflixJudge extends CanaryJudge {
                      scoreThresholds: CanaryClassifierThresholdsConfig,
                      metricSetPairList: util.List[MetricSetPair]): CanaryJudgeResult = {
 
+    //Connect to RServe to perform the Mann-Whitney U Test
+    val mw = new MannWhitney()
+
     //Metric Classification
-    val metricResults = metricSetPairList.asScala.toList.map{ metricPair => classifyMetric(canaryConfig, metricPair)}
+    val metricResults = metricSetPairList.asScala.toList.map{ metricPair =>
+      classifyMetric(canaryConfig, metricPair, mw)}
+
+    //Disconnect from RServe
+    mw.disconnect()
 
     //Get the group weights from the canary configuration
     val groupWeights = Option(canaryConfig.getClassifier.getGroupWeights) match {
@@ -80,9 +84,6 @@ class NetflixJudge extends CanaryJudge {
       }
       case None => List(CanaryJudgeGroupScore.builder().build())
     }
-
-    //Disconnect from RServe
-    mw.disconnect()
 
     val results = metricResults.map( metric => metric.getName -> metric).toMap.asJava
     val score = CanaryJudgeScore.builder()
@@ -134,7 +135,7 @@ class NetflixJudge extends CanaryJudge {
     * @param metric
     * @return
     */
-  def classifyMetric(canaryConfig: CanaryConfig, metric: MetricSetPair): CanaryAnalysisResult ={
+  def classifyMetric(canaryConfig: CanaryConfig, metric: MetricSetPair, mw: MannWhitney): CanaryAnalysisResult ={
 
     val metricConfig = canaryConfig.getMetrics.asScala.find(m => m.getName == metric.getName) match {
       case Some(config) => config
