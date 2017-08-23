@@ -32,7 +32,6 @@ import org.springframework.stereotype.Component
 import scala.collection.JavaConverters._
 
 case class Metric(name: String, values: Array[Double], label: String)
-case class MetricPair(experiment: Metric, control: Metric)
 
 @Component
 class NetflixJudge extends CanaryJudge {
@@ -100,16 +99,33 @@ class NetflixJudge extends CanaryJudge {
   }
 
   /**
-    * Metric Transformation
+    * Metric Transformations
     * @param metric
     * @return
     */
   def transformMetric(metric: Metric): Metric = {
     val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
     val transform = Function.chain[Metric](Seq(
-      Transforms.removeNaNs,
+      Transforms.removeNaNs(_),
       Transforms.removeOutliers(_, detector)))
     transform(metric)
+  }
+
+  /**
+    * Metric Validation
+    * @param metric
+    * @return
+    */
+  def validateMetric(metric: Metric): ValidationResult = {
+    val validators: List[Metric => ValidationResult] = List(
+      Validators.checkEmptyArray(_),
+      Validators.checkNaNArray(_))
+
+    val validationResults = validators.map(fn => fn(metric))
+    val invalidResults = validationResults.filter(_.valid == false)
+    val validResults = validationResults.filter(_.valid == true)
+
+    if(invalidResults.nonEmpty) invalidResults.head else validResults.head
   }
 
   /**
@@ -130,15 +146,13 @@ class NetflixJudge extends CanaryJudge {
 
     val experiment = Metric(metric.getName, experimentValues, label="canary")
     val control = Metric(metric.getName, controlValues, label="baseline")
-    val metricPair = MetricPair(experiment, control)
 
     //=============================================
     // Metric Validation
     // ============================================
     //todo (csanden) Implement metric validation
-    //todo (csanden) Move away from using metricPair
-    val validateNoData = Validators.checkNoData(metricPair)
-    val validateAllNaNs = Validators.checkAllNaNs(metricPair)
+    val validExperimentMetric = validateMetric(experiment)
+    val validControlMetric = validateMetric(control)
 
     //=============================================
     // Metric Transformation
