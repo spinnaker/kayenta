@@ -140,8 +140,8 @@ class NetflixJudge extends CanaryJudge {
     val experimentValues = metric.getValues.get("experiment").asScala.map(_.toDouble).toArray
     val controlValues = metric.getValues.get("control").asScala.map(_.toDouble).toArray
 
-    val experiment = Metric(metric.getName, experimentValues, label="canary")
-    val control = Metric(metric.getName, controlValues, label="baseline")
+    val experiment = Metric(metric.getName, experimentValues, label="Canary")
+    val control = Metric(metric.getName, controlValues, label="Baseline")
 
     //=============================================
     // Metric Validation
