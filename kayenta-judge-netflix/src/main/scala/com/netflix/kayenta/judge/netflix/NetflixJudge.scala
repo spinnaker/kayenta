@@ -69,8 +69,6 @@ class NetflixJudge extends CanaryJudge {
     val scoreResult = scoreClassifier.classify(scores)
 
     //todo (csanden) CanaryJudgeGroupScore should define a numeric score
-    //todo (csanden) CanaryJudgeGroupScore should define a weight
-    //todo (csanden) Remove Group Classification and Reason
     val groupScores = scores.groupScores match {
       case Some(groups) => groups.map{ group =>
         CanaryJudgeGroupScore.builder()
