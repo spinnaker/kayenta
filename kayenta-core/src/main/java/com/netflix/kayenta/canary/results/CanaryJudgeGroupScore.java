@@ -33,5 +33,12 @@ public class CanaryJudgeGroupScore {
 
   @NotNull
   @Getter
-  private CanaryJudgeMetricClassification score;
+  private Double score;
+
+  @NotNull
+  @Getter
+  private String classification;
+
+  @Getter
+  private String classificationReason;
 }

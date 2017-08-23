@@ -68,19 +68,16 @@ class NetflixJudge extends CanaryJudge {
     val scoreClassifier = new ThresholdScoreClassifier(scoreThresholds.getPass, scoreThresholds.getMarginal)
     val scoreResult = scoreClassifier.classify(scores)
 
-    //todo (csanden) CanaryJudgeGroupScore should define a numeric score
     val groupScores = scores.groupScores match {
+      case None => List(CanaryJudgeGroupScore.builder().build())
       case Some(groups) => groups.map{ group =>
         CanaryJudgeGroupScore.builder()
           .name(group.name)
-          .score(
-            CanaryJudgeMetricClassification.builder()
-              .classification("")
-              .classificationReason("")
-              .build())
+          .score(group.score)
+          .classification("")
+          .classificationReason("")
           .build()
       }
-      case None => List(CanaryJudgeGroupScore.builder().build())
     }
 
     val results = metricResults.map( metric => metric.getName -> metric).toMap.asJava
