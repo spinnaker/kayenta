@@ -21,9 +21,9 @@ import java.util
 import com.netflix.kayenta.canary.results._
 import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CanaryJudge, CombinedCanaryResultStrategy}
 import com.netflix.kayenta.judge.netflix.classifiers.metric.MannWhitneyClassifier
-import com.netflix.kayenta.judge.netflix.classifiers.score.ThresholdScoreClassifier
+import com.netflix.kayenta.judge.netflix.classifiers.score.{ScoreClassification, ThresholdScoreClassifier}
 import com.netflix.kayenta.judge.netflix.detectors.IQRDetector
-import com.netflix.kayenta.judge.netflix.scorers.WeightedSumScorer
+import com.netflix.kayenta.judge.netflix.scorers.{ScoreResult, WeightedSumScorer}
 import com.netflix.kayenta.judge.netflix.stats.DescriptiveStatistics
 import com.netflix.kayenta.metrics.MetricSetPair
 import com.netflix.kayenta.r.MannWhitney
@@ -66,8 +66,23 @@ class NetflixJudge extends CanaryJudge {
 
     //Classify the summary score
     val scoreClassifier = new ThresholdScoreClassifier(scoreThresholds.getPass, scoreThresholds.getMarginal)
-    val scoreResult = scoreClassifier.classify(scores)
+    val scoreClassification = scoreClassifier.classify(scores)
 
+    //Construct the canary result object
+    buildCanaryResult(scores, scoreClassification, metricResults)
+  }
+
+  /**
+    * Build the canary result object
+    * @param scores
+    * @param scoreClassification
+    * @param metricResults
+    * @return
+    */
+  def buildCanaryResult(scores: ScoreResult, scoreClassification: ScoreClassification,
+                        metricResults: List[CanaryAnalysisResult]): CanaryJudgeResult ={
+
+    //Construct the group score result object
     val groupScores = scores.groupScores match {
       case None => List(CanaryJudgeGroupScore.builder().build())
       case Some(groups) => groups.map{ group =>
@@ -80,18 +95,20 @@ class NetflixJudge extends CanaryJudge {
       }
     }
 
-    val results = metricResults.map( metric => metric.getName -> metric).toMap.asJava
-    val score = CanaryJudgeScore.builder()
-        .score(scoreResult.score)
-        .classification(scoreResult.classification.toString)
-        .classificationReason(scoreResult.reason.getOrElse(""))
-        .build()
+    //Construct the summary score result object
+    val summaryScore = CanaryJudgeScore.builder()
+      .score(scoreClassification.score)
+      .classification(scoreClassification.classification.toString)
+      .classificationReason(scoreClassification.reason.getOrElse(""))
+      .build()
 
+    //Construct the judge result object
+    val results = metricResults.map( metric => metric.getName -> metric).toMap.asJava
     CanaryJudgeResult.builder()
-        .score(score)
-        .results(results)
-        .groupScores(groupScores.asJava)
-        .build()
+      .score(summaryScore)
+      .results(results)
+      .groupScores(groupScores.asJava)
+      .build()
   }
 
   /**
