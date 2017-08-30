@@ -26,7 +26,7 @@ import com.netflix.kayenta.memory.config.MemoryConfiguration;
 import com.netflix.kayenta.prometheus.config.PrometheusConfiguration;
 import com.netflix.kayenta.s3.config.S3Configuration;
 import com.netflix.kayenta.stackdriver.config.StackdriverConfiguration;
-import com.netflix.kayenta.judge.netflix.config.NetflixJudgeConfiguration;
+import com.netflix.kayenta.judge.config.NetflixJudgeConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
