@@ -18,8 +18,8 @@ package com.netflix.kayenta.judge
 
 import java.util
 
-import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CanaryJudge, CombinedCanaryResultStrategy}
-import com.netflix.kayenta.canary.results.{CanaryAnalysisResult, CanaryJudgeMetricClassification, CanaryJudgeResult}
+import com.netflix.kayenta.canary.results._
+import com.netflix.kayenta.canary.{CanaryClassifierThresholdsConfig, CanaryConfig, CanaryJudge}
 import com.netflix.kayenta.judge.classifiers.metric.MannWhitneyClassifier
 import com.netflix.kayenta.judge.classifiers.score.{ScoreClassification, ThresholdScoreClassifier}
 import com.netflix.kayenta.judge.detectors.IQRDetector
@@ -40,7 +40,6 @@ class Judge extends CanaryJudge {
   override def getName: String = judgeName
 
   override def judge(canaryConfig: CanaryConfig,
-                     resultStrategy: CombinedCanaryResultStrategy,
                      scoreThresholds: CanaryClassifierThresholdsConfig,
                      metricSetPairList: util.List[MetricSetPair]): CanaryJudgeResult = {
 
