@@ -23,7 +23,7 @@ import com.netflix.kayenta.gcs.config.GcsConfiguration;
 import com.netflix.kayenta.google.config.GoogleConfiguration;
 import com.netflix.kayenta.memory.config.MemoryConfiguration;
 import com.netflix.kayenta.stackdriver.config.StackdriverConfiguration;
-import com.netflix.kayenta.judge.netflix.config.NetflixJudgeConfiguration;
+import com.netflix.kayenta.judge.config.NetflixJudgeConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
