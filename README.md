@@ -15,5 +15,5 @@ apt-get install r-base r-cran-rserve
 ### Running RServe
 The following assumes you are in the root of the Kayenta repo:
 ```
-R CMD RServe --RS-conf gradle/Rserve.conf --no-save
+R CMD Rserve --RS-conf gradle/Rserve.conf --no-save
 ```
