@@ -62,7 +62,7 @@ public class CanaryConfigController {
   public CanaryConfig loadCanaryConfig(@RequestParam(required = false) final String accountName,
                                        @PathVariable String canaryConfigId) {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
-                                                                              AccountCredentials.Type.OBJECT_STORE,
+                                                                              AccountCredentials.Type.CONFIGURATION_STORE,
                                                                               accountCredentialsRepository);
     StorageService storageService =
       storageServiceRepository
@@ -79,7 +79,7 @@ public class CanaryConfigController {
   public String storeCanaryConfig(@RequestParam(required = false) final String accountName,
                                   @RequestBody CanaryConfig canaryConfig) throws IOException {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
-                                                                              AccountCredentials.Type.OBJECT_STORE,
+                                                                              AccountCredentials.Type.CONFIGURATION_STORE,
                                                                               accountCredentialsRepository);
     StorageService storageService =
       storageServiceRepository
@@ -132,7 +132,7 @@ public class CanaryConfigController {
                                    @PathVariable String canaryConfigId,
                                    @RequestBody CanaryConfig canaryConfig) throws IOException {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
-                                                                              AccountCredentials.Type.OBJECT_STORE,
+                                                                              AccountCredentials.Type.CONFIGURATION_STORE,
                                                                               accountCredentialsRepository);
     StorageService storageService =
       storageServiceRepository
@@ -164,7 +164,7 @@ public class CanaryConfigController {
                                  @PathVariable String canaryConfigId,
                                  HttpServletResponse response) {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
-                                                                              AccountCredentials.Type.OBJECT_STORE,
+                                                                              AccountCredentials.Type.CONFIGURATION_STORE,
                                                                               accountCredentialsRepository);
     StorageService storageService =
       storageServiceRepository
@@ -180,7 +180,7 @@ public class CanaryConfigController {
   @RequestMapping(method = RequestMethod.GET)
   public List<Map<String, Object>> listAllCanaryConfigs(@RequestParam(required = false) final String accountName) {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
-                                                                              AccountCredentials.Type.OBJECT_STORE,
+                                                                              AccountCredentials.Type.CONFIGURATION_STORE,
                                                                               accountCredentialsRepository);
     StorageService storageService =
       storageServiceRepository
