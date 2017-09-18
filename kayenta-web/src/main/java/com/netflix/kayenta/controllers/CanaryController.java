@@ -113,9 +113,9 @@ public class CanaryController {
                                                                                            accountCredentialsRepository);
 
     StorageService configurationService =
-            storageServiceRepository
-                    .getOne(resolvedConfigurationAccountName)
-                    .orElseThrow(() -> new IllegalArgumentException("No configuration service was configured."));
+      storageServiceRepository
+        .getOne(resolvedConfigurationAccountName)
+        .orElseThrow(() -> new IllegalArgumentException("No configuration service was configured."));
 
     canaryConfigId = canaryConfigId.toLowerCase();
 
