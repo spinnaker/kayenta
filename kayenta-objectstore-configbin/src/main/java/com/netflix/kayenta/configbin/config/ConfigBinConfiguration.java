@@ -35,6 +35,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -51,9 +52,12 @@ public class ConfigBinConfiguration {
   }
 
   @Bean
-  StorageService storageService(ConfigBinConfigurationProperties configbinConfigurationProperties,
+  StorageService storageService(ConfigBinResponseConverter configbinConverter,
+                                ConfigBinConfigurationProperties configbinConfigurationProperties,
                                 ConfigBinRemoteService remoteService,
-                                AccountCredentialsRepository accountCredentialsRepository) {
+                                RetrofitClientFactory retrofitClientFactory,
+                                OkHttpClient okHttpClient,
+                                AccountCredentialsRepository accountCredentialsRepository) throws IOException {
     log.debug("Created a ConfigBin StorageService");
     ConfigBinStorageService.ConfigBinStorageServiceBuilder configbinStorageServiceBuilder = ConfigBinStorageService.builder();
 
@@ -67,7 +71,7 @@ public class ConfigBinConfiguration {
       log.info("Registering ConfigBin account {} with supported types {}.", name, supportedTypes);
 
       ConfigBinAccountCredentials configbinAccountCredentials = ConfigBinAccountCredentials.builder().build();
-      ConfigBinNamedAccountCredentials.ConfigBinNamedAccountCredentialsBuilder configbinNamedAccountCredentialsBuilder =
+      ConfigBinNamedAccountCredentials.ConfigBinNamedAccountCredentialsBuilder configBinNamedAccountCredentialsBuilder =
         ConfigBinNamedAccountCredentials.builder()
           .name(name)
           .ownerApp(ownerApp)
@@ -77,10 +81,17 @@ public class ConfigBinConfiguration {
           .credentials(configbinAccountCredentials);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
-        configbinNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
+        if (supportedTypes.contains(AccountCredentials.Type.CONFIGURATION_STORE)) {
+          ConfigBinRemoteService configBinRemoteService = retrofitClientFactory.createClient(ConfigBinRemoteService.class,
+                                                                                             configbinConverter,
+                                                                                             configbinManagedAccount.getEndpoint(),
+                                                                                             okHttpClient);
+          configBinNamedAccountCredentialsBuilder.remoteService(configBinRemoteService);
+        }
+        configBinNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
       }
 
-      ConfigBinNamedAccountCredentials configbinNamedAccountCredentials = configbinNamedAccountCredentialsBuilder.build();
+      ConfigBinNamedAccountCredentials configbinNamedAccountCredentials = configBinNamedAccountCredentialsBuilder.build();
       accountCredentialsRepository.save(name, configbinNamedAccountCredentials);
       configbinStorageServiceBuilder.accountName(name);
     }
@@ -90,14 +101,5 @@ public class ConfigBinConfiguration {
     log.info("Populated ConfigBinStorageService with {} ConfigBin accounts.", configbinStorageService.getAccountNames().size());
 
     return configbinStorageService;
-  }
-
-  @Bean
-  ConfigBinRemoteService configBinRemoteService(ConfigBinResponseConverter converter,
-                                                ConfigBinConfigurationProperties props,
-                                                RetrofitClientFactory retrofitClientFactory,
-                                                OkHttpClient okHttpClient) {
-    return retrofitClientFactory.createClient(ConfigBinRemoteService.class,
-                                              converter, props.getEndpoint(), okHttpClient);
   }
 }

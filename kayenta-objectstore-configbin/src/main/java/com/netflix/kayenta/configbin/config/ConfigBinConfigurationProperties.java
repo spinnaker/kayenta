@@ -26,11 +26,6 @@ import java.util.List;
 
 public class ConfigBinConfigurationProperties {
 
-  @NotNull
-  @Getter
-  @Setter
-  private RemoteService endpoint;
-
   @Getter
   private List<ConfigBinManagedAccount> accounts = new ArrayList<>();
 }
