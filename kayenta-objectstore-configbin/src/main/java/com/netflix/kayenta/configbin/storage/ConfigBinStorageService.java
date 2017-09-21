@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import retrofit.RetrofitError;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -70,13 +71,15 @@ public class ConfigBinStorageService implements StorageService {
     String ownerApp = credentials.getOwnerApp();
     String configType = credentials.getConfigType();
     ConfigBinRemoteService remoteService = credentials.getRemoteService();
-    String json =  remoteService.get(ownerApp, configType, objectKey);
-    if (json == null) {
+    String json;
+    try {
+       json = remoteService.get(ownerApp, configType, objectKey);
+    } catch (RetrofitError e) {
       throw new IllegalArgumentException("No such object named " + objectKey);
     }
     try {
       return objectMapper.readValue(json, objectType.getTypeReference());
-    } catch (IOException e) {
+    } catch (Throwable e) {
       log.error("Read failed on path {}: {}", objectKey, e);
       throw new IllegalStateException(e);
     }
@@ -92,7 +95,7 @@ public class ConfigBinStorageService implements StorageService {
     ConfigBinRemoteService remoteService = credentials.getRemoteService();
     try {
       String json = objectMapper.writeValueAsString(obj);
-      remoteService.put(ownerApp, configType, objectKey, json);
+      remoteService.post(ownerApp, configType, objectKey, json);
     } catch (IOException e) {
       log.error("Update failed on path {}: {}", objectKey, e);
       throw new IllegalStateException(e);

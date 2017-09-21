@@ -16,6 +16,7 @@
 
 package com.netflix.kayenta.configbin.service;
 
+import retrofit.client.Response;
 import retrofit.http.*;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public interface ConfigBinRemoteService {
                     @Path("configType") String configType);
 
   @DELETE("/{ownerApp}/{configType}/{configName}")
-  void delete(@Path("ownerApp") String ownerApp,
+  Response delete(@Path("ownerApp") String ownerApp,
               @Path("configType") String configType,
               @Path("configName") String configName);
 
@@ -36,8 +37,8 @@ public interface ConfigBinRemoteService {
            @Path("configName") String configName);
 
   @POST("/{ownerApp}/{configType}/{configName}")
-  void put(@Path("ownerApp") String ownerApp,
-           @Path("configType") String configType,
-           @Path("configName") String configName,
-           @Body String json);
+  Response post(@Path("ownerApp") String ownerApp,
+                @Path("configType") String configType,
+                @Path("configName") String configName,
+                @Body String json);
 }
