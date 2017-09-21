@@ -22,6 +22,8 @@ import com.netflix.kayenta.configbin.service.ConfigBinRemoteService;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.RequestBody;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -95,7 +97,8 @@ public class ConfigBinStorageService implements StorageService {
     ConfigBinRemoteService remoteService = credentials.getRemoteService();
     try {
       String json = objectMapper.writeValueAsString(obj);
-      remoteService.post(ownerApp, configType, objectKey, json);
+      RequestBody body = RequestBody.create(MediaType.parse("application/json"), json);
+      remoteService.post(ownerApp, configType, objectKey, body);
     } catch (IOException e) {
       log.error("Update failed on path {}: {}", objectKey, e);
       throw new IllegalStateException(e);

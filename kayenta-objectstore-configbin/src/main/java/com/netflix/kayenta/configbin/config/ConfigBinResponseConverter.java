@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google, Inc.
+ * Copyright 2017 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,20 @@
 
 package com.netflix.kayenta.configbin.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.okhttp.RequestBody;
 import lombok.extern.slf4j.Slf4j;
+import okio.Buffer;
 import org.springframework.stereotype.Component;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -45,10 +43,10 @@ public class ConfigBinResponseConverter implements Converter {
     .disable(FAIL_ON_UNKNOWN_PROPERTIES);
 
   @Override
-  public List<Object> fromBody(TypedInput body, Type type) throws ConversionException {
+  public String fromBody(TypedInput body, Type type) throws ConversionException {
     try {
-      Object obj = objectMapper.readTree(body.in());
-      return Collections.singletonList(obj);
+      JsonNode obj = objectMapper.readTree(body.in());
+      return obj.get("payload").asText();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -58,6 +56,31 @@ public class ConfigBinResponseConverter implements Converter {
 
   @Override
   public TypedOutput toBody(Object object) {
-    return null;
+    RequestBody requestBody = (RequestBody)object;
+    return new StringTypedOutput(requestBody);
+  }
+
+  private static class StringTypedOutput implements TypedOutput {
+    private final RequestBody string;
+
+    StringTypedOutput(RequestBody s) { this.string = s; }
+
+    @Override public String fileName() { return null; }
+
+    @Override public String mimeType() { return "application/json; charset=UTF-8"; }
+
+    @Override public long length() {
+      try {
+        return string.contentLength();
+      } catch (IOException e) {
+        return 0;
+      }
+    }
+
+    @Override public void writeTo(OutputStream out) throws IOException {
+      Buffer buffer = new Buffer();
+      string.writeTo(buffer);
+      buffer.writeTo(out);
+    }
   }
 }

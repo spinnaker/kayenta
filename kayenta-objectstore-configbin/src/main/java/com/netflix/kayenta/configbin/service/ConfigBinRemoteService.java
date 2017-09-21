@@ -16,6 +16,7 @@
 
 package com.netflix.kayenta.configbin.service;
 
+import com.squareup.okhttp.RequestBody;
 import retrofit.client.Response;
 import retrofit.http.*;
 
@@ -40,5 +41,5 @@ public interface ConfigBinRemoteService {
   Response post(@Path("ownerApp") String ownerApp,
                 @Path("configType") String configType,
                 @Path("configName") String configName,
-                @Body String json);
+                @Body RequestBody config);
 }
