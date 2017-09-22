@@ -27,9 +27,12 @@ import retrofit.converter.Converter;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -45,13 +48,19 @@ public class ConfigBinResponseConverter implements Converter {
   @Override
   public String fromBody(TypedInput body, Type type) throws ConversionException {
     try {
-      JsonNode obj = objectMapper.readTree(body.in());
-      return obj.get("payload").asText();
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      int nRead;
+      byte[] data = new byte[1024];
+      InputStream inputStream = body.in();
+      while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+        buffer.write(data, 0, nRead);
+      }
+      buffer.flush();
+      byte[] byteArray = buffer.toByteArray();
+      return new String(byteArray, StandardCharsets.UTF_8);
     } catch (IOException e) {
-      e.printStackTrace();
+      return null;
     }
-
-    return null;
   }
 
   @Override

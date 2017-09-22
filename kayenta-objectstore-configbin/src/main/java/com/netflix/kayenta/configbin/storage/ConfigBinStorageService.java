@@ -16,6 +16,7 @@
 
 package com.netflix.kayenta.configbin.storage;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.configbin.security.ConfigBinNamedAccountCredentials;
 import com.netflix.kayenta.configbin.service.ConfigBinRemoteService;
@@ -24,6 +25,7 @@ import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -124,11 +126,17 @@ public class ConfigBinStorageService implements StorageService {
     String ownerApp = credentials.getOwnerApp();
     String configType = credentials.getConfigType();
     ConfigBinRemoteService remoteService = credentials.getRemoteService();
-    List<String> nameList = remoteService.list(ownerApp, configType);
-    Map<String, Object> objectList = nameList
-      .stream()
-      .collect(Collectors.toMap(Function.identity(), this::metadataFor));
-    return Collections.singletonList(objectList);
+    String jsonBody = remoteService.list(ownerApp, configType);
+    try {
+      List<String> names = objectMapper.readValue(jsonBody, new TypeReference<List<String>>(){});
+      Map<String, Object> objectlist = names
+        .stream()
+        .collect(Collectors.toMap(Function.identity(), this::metadataFor));
+      return Collections.singletonList(objectlist);
+    } catch (IOException e) {
+      e.printStackTrace();
+      return Collections.emptyList();
+    }
   }
 
   private ObjectMetadata metadataFor(String key) {
