@@ -17,16 +17,13 @@
 package com.netflix.kayenta.configbin.service;
 
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import retrofit.client.Response;
 import retrofit.http.*;
-
-import java.util.List;
 
 public interface ConfigBinRemoteService {
   @GET("/{ownerApp}/{configType}")
   String list(@Path("ownerApp") String ownerApp,
-                    @Path("configType") String configType);
+              @Path("configType") String configType);
 
   @DELETE("/{ownerApp}/{configType}/{configName}")
   Response delete(@Path("ownerApp") String ownerApp,
@@ -35,8 +32,8 @@ public interface ConfigBinRemoteService {
 
   @GET("/payload/{ownerApp}/{configType}/{configName}")
   String get(@Path("ownerApp") String ownerApp,
-           @Path("configType") String configType,
-           @Path("configName") String configName);
+             @Path("configType") String configType,
+             @Path("configName") String configName);
 
   @POST("/{ownerApp}/{configType}/{configName}")
   Response post(@Path("ownerApp") String ownerApp,
