@@ -25,7 +25,6 @@ import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.ResponseBody;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -40,13 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-@Builder
-class ObjectMetadata {
-
-  @NotNull
-  public final String name;
-}
 
 @Builder
 @Slf4j
@@ -69,7 +61,7 @@ public class ConfigBinStorageService implements StorageService {
 
   @Override
   public <T> T loadObject(String accountName, ObjectType objectType, String objectKey) throws IllegalArgumentException {
-    ConfigBinNamedAccountCredentials credentials = (ConfigBinNamedAccountCredentials) accountCredentialsRepository
+    ConfigBinNamedAccountCredentials credentials = (ConfigBinNamedAccountCredentials)accountCredentialsRepository
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
     String ownerApp = credentials.getOwnerApp();
@@ -142,4 +134,11 @@ public class ConfigBinStorageService implements StorageService {
   private ObjectMetadata metadataFor(String key) {
     return ObjectMetadata.builder().name(key).build();
   }
+}
+
+@Builder
+class ObjectMetadata {
+
+  @NotNull
+  public final String name;
 }
