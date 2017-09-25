@@ -59,6 +59,7 @@ public class ConfigBinResponseConverter implements Converter {
       byte[] byteArray = buffer.toByteArray();
       return new String(byteArray, StandardCharsets.UTF_8);
     } catch (IOException e) {
+      log.error("Unable to read response body or convert it to a UTF-8 string", e);
       return null;
     }
   }
@@ -82,6 +83,7 @@ public class ConfigBinResponseConverter implements Converter {
       try {
         return string.contentLength();
       } catch (IOException e) {
+        log.error("Unable to determine response body length", e);
         return 0;
       }
     }
