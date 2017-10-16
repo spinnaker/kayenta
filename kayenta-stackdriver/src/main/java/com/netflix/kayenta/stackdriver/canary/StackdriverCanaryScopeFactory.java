@@ -35,7 +35,7 @@ public class StackdriverCanaryScopeFactory implements CanaryScopeFactory {
   public CanaryScope buildCanaryScope(String scope,
                                       Instant startTimeInstant,
                                       Instant endTimeInstant,
-                                      String step,
+                                      Long step,
                                       Map<String, String> extendedScopeParams) {
     StackdriverCanaryScope stackdriverCanaryScope = new StackdriverCanaryScope();
     stackdriverCanaryScope.setScope(scope);

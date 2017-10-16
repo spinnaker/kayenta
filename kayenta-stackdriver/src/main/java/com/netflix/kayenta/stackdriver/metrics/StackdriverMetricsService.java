@@ -80,7 +80,7 @@ public class StackdriverMetricsService implements MetricsService {
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + metricsAccountName + "."));
     Monitoring monitoring = credentials.getMonitoring();
     StackdriverCanaryMetricSetQueryConfig stackdriverMetricSetQuery = (StackdriverCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
-    int alignmentPeriodSec = Integer.parseInt(canaryScope.getStep());
+    long alignmentPeriodSec = canaryScope.getStep();
     Monitoring.Projects.TimeSeries.List list = monitoring
       .projects()
       .timeSeries()

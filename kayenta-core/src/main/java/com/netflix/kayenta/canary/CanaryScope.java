@@ -32,5 +32,5 @@ public class CanaryScope {
     protected String end;
 
     @NotNull
-    protected String step;
+    protected Long step;
 }

@@ -35,7 +35,7 @@ public class AtlasCanaryScopeFactory implements CanaryScopeFactory {
   public CanaryScope buildCanaryScope(String scope,
                                       Instant startTimeInstant,
                                       Instant endTimeInstant,
-                                      String step,
+                                      Long step,
                                       Map<String, String> extendedScopeParams) {
     AtlasCanaryScope atlasCanaryScope = new AtlasCanaryScope();
     atlasCanaryScope.setScope(scope);

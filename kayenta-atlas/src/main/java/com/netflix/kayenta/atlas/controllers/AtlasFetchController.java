@@ -54,7 +54,7 @@ public class AtlasFetchController {
                              @RequestParam String scope,
                              @ApiParam(defaultValue = "0") @RequestParam String start,
                              @ApiParam(defaultValue = "6000000") @RequestParam String end,
-                             @ApiParam(defaultValue = "PT1M") @RequestParam String step) throws IOException {
+                             @ApiParam(defaultValue = "PT1M") @RequestParam Long step) throws IOException {
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);

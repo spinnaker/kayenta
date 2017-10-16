@@ -26,6 +26,6 @@ public interface CanaryScopeFactory {
   CanaryScope buildCanaryScope(String scope,
                                Instant startTimeInstant,
                                Instant endTimeInstant,
-                               String step,
+                               Long step,
                                Map<String, String> extendedScopeParams);
 }

@@ -17,6 +17,7 @@ package com.netflix.kayenta.canary;
 
 import lombok.Data;
 import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 @Data
 public class CanaryExecutionRequest {
@@ -26,4 +27,13 @@ public class CanaryExecutionRequest {
 
   @NotNull
   protected CanaryScope controlScope;
+
+  @NotNull
+  protected Long step;
+
+  protected CanaryClassifierThresholdsConfig thresholds;
+
+  // Metric source specific parameters which may be used to further
+  // alter the canary scope.
+  Map<String, String> extendedScopeParams;
 }

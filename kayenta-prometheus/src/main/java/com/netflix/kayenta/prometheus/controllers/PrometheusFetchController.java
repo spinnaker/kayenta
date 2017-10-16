@@ -58,7 +58,7 @@ public class PrometheusFetchController {
                              @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
                              @ApiParam(defaultValue = "2017-08-17T21:13:00Z") @RequestParam String start,
                              @ApiParam(defaultValue = "2017-08-17T21:30:00Z") @RequestParam String end,
-                             @ApiParam(defaultValue = "15s") @RequestParam String step) throws IOException {
+                             @ApiParam(defaultValue = "300") @RequestParam Long step) throws IOException {
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);

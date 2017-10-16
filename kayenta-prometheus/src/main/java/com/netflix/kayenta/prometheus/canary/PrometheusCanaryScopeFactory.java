@@ -35,7 +35,7 @@ public class PrometheusCanaryScopeFactory implements CanaryScopeFactory {
   public CanaryScope buildCanaryScope(String scope,
                                       Instant startTimeInstant,
                                       Instant endTimeInstant,
-                                      String step,
+                                      Long step,
                                       Map<String, String> extendedScopeParams) {
     PrometheusCanaryScope prometheusCanaryScope = new PrometheusCanaryScope();
     prometheusCanaryScope.setScope(scope);

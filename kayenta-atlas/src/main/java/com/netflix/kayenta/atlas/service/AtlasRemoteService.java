@@ -29,5 +29,5 @@ public interface AtlasRemoteService {
   List<AtlasResults> fetch(@Query("q") String q,
                            @Query("s") String start,
                            @Query("e") String end,
-                           @Query("step") String step);
+                           @Query("step") Long step);
 }
