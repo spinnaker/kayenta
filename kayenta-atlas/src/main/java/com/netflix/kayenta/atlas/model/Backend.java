@@ -20,6 +20,7 @@ import lombok.*;
 
 import javax.validation.constraints.NotNull;
 
+import java.time.Duration;
 import java.util.List;
 
 @Builder
@@ -29,31 +30,46 @@ import java.util.List;
 @AllArgsConstructor
 public class Backend {
 
-    @NotNull
-    @Getter
-    private String cname;
+  @NotNull
+  @Getter
+  private String cname;
 
-    @NotNull
-    @Getter
-    private String deployment;
+  @NotNull
+  @Getter
+  private String deployment;
 
-    @NotNull
-    @Getter
-    private String dataset;
+  @NotNull
+  @Getter
+  private String dataset;
 
-    @NotNull
-    @Getter
-    private int port;
+  @NotNull
+  @Getter
+  private int port;
 
-    @NotNull
-    @Getter
-    private List<String> environments;
+  @NotNull
+  @Getter
+  private List<String> environments;
 
-    @NotNull
-    @Getter
-    private List<Long> accounts;
+  @NotNull
+  @Getter
+  private List<String> regions;
 
-    @NotNull
-    @Getter
-    private List<String> regions;
+  @NotNull
+  @Getter
+  private Duration step;
+
+  @NotNull
+  @Getter
+  private String description;
+
+  public String getUri(String method, String deployment, String dataset, String region, String environment) {
+    String ret = cname
+      .replaceAll("\\$\\(deployment\\)", deployment)
+      .replaceAll("\\$\\(dataset\\)", dataset)
+      .replaceAll("\\$\\(region\\)", region)
+      .replaceAll("\\$\\(env\\)", environment);
+    if ((method.equals("http") && port != 80) || (method.equals("https") && port != 443))
+      ret += ":" + port;
+    return method + "://" + ret;
+  }
 }
