@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.netflix.kayenta.atlas.model.AtlasResults;
 import com.netflix.kayenta.atlas.model.TimeseriesData;
+import com.netflix.kayenta.util.ObjectMapperFactory;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -44,7 +45,7 @@ public class SampleAtlasController {
   @Autowired
   private ResourceLoader resourceLoader;
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = ObjectMapperFactory.getMapper();
 
   private static final Map<String, String> queryMap = createQueryMap();
 

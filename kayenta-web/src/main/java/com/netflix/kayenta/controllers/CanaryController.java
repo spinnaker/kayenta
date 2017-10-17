@@ -131,6 +131,9 @@ public class CanaryController {
     CanaryScope controlScopeModel = canaryScopeFactory.buildCanaryScope(canaryExecutionRequest.getControlScope());
     CanaryScope experimentScopeModel = canaryScopeFactory.buildCanaryScope(canaryExecutionRequest.getExperimentScope());
 
+    System.out.println(controlScopeModel.toString());
+    System.out.println(experimentScopeModel.toString());
+
     Map<String, Object> fetchControlContext =
       Maps.newHashMap(
         new ImmutableMap.Builder<String, Object>()

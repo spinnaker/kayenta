@@ -8,6 +8,7 @@ import com.netflix.kayenta.atlas.model.TimeseriesData;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.providers.AtlasCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.util.ObjectMapperFactory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -60,9 +61,7 @@ public class IntegrationTest {
     @Autowired
     private ResourceLoader resourceLoader;
 
-    private ObjectMapper objectMapper = new ObjectMapper()
-            .setSerializationInclusion(NON_NULL)
-            .disable(FAIL_ON_UNKNOWN_PROPERTIES);
+    private static final ObjectMapper objectMapper = ObjectMapperFactory.getMapper();
 
     private String getFileContent(String filename) throws IOException {
         try (InputStream inputStream = resourceLoader.getResource("classpath:" + filename).getInputStream()) {
@@ -107,14 +106,14 @@ public class IntegrationTest {
         AtlasCanaryScope experiment = new AtlasCanaryScope();
         experiment.setType("asg");
         experiment.setScope("kayenta-iep-v400");
-        experiment.setStart(Instant.parse("0"));
-        experiment.setEnd(Instant.parse("600000"));
+        experiment.setStart(Instant.parse("2000-01-01T00:11:22Z"));
+        experiment.setEnd(Instant.parse("2000-01-01T04:11:22Z"));
         experiment.setStep(300L);
         AtlasCanaryScope control = new AtlasCanaryScope();
         control.setType("asg");
         control.setScope("kayenta-iep-v401");
-        control.setStart(Instant.parse("0"));
-        control.setEnd(Instant.parse("600000"));
+        control.setStart(Instant.parse("2000-01-01T00:11:22Z"));
+        control.setEnd(Instant.parse("2000-01-01T04:11:22Z"));
         control.setStep(300L);
 
         //   3.  for each metric in the config:
