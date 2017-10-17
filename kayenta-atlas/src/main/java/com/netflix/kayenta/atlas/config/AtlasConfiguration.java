@@ -60,7 +60,6 @@ public class AtlasConfiguration {
 
     for (AtlasManagedAccount atlasManagedAccount : atlasConfigurationProperties.getAccounts()) {
       String name = atlasManagedAccount.getName();
-      String namespace = atlasManagedAccount.getNamespace();
       List<AccountCredentials.Type> supportedTypes = atlasManagedAccount.getSupportedTypes();
 
       log.info("Registering Atlas account {} with supported types {}.", name, supportedTypes);
@@ -73,7 +72,6 @@ public class AtlasConfiguration {
         AtlasNamedAccountCredentials
           .builder()
           .name(name)
-          .namespace(namespace)
           .credentials(atlasCredentials);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {

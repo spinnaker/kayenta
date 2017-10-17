@@ -40,11 +40,6 @@ public class AtlasNamedAccountCredentials implements AccountCredentials<AtlasCre
   @NotNull
   private AtlasCredentials credentials;
 
-  // Any required fields to use in identifying a project space or something similar in Atlas would go here.
-  // This one is just an example/placeholder.
-  @NotNull
-  private String namespace;
-
   @Override
   public String getType() {
     return "atlas";

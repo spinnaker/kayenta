@@ -36,7 +36,5 @@ public class AtlasManagedAccount {
   @Setter
   private RemoteService endpoint;
 
-  private String namespace;
-
   private List<AccountCredentials.Type> supportedTypes;
 }
