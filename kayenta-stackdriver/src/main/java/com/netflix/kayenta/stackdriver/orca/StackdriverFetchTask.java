@@ -18,11 +18,11 @@ package com.netflix.kayenta.stackdriver.orca;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.canary.CanaryConfig;
+import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
-import com.netflix.kayenta.stackdriver.canary.StackdriverCanaryScope;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
@@ -35,7 +35,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +73,8 @@ public class StackdriverFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     String configurationAccountName = (String)context.get("configurationAccountName");
     String canaryConfigId = (String)context.get("canaryConfigId");
-    StackdriverCanaryScope stackdriverCanaryScope =
-      objectMapper.convertValue(stage.getContext().get("stackdriverCanaryScope"), StackdriverCanaryScope.class);
+    CanaryScope canaryScope =
+      objectMapper.convertValue(stage.getContext().get("stackdriverCanaryScope"), CanaryScope.class);
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);
@@ -95,17 +94,11 @@ public class StackdriverFetchTask implements RetryableTask {
       CanaryConfig canaryConfig =
         configurationService.loadObject(resolvedConfigurationAccountName, ObjectType.CANARY_CONFIG, canaryConfigId.toLowerCase());
 
-      Instant startTimeInstant = Instant.parse(stackdriverCanaryScope.getIntervalStartTimeIso());
-      long startTimeMillis = startTimeInstant.toEpochMilli();
-      Instant endTimeInstant = Instant.parse(stackdriverCanaryScope.getIntervalEndTimeIso());
-      long endTimeMillis = endTimeInstant.toEpochMilli();
-      stackdriverCanaryScope.setStart(startTimeMillis + "");
-      stackdriverCanaryScope.setEnd(endTimeMillis + "");
 
       List<String> metricSetListIds = synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,
                                                                              resolvedStorageAccountName,
                                                                              canaryConfig.getMetrics(),
-                                                                             stackdriverCanaryScope);
+                                                                             canaryScope);
 
       Map outputs = Collections.singletonMap("metricSetListIds", metricSetListIds);
 

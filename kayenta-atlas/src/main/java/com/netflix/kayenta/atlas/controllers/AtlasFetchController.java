@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collections;
 
 @RestController
@@ -77,8 +78,8 @@ public class AtlasFetchController {
     AtlasCanaryScope atlasCanaryScope = new AtlasCanaryScope();
     atlasCanaryScope.setType(type);
     atlasCanaryScope.setScope(scope);
-    atlasCanaryScope.setStart(start);
-    atlasCanaryScope.setEnd(end);
+    atlasCanaryScope.setStart(Instant.parse(start));
+    atlasCanaryScope.setEnd(Instant.parse(end));
     atlasCanaryScope.setStep(step);
 
     return synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,

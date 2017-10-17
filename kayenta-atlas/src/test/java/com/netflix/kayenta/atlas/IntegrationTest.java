@@ -27,6 +27,7 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +77,8 @@ public class IntegrationTest {
 
     private CanaryMetricConfigWithResults queryMetric(CanaryMetricConfig metric, AtlasCanaryScope scope) {
         long step = Duration.ofSeconds(scope.getStep()).toMillis();
-        long start = Long.parseLong(scope.getStart()) / step * step;
-        long end = Long.parseLong(scope.getEnd()) / step * step;
+        long start = scope.getStart().toEpochMilli() / step * step;
+        long end = scope.getEnd().toEpochMilli() / step * step;
         long count = (end - start) / step;
 
         AtlasCanaryMetricSetQueryConfig atlasMetricSetQuery = (AtlasCanaryMetricSetQueryConfig)metric.getQuery();
@@ -106,14 +107,14 @@ public class IntegrationTest {
         AtlasCanaryScope experiment = new AtlasCanaryScope();
         experiment.setType("asg");
         experiment.setScope("kayenta-iep-v400");
-        experiment.setStart("0");
-        experiment.setEnd("600000");
+        experiment.setStart(Instant.parse("0"));
+        experiment.setEnd(Instant.parse("600000"));
         experiment.setStep(300L);
         AtlasCanaryScope control = new AtlasCanaryScope();
         control.setType("asg");
         control.setScope("kayenta-iep-v401");
-        control.setStart("0");
-        control.setEnd("600000");
+        control.setStart(Instant.parse("0"));
+        control.setEnd(Instant.parse("600000"));
         control.setStep(300L);
 
         //   3.  for each metric in the config:

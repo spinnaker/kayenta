@@ -76,7 +76,6 @@ public class AtlasMetricsService implements MetricsService {
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
     AtlasRemoteService atlasRemoteService = credentials.getAtlasRemoteService();
-    // TODO(mgraff): Is this how we decorate the base query?
     AtlasCanaryMetricSetQueryConfig atlasMetricSetQuery = (AtlasCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
     String decoratedQuery = atlasMetricSetQuery.getQ() + "," + atlasCanaryScope.cq();
     List<AtlasResults> atlasResultsList = atlasRemoteService.fetch(decoratedQuery,

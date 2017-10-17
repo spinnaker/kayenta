@@ -16,7 +16,6 @@
 
 package com.netflix.kayenta.prometheus.metrics;
 
-import com.netflix.kayenta.prometheus.canary.PrometheusCanaryScope;
 import com.netflix.kayenta.prometheus.model.PrometheusResults;
 import com.netflix.kayenta.prometheus.security.PrometheusNamedAccountCredentials;
 import com.netflix.kayenta.prometheus.service.PrometheusRemoteService;
@@ -28,7 +27,6 @@ import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -119,11 +118,6 @@ public class PrometheusMetricsService implements MetricsService {
   public List<MetricSet> queryMetrics(String accountName,
                                       CanaryMetricConfig canaryMetricConfig,
                                       CanaryScope canaryScope) throws IOException {
-    if (!(canaryScope instanceof PrometheusCanaryScope)) {
-      throw new IllegalArgumentException("Canary scope not instance of PrometheusCanaryScope: " + canaryScope);
-    }
-
-    PrometheusCanaryScope prometheusCanaryScope = (PrometheusCanaryScope)canaryScope;
     PrometheusNamedAccountCredentials credentials = (PrometheusNamedAccountCredentials)accountCredentialsRepository
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
@@ -131,14 +125,15 @@ public class PrometheusMetricsService implements MetricsService {
     PrometheusCanaryMetricSetQueryConfig queryConfig = (PrometheusCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
 
     StringBuilder queryBuilder = new StringBuilder(queryConfig.getMetricName());
-    queryBuilder = addScopeFilter(queryBuilder, prometheusCanaryScope.getScope(), queryConfig);
+    queryBuilder = addScopeFilter(queryBuilder, canaryScope.getScope(), queryConfig);
     queryBuilder = addRateQuery(queryBuilder, queryConfig);
     queryBuilder = addSumQuery(queryBuilder, queryConfig);
 
+    DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
     List<PrometheusResults> prometheusResultsList = prometheusRemoteService.fetch(queryBuilder.toString(),
-                                                                                  prometheusCanaryScope.getStart(),
-                                                                                  prometheusCanaryScope.getEnd(),
-                                                                                  prometheusCanaryScope.getStep());
+                                                                                  formatter.format(canaryScope.getStart()),
+                                                                                  formatter.format(canaryScope.getEnd()),
+                                                                                  canaryScope.getStep());
     List<MetricSet> metricSetList = new ArrayList<>();
 
     for (PrometheusResults prometheusResults : prometheusResultsList) {

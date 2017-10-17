@@ -18,11 +18,11 @@ package com.netflix.kayenta.prometheus.orca;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.canary.CanaryConfig;
+import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
-import com.netflix.kayenta.prometheus.canary.PrometheusCanaryScope;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
@@ -35,7 +35,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +75,8 @@ public class PrometheusFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     String configurationAccountName = (String)context.get("configurationAccountName");
     String canaryConfigId = (String)context.get("canaryConfigId");
-    PrometheusCanaryScope prometheusCanaryScope =
-      objectMapper.convertValue(stage.getContext().get("prometheusCanaryScope"), PrometheusCanaryScope.class);
+    CanaryScope canaryScope =
+      objectMapper.convertValue(stage.getContext().get("prometheusCanaryScope"), CanaryScope.class);
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);
@@ -97,22 +96,10 @@ public class PrometheusFetchTask implements RetryableTask {
       CanaryConfig canaryConfig =
         configurationService.loadObject(resolvedConfigurationAccountName, ObjectType.CANARY_CONFIG, canaryConfigId.toLowerCase());
 
-
-      Instant startTimeInstant = Instant.parse(prometheusCanaryScope.getIntervalStartTimeIso());
-      long startTimeMillis = startTimeInstant.toEpochMilli();
-      Instant endTimeInstant = Instant.parse(prometheusCanaryScope.getIntervalEndTimeIso());
-      long endTimeMillis = endTimeInstant.toEpochMilli();
-      /*
-      prometheusCanaryScope.setStart(startTimeMillis + "");
-      prometheusCanaryScope.setEnd(endTimeMillis + "");
-      */
-      prometheusCanaryScope.setStart(prometheusCanaryScope.getIntervalStartTimeIso());
-      prometheusCanaryScope.setEnd(prometheusCanaryScope.getIntervalEndTimeIso());
-
       List<String> metricSetListIds = synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,
                                                                              resolvedStorageAccountName,
                                                                              canaryConfig.getMetrics(),
-                                                                             prometheusCanaryScope);
+                                                                             canaryScope);
 
       Map outputs = Collections.singletonMap("metricSetListIds", metricSetListIds);
 

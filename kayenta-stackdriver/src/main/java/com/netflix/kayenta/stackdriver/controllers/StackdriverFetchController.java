@@ -17,12 +17,12 @@
 package com.netflix.kayenta.stackdriver.controllers;
 
 import com.netflix.kayenta.canary.CanaryMetricConfig;
+import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.StackdriverCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
-import com.netflix.kayenta.stackdriver.canary.StackdriverCanaryScope;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,21 +81,17 @@ public class StackdriverFetchController {
         .build();
 
     Instant startTimeInstant = Instant.parse(intervalStartTimeIso);
-    long startTimeMillis = startTimeInstant.toEpochMilli();
     Instant endTimeInstant = Instant.parse(intervalEndTimeIso);
-    long endTimeMillis = endTimeInstant.toEpochMilli();
 
-    StackdriverCanaryScope stackdriverCanaryScope = new StackdriverCanaryScope();
-    stackdriverCanaryScope.setScope(scope);
-    stackdriverCanaryScope.setStart(startTimeMillis + "");
-    stackdriverCanaryScope.setEnd(endTimeMillis + "");
-    stackdriverCanaryScope.setIntervalStartTimeIso(intervalStartTimeIso);
-    stackdriverCanaryScope.setIntervalEndTimeIso(intervalEndTimeIso);
-    stackdriverCanaryScope.setStep(step);
+    CanaryScope canaryScope = new CanaryScope();
+    canaryScope.setScope(scope);
+    canaryScope.setStart(startTimeInstant);
+    canaryScope.setEnd(endTimeInstant);
+    canaryScope.setStep(step);
 
     return synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,
                                                   resolvedStorageAccountName,
                                                   Collections.singletonList(canaryMetricConfig),
-                                                  stackdriverCanaryScope).get(0);
+                                                  canaryScope).get(0);
   }
 }
