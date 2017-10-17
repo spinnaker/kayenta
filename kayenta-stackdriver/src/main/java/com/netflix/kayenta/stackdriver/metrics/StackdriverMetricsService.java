@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -76,7 +75,6 @@ public class StackdriverMetricsService implements MetricsService {
     Monitoring monitoring = credentials.getMonitoring();
     StackdriverCanaryMetricSetQueryConfig stackdriverMetricSetQuery = (StackdriverCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
     long alignmentPeriodSec = canaryScope.getStep();
-    DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
     Monitoring.Projects.TimeSeries.List list = monitoring
       .projects()
       .timeSeries()
@@ -87,8 +85,8 @@ public class StackdriverMetricsService implements MetricsService {
       // TODO(duftler): Support 'filter' directly on StackdriverMetricSetQuery?
       .setFilter("metric.type=\"" + stackdriverMetricSetQuery.getMetricType() + "\" AND " +
                  "metric.label.instance_name=starts_with(\"" + canaryScope.getScope() + "\")")
-      .setIntervalStartTime(formatter.format(canaryScope.getStart()))
-      .setIntervalEndTime(formatter.format(canaryScope.getEnd()));
+      .setIntervalStartTime(canaryScope.getStart().toString())
+      .setIntervalEndTime(canaryScope.getEnd().toString());
 
     List<String> groupByFields = stackdriverMetricSetQuery.getGroupByFields();
 

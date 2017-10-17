@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -129,10 +128,9 @@ public class PrometheusMetricsService implements MetricsService {
     queryBuilder = addRateQuery(queryBuilder, queryConfig);
     queryBuilder = addSumQuery(queryBuilder, queryConfig);
 
-    DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
     List<PrometheusResults> prometheusResultsList = prometheusRemoteService.fetch(queryBuilder.toString(),
-                                                                                  formatter.format(canaryScope.getStart()),
-                                                                                  formatter.format(canaryScope.getEnd()),
+                                                                                  canaryScope.getStart().toString(),
+                                                                                  canaryScope.getEnd().toString(),
                                                                                   canaryScope.getStep());
     List<MetricSet> metricSetList = new ArrayList<>();
 

@@ -32,6 +32,7 @@ import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class AtlasFetchTask implements RetryableTask {
 
   private final ObjectMapper objectMapper = ObjectMapperFactory.getMapper();
@@ -91,8 +93,8 @@ public class AtlasFetchTask implements RetryableTask {
     try {
       atlasCanaryScope = objectMapper.readValue(scopeJson, AtlasCanaryScope.class);
     } catch (IOException e) {
-      e.printStackTrace();
-      throw new IllegalArgumentException(e);
+      log.error("Unable to parse JSON scope: " + scopeJson, e);
+      throw new RuntimeException(e);
     }
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,

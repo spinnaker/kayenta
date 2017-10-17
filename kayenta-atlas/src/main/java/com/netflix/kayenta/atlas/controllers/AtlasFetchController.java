@@ -53,9 +53,9 @@ public class AtlasFetchController {
                              @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
                              @ApiParam(defaultValue = "cluster") @RequestParam String type,
                              @RequestParam String scope,
-                             @ApiParam(defaultValue = "0") @RequestParam String start,
-                             @ApiParam(defaultValue = "6000000") @RequestParam String end,
-                             @ApiParam(defaultValue = "PT1M") @RequestParam Long step) throws IOException {
+                             @ApiParam(defaultValue = "2000-01-01T00:00:00Z") @RequestParam String start,
+                             @ApiParam(defaultValue = "2000-01-01T04:00:00Z") @RequestParam String end,
+                             @ApiParam(defaultValue = "300") @RequestParam Long step) throws IOException {
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);

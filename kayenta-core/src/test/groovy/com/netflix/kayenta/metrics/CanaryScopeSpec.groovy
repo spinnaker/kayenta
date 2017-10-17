@@ -61,10 +61,10 @@ class CanaryScopeSpec extends Specification {
     when:
     ObjectMapper objectMapper = ObjectMapperFactory.getMapper()
 
-    CanaryScope scope = objectMapper.readValue(scope1Json, CanaryScope.class)
+    CanaryScope scope = objectMapper.readValue(scope1Json, CanaryScope)
 
     then:
-    scope.extendedScopeParams.get("type") == "asg"
+    scope.extendedScopeParams.type == "asg"
   }
 
   @Unroll
@@ -75,7 +75,7 @@ class CanaryScopeSpec extends Specification {
     StringWriter jsonStream = new StringWriter()
     objectMapper.writeValue(jsonStream, scope1)
     String json = jsonStream.toString()
-    CanaryScope scope = objectMapper.readValue(json, CanaryScope.class)
+    CanaryScope scope = objectMapper.readValue(json, CanaryScope)
 
     then:
     scope == scope1
