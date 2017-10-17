@@ -22,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
+import java.time.Duration;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -30,6 +31,9 @@ public class AtlasCanaryScope extends CanaryScope {
 
   @NotNull
   private String type;
+
+  @NotNull
+  private Duration stepSize;
 
   public String cq() {
     if (type == null) {

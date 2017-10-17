@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -26,6 +28,7 @@ import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
+import com.netflix.kayenta.util.ObjectMapperFactory;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.pipeline.PipelineLauncher;
@@ -38,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.StringWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -59,6 +63,7 @@ public class CanaryController {
   private final StorageServiceRepository storageServiceRepository;
   private final List<CanaryScopeFactory> canaryScopeFactories;
   private final Registry registry;
+  private final ObjectMapper objectMapper = ObjectMapperFactory.getMapper();
 
   @Autowired
   public CanaryController(String currentInstanceId,
@@ -90,7 +95,7 @@ public class CanaryController {
                                @RequestParam(required = false) final String configurationAccountName,
                                @RequestParam(required = false) final String storageAccountName,
                                @ApiParam @RequestBody final CanaryExecutionRequest canaryExecutionRequest,
-                               @PathVariable String canaryConfigId) {
+                               @PathVariable String canaryConfigId) throws JsonProcessingException {
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);
@@ -131,8 +136,8 @@ public class CanaryController {
     CanaryScope controlScopeModel = canaryScopeFactory.buildCanaryScope(canaryExecutionRequest.getControlScope());
     CanaryScope experimentScopeModel = canaryScopeFactory.buildCanaryScope(canaryExecutionRequest.getExperimentScope());
 
-    System.out.println(controlScopeModel.toString());
-    System.out.println(experimentScopeModel.toString());
+    String controlScopeJson = objectMapper.writeValueAsString(controlScopeModel);
+    String experimentScopeJson = objectMapper.writeValueAsString(experimentScopeModel);
 
     Map<String, Object> fetchControlContext =
       Maps.newHashMap(
@@ -144,7 +149,7 @@ public class CanaryController {
           .put("storageAccountName", resolvedStorageAccountName)
           .put("configurationAccountName", resolvedConfigurationAccountName)
           .put("canaryConfigId", canaryConfigId)
-          .put(serviceType + "CanaryScope", controlScopeModel)
+          .put(serviceType + "CanaryScope", controlScopeJson)
           .build());
 
     Map<String, Object> fetchExperimentContext =
@@ -156,7 +161,7 @@ public class CanaryController {
           .put("storageAccountName", resolvedStorageAccountName)
           .put("configurationAccountName", resolvedConfigurationAccountName)
           .put("canaryConfigId", canaryConfigId)
-          .put(serviceType + "CanaryScope", experimentScopeModel)
+          .put(serviceType + "CanaryScope", experimentScopeJson)
           .build());
 
     Map<String, Object> mixMetricSetsContext =

@@ -27,6 +27,7 @@ import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
+import com.netflix.kayenta.util.ObjectMapperFactory;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
@@ -43,8 +44,7 @@ import java.util.Map;
 @Component
 public class AtlasFetchTask implements RetryableTask {
 
-  @Autowired
-  ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper = ObjectMapperFactory.getMapper();
 
   @Autowired
   AccountCredentialsRepository accountCredentialsRepository;
@@ -86,8 +86,14 @@ public class AtlasFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     String configurationAccountName = (String)context.get("configurationAccountName");
     String canaryConfigId = (String)context.get("canaryConfigId");
-    AtlasCanaryScope atlasCanaryScope =
-      objectMapper.convertValue(stage.getContext().get("atlasCanaryScope"), AtlasCanaryScope.class);
+    String scopeJson = (String)stage.getContext().get("atlasCanaryScope");
+    AtlasCanaryScope atlasCanaryScope;
+    try {
+      atlasCanaryScope = objectMapper.readValue(scopeJson, AtlasCanaryScope.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new IllegalArgumentException(e);
+    }
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);

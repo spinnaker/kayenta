@@ -73,8 +73,13 @@ public class StackdriverFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     String configurationAccountName = (String)context.get("configurationAccountName");
     String canaryConfigId = (String)context.get("canaryConfigId");
-    CanaryScope canaryScope =
-      objectMapper.convertValue(stage.getContext().get("stackdriverCanaryScope"), CanaryScope.class);
+    CanaryScope canaryScope;
+    try {
+      canaryScope = objectMapper.readValue((String)stage.getContext().get("stackdriverCanaryScope"), CanaryScope.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new IllegalArgumentException(e);
+    }
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);

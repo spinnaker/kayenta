@@ -20,9 +20,12 @@ import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopeFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Component
 public class AtlasCanaryScopeFactory implements CanaryScopeFactory {
@@ -39,12 +42,15 @@ public class AtlasCanaryScopeFactory implements CanaryScopeFactory {
     atlasCanaryScope.setStart(canaryScope.getStart());
     atlasCanaryScope.setEnd(canaryScope.getEnd());
     atlasCanaryScope.setStep(canaryScope.getStep());
+    atlasCanaryScope.setExtendedScopeParams(canaryScope.getExtendedScopeParams());
 
-    Map<String, String> extendedScopeParams = canaryScope.getExtendedScopeParams();
+    Map<String, String> extendedScopeParams = atlasCanaryScope.getExtendedScopeParams();
     if (extendedScopeParams == null) {
       extendedScopeParams = Collections.emptyMap();
     }
     atlasCanaryScope.setType(extendedScopeParams.getOrDefault("type", "cluster"));
+
+    atlasCanaryScope.setStepSize(Duration.of(atlasCanaryScope.getStep(), SECONDS));
 
     return atlasCanaryScope;
   }
