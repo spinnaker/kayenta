@@ -19,12 +19,9 @@ package com.netflix.kayenta.atlas.config;
 import com.netflix.kayenta.atlas.metrics.AtlasMetricsService;
 import com.netflix.kayenta.atlas.security.AtlasCredentials;
 import com.netflix.kayenta.atlas.security.AtlasNamedAccountCredentials;
-import com.netflix.kayenta.atlas.service.AtlasRemoteService;
 import com.netflix.kayenta.metrics.MetricsService;
-import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import com.squareup.okhttp.OkHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -51,10 +48,7 @@ public class AtlasConfiguration {
   }
 
   @Bean
-  MetricsService atlasMetricsService(AtlasSSEConverter atlasSSEConverter,
-                                     AtlasConfigurationProperties atlasConfigurationProperties,
-                                     RetrofitClientFactory retrofitClientFactory,
-                                     OkHttpClient okHttpClient,
+  MetricsService atlasMetricsService(AtlasConfigurationProperties atlasConfigurationProperties,
                                      AccountCredentialsRepository accountCredentialsRepository) throws IOException {
     AtlasMetricsService.AtlasMetricsServiceBuilder atlasMetricsServiceBuilder = AtlasMetricsService.builder();
 
@@ -75,15 +69,6 @@ public class AtlasConfiguration {
           .credentials(atlasCredentials);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
-        if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
-          AtlasRemoteService atlasRemoteService = retrofitClientFactory.createClient(AtlasRemoteService.class,
-                                                                                     atlasSSEConverter,
-                                                                                     atlasManagedAccount.getEndpoint(),
-                                                                                     okHttpClient);
-
-          atlasNamedAccountCredentialsBuilder.atlasRemoteService(atlasRemoteService);
-        }
-
         atlasNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
       }
 

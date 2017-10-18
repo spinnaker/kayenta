@@ -3,8 +3,9 @@ package com.netflix.kayenta.atlas;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.netflix.kayenta.atlas.backends.BackendsDatabase;
+import com.netflix.kayenta.atlas.backends.BackendDatabase;
 import com.netflix.kayenta.atlas.model.Backend;
+import com.netflix.kayenta.util.ObjectMapperFactory;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,7 +51,7 @@ public class BackendsTest {
   public void backendTest() throws IOException {
     List<Backend> backends = readBackends("backends.json");
 
-    BackendsDatabase db = new BackendsDatabase();
+    BackendDatabase db = new BackendDatabase();
     db.update(backends);
 
     Optional<Backend> ret = db.getOne("example", "example", "us-east-1", "test");

@@ -48,6 +48,9 @@ public class RetrofitClientFactory {
 
     Endpoint endpoint = newFixedEndpoint(baseUrl);
 
+    if (converter == null)
+      converter = jacksonConverterWithMapper();
+
     return new RestAdapter.Builder()
       .setEndpoint(endpoint)
       .setClient(new OkClient(okHttpClient))

@@ -22,7 +22,7 @@ import com.netflix.kayenta.security.AccountCredentials;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class BackendsDatabase {
+public class BackendDatabase {
 
   private List<Backend> backends = new ArrayList<>();
 

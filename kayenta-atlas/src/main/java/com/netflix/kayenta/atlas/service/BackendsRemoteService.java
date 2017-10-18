@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google, Inc.
+ * Copyright 2017 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.atlas.config;
+package com.netflix.kayenta.atlas.service;
 
-import com.netflix.kayenta.retrofit.config.RemoteService;
-import com.netflix.kayenta.security.AccountCredentials;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import com.netflix.kayenta.atlas.model.AtlasResults;
+import com.netflix.kayenta.atlas.model.Backend;
+import retrofit.http.GET;
+import retrofit.http.Query;
 
-import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.List;
 
-@Data
-public class AtlasManagedAccount {
+public interface BackendsRemoteService {
 
-  @NotNull
-  private String name;
-
-  private List<AccountCredentials.Type> supportedTypes;
+  @GET("/")
+  List<Backend> fetch();
 }
