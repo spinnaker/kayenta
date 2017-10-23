@@ -21,12 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.netflix.kayenta.canary.CanaryClassifierThresholdsConfig;
-import com.netflix.kayenta.canary.CanaryConfig;
-import com.netflix.kayenta.canary.CanaryExecutionRequest;
-import com.netflix.kayenta.canary.CanaryScope;
-import com.netflix.kayenta.canary.CanaryScopeFactory;
-import com.netflix.kayenta.canary.CanaryServiceConfig;
+import com.netflix.kayenta.canary.*;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
@@ -96,14 +91,17 @@ public class CanaryController {
     this.kayentaObjectMapper = kayentaObjectMapper;
   }
 
+  //
+  // Initiate a new canary run.
+  //
   // TODO(duftler): Allow for user to be passed in.
   @ApiOperation(value = "Initiate a canary pipeline")
   @RequestMapping(value = "/{canaryConfigId:.+}", consumes = "application/json", method = RequestMethod.POST)
-  public String initiateCanary(@RequestParam(required = false) final String metricsAccountName,
-                               @RequestParam(required = false) final String configurationAccountName,
-                               @RequestParam(required = false) final String storageAccountName,
-                               @ApiParam @RequestBody final CanaryExecutionRequest canaryExecutionRequest,
-                               @PathVariable String canaryConfigId) throws JsonProcessingException {
+  public CanaryExecutionResponse initiateCanary(@RequestParam(required = false) final String metricsAccountName,
+                                                @RequestParam(required = false) final String configurationAccountName,
+                                                @RequestParam(required = false) final String storageAccountName,
+                                                @ApiParam @RequestBody final CanaryExecutionRequest canaryExecutionRequest,
+                                                @PathVariable String canaryConfigId) throws JsonProcessingException {
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);
@@ -232,7 +230,25 @@ public class CanaryController {
       handleStartupFailure(pipeline, t);
     }
 
-    return pipeline.getId();
+    return CanaryExecutionResponse.builder().canaryExecutionId(pipeline.getId()).build();
+  }
+
+  //
+  // Get the results of a canary run by ID
+  //
+  @ApiOperation(value = "Retrieve status and results for a canary run")
+  @RequestMapping(value = "/{canaryConfigId:.+}/{canaryExecutionId:.+}", method = RequestMethod.GET)
+  public String getCanaryResults(@RequestParam(required = false) final String configurationAccountName,
+                                 @RequestParam(required = false) final String storageAccountName,
+                                 @PathVariable String canaryConfigId,
+                                 @PathVariable String canaryExecutionId) throws JsonProcessingException {
+    String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
+                                                                                     AccountCredentials.Type.OBJECT_STORE,
+                                                                                     accountCredentialsRepository);
+    String resolvedConfigurationAccountName = CredentialsHelper.resolveAccountByNameOrType(configurationAccountName,
+                                                                                           AccountCredentials.Type.CONFIGURATION_STORE,
+                                                                                           accountCredentialsRepository);
+    return "blah";
   }
 
   private Pipeline handleStartupFailure(Pipeline pipeline, Throwable failure) {
