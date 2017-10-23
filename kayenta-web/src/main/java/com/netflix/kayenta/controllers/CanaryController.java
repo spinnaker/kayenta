@@ -242,16 +242,12 @@ public class CanaryController {
   //
   @ApiOperation(value = "Retrieve status and results for a canary run")
   @RequestMapping(value = "/{canaryConfigId:.+}/{canaryExecutionId:.+}", method = RequestMethod.GET)
-  public CanaryExecutionStatusResponse getCanaryResults(@RequestParam(required = false) final String configurationAccountName,
-                                                        @RequestParam(required = false) final String storageAccountName,
+  public CanaryExecutionStatusResponse getCanaryResults(@RequestParam(required = false) final String storageAccountName,
                                                         @PathVariable String canaryConfigId,
                                                         @PathVariable String canaryExecutionId) throws JsonProcessingException {
     String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
                                                                                      AccountCredentials.Type.OBJECT_STORE,
                                                                                      accountCredentialsRepository);
-    String resolvedConfigurationAccountName = CredentialsHelper.resolveAccountByNameOrType(configurationAccountName,
-                                                                                           AccountCredentials.Type.CONFIGURATION_STORE,
-                                                                                           accountCredentialsRepository);
 
     StorageService storageService =
       storageServiceRepository
@@ -259,6 +255,19 @@ public class CanaryController {
         .orElseThrow(() -> new IllegalArgumentException("No storage service was configured; unable to retrieve results."));
 
     Pipeline pipeline = executionRepository.retrievePipeline(canaryExecutionId);
+    Stage judgeStage = pipeline.getStages().stream()
+      .filter(stage -> stage.getRefId().equals(REFID_JUDGE))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_JUDGE + "' in pipeline ID '" + canaryExecutionId + "'"));
+    Map<String, Object> judgeContext = judgeStage.getContext();
+
+    if (!judgeContext.containsKey("canaryConfigId")) {
+      throw new IllegalArgumentException("The judge stage does not contain a canaryConfigId reference");
+    }
+    String judgeCanaryConfigId = (String)judgeContext.get("canaryConfigId");
+    if (!judgeCanaryConfigId.equalsIgnoreCase(canaryConfigId)) {
+      throw new IllegalArgumentException("Execution ID does not belong to this configuration ('" + judgeCanaryConfigId + "' vs '" + canaryConfigId + "')");
+    }
 
     CanaryExecutionStatusResponse.CanaryExecutionStatusResponseBuilder canaryExecutionStatusResponseBuilder = CanaryExecutionStatusResponse.builder();
 
@@ -273,12 +282,6 @@ public class CanaryController {
     canaryExecutionStatusResponseBuilder.status(pipelineStatus);
 
     if (isComplete && pipelineStatus.equals("succeeded")) {
-      Stage judgeStage = pipeline.getStages().stream()
-        .filter(stage -> stage.getRefId().equals(REFID_JUDGE))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_JUDGE + "' in pipeline ID '" + canaryExecutionId + "'"));
-      Map<String, Object> judgeContext = judgeStage.getContext();
-
       if (judgeContext.containsKey("canaryJudgeResultId")) {
         String canaryJudgeResultId = (String)judgeContext.get("canaryJudgeResultId");
         canaryExecutionStatusResponseBuilder.result(storageService.loadObject(resolvedStorageAccountName, ObjectType.CANARY_JUDGE_RESULT, canaryJudgeResultId));
