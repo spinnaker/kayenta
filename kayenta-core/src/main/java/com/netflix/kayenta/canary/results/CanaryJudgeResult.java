@@ -17,10 +17,12 @@
 package com.netflix.kayenta.canary.results;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.netflix.kayenta.canary.CanaryConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
@@ -49,4 +51,8 @@ public class CanaryJudgeResult {
   @NotNull
   @Getter
   private CanaryJudgeScore score;
+
+  @Getter
+  @Setter
+  private CanaryConfig config;
 }
