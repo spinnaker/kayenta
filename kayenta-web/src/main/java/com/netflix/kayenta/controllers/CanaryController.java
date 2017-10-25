@@ -175,7 +175,6 @@ public class CanaryController {
       Maps.newHashMap(
         new ImmutableMap.Builder<String, Object>()
           .put("refId", REFID_FETCH_EXPERIMENT)
-          .put("refId", "3")
           .put("requisiteStageRefIds", Collections.singletonList(REFID_SET_CONTEXT))
           .put("user", "[anonymous]")
           .put("metricsAccountName", resolvedMetricsAccountName)
