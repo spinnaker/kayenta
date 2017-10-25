@@ -120,6 +120,7 @@ public class CanaryJudgeTask implements RetryableTask {
     }
 
     CanaryJudgeResult result = canaryJudge.judge(canaryConfig, orchestratorScoreThresholds, metricSetPairList);
+    result.setConfig(canaryConfig);
     String canaryJudgeResultId = UUID.randomUUID() + "";
 
     storageService.storeObject(resolvedStorageAccountName, ObjectType.CANARY_JUDGE_RESULT, canaryJudgeResultId, result);
