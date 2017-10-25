@@ -260,12 +260,18 @@ public class CanaryController {
       .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_JUDGE + "' in pipeline ID '" + canaryExecutionId + "'"));
     Map<String, Object> judgeContext = judgeStage.getContext();
 
-    if (!judgeContext.containsKey("canaryConfigId")) {
+    Stage contextStage = pipeline.getStages().stream()
+      .filter(stage -> stage.getRefId().equals(REFID_SET_CONTEXT))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_JUDGE + "' in pipeline ID '" + canaryExecutionId + "'"));
+    Map<String, Object> contextContext = contextStage.getContext();
+
+    if (!contextContext.containsKey("canaryConfigId")) {
       throw new IllegalArgumentException("The judge stage does not contain a canaryConfigId reference");
     }
-    String judgeCanaryConfigId = (String)judgeContext.get("canaryConfigId");
-    if (!judgeCanaryConfigId.equalsIgnoreCase(canaryConfigId)) {
-      throw new IllegalArgumentException("Execution ID does not belong to this configuration ('" + judgeCanaryConfigId + "' vs '" + canaryConfigId + "')");
+    String contextCanaryConfigId = (String)contextContext.get("canaryConfigId");
+    if (!contextCanaryConfigId.equalsIgnoreCase(canaryConfigId)) {
+      throw new IllegalArgumentException("Execution ID does not belong to this configuration ('" + contextCanaryConfigId + "' vs '" + canaryConfigId + "')");
     }
 
     CanaryExecutionStatusResponse.CanaryExecutionStatusResponseBuilder canaryExecutionStatusResponseBuilder = CanaryExecutionStatusResponse.builder();
