@@ -26,6 +26,6 @@ import java.util.List;
 
 public interface BackendsRemoteService {
 
-  @GET("/")
+  @GET("/api/v1/atlas/backends.json")
   List<Backend> fetch();
 }

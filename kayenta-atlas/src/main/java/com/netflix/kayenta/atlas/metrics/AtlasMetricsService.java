@@ -63,6 +63,9 @@ public class AtlasMetricsService implements MetricsService {
   @Autowired
   AccountCredentialsRepository accountCredentialsRepository;
 
+  @Autowired
+  RetrofitClientFactory retrofitClientFactory;
+
   @Override
   public String getType() {
     return "atlas";
@@ -80,7 +83,6 @@ public class AtlasMetricsService implements MetricsService {
 
     // TODO: (mgraff) clean this up, we should not be making these here even if this works...
     AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter();
-    RetrofitClientFactory retrofitClientFactory = new RetrofitClientFactory();
     OkHttpClient okHttpClient = new OkHttpClient();
 
     if (!(canaryScope instanceof AtlasCanaryScope)) {

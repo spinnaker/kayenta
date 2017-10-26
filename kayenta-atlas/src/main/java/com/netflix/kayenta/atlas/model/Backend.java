@@ -54,9 +54,10 @@ public class Backend {
   @Getter
   private List<String> regions;
 
+  // TODO: Should be a Duration (but that can't parse the minute format PT1M)
   @NotNull
   @Getter
-  private Duration step;
+  private String step;
 
   @NotNull
   @Getter
