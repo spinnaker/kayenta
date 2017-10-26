@@ -65,7 +65,7 @@ class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.95, mw: M
   }
 
 
-  override def classify(control: Metric, experiment: Metric, direction: ClassificationDirection): MetricClassification = {
+  override def classify(control: Metric, experiment: Metric, direction: MetricDirection): MetricClassification = {
 
     //Check if there is no-data for the experiment or control
     if(experiment.values.isEmpty || control.values.isEmpty){
@@ -82,11 +82,11 @@ class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.95, mw: M
     val ratio = StatUtils.mean(experiment.values)/StatUtils.mean(control.values)
     val (lowerBound, upperBound) = calculateBounds(mwResult)
 
-    if((direction == Increase || direction == Either) && mwResult.lowerConfidence > upperBound){
+    if((direction == MetricDirection.Increase || direction == MetricDirection.Either) && mwResult.lowerConfidence > upperBound){
       val reason = s"The metric was classified as $High"
       return MetricClassification(High, Some(reason), ratio)
 
-    }else if((direction == Decrease || direction == Either) && mwResult.upperConfidence < lowerBound){
+    }else if((direction == MetricDirection.Decrease || direction == MetricDirection.Either) && mwResult.upperConfidence < lowerBound){
       val reason = s"The metric was classified as $Low"
       return MetricClassification(Low, Some(reason), ratio)
     }

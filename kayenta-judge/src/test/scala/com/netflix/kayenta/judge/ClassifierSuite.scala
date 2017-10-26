@@ -16,7 +16,7 @@
 
 package com.netflix.kayenta.judge
 
-import com.netflix.kayenta.judge.classifiers.metric.{Either, Increase, Decrease}
+import com.netflix.kayenta.judge.classifiers.metric.MetricDirection
 import com.netflix.kayenta.judge.classifiers.metric.{Pass, High, Low}
 import com.netflix.kayenta.judge.classifiers.metric.MannWhitneyClassifier
 import com.netflix.kayenta.r.MannWhitney
@@ -53,7 +53,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Either)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
     mw.disconnect()
 
     assert(result.classification == Pass)
@@ -87,7 +87,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Either)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
     mw.disconnect()
 
     assert(result.classification == High)
@@ -121,7 +121,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Either)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
     mw.disconnect()
 
     assert(result.classification == Low)
@@ -155,7 +155,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Increase)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Increase)
     mw.disconnect()
 
     assert(result.classification == Pass)
@@ -189,7 +189,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Decrease)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
     mw.disconnect()
 
     assert(result.classification == Pass)
@@ -223,7 +223,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Increase)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Increase)
     mw.disconnect()
 
     assert(result.classification == High)
@@ -257,7 +257,7 @@ class ClassifierSuite extends FunSuite{
 
     val mw = new MannWhitney()
     val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, Decrease)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
     mw.disconnect()
 
     assert(result.classification == Low)
