@@ -81,7 +81,6 @@ public class AtlasMetricsService implements MetricsService {
                                       CanaryMetricConfig canaryMetricConfig,
                                       CanaryScope canaryScope) throws IOException {
 
-    // TODO: (mgraff) clean this up, we should not be making these here even if this works...
     AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter();
     OkHttpClient okHttpClient = new OkHttpClient();
 
