@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.netflix.kayenta.atlas.backends.BackendDatabase;
 import com.netflix.kayenta.atlas.model.Backend;
-import com.netflix.kayenta.util.ObjectMapperFactory;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,6 +25,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @Configuration
+@ComponentScan({
+  "com.netflix.kayenta.retrofit.config"
+})
 class BackendsConfig {}
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -33,7 +36,8 @@ public class BackendsTest {
   @Autowired
   private ResourceLoader resourceLoader;
 
-  private static final ObjectMapper objectMapper = ObjectMapperFactory.getMapper();
+  @Autowired
+  private ObjectMapper objectMapper;
 
   private String getFileContent(String filename) throws IOException {
     try (InputStream inputStream = resourceLoader.getResource("classpath:com/netflix/kayenta/atlas/" + filename).getInputStream()) {
