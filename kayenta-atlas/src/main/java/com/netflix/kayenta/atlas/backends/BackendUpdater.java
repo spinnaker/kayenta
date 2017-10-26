@@ -4,15 +4,12 @@ import com.netflix.kayenta.atlas.model.Backend;
 import com.netflix.kayenta.atlas.service.BackendsRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
-import com.netflix.kayenta.util.ObjectMapperFactory;
 import com.squareup.okhttp.OkHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import retrofit.converter.JacksonConverter;
 
 import java.util.List;
 
