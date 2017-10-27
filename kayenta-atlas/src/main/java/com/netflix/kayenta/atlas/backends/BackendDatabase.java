@@ -17,10 +17,8 @@
 package com.netflix.kayenta.atlas.backends;
 
 import com.netflix.kayenta.atlas.model.Backend;
-import com.netflix.kayenta.security.AccountCredentials;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class BackendDatabase {
 

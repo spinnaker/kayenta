@@ -92,10 +92,10 @@ public class AtlasMetricsService implements MetricsService {
     AtlasNamedAccountCredentials credentials = (AtlasNamedAccountCredentials)accountCredentialsRepository
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
-    Optional<Backend> backend = credentials.getBackendDatabase().getOne(atlasCanaryScope.getDeployment(),
-                                                                        atlasCanaryScope.getDataset(),
-                                                                        atlasCanaryScope.getRegion(),
-                                                                        atlasCanaryScope.getEnvironment());
+    Optional<Backend> backend = credentials.getBackendUpdater().getBackendDatabase().getOne(atlasCanaryScope.getDeployment(),
+                                                                                            atlasCanaryScope.getDataset(),
+                                                                                            atlasCanaryScope.getRegion(),
+                                                                                            atlasCanaryScope.getEnvironment());
     if (!backend.isPresent()) {
       throw new IllegalArgumentException("Unable to find an appropriate Atlas cluster");
     }
@@ -123,6 +123,7 @@ public class AtlasMetricsService implements MetricsService {
 
     // Gather a list of tags which have multiple values across all results.
     // This is the set of keys we wish to keep.
+    // TODO:  this should happen later, during the mixing stage, where we do this per metric name across both control and experiment
     List<String> interestingKeys = idToAtlasResultsMap.values()
       .stream()
       .flatMap(result -> result.getTags().entrySet().stream())

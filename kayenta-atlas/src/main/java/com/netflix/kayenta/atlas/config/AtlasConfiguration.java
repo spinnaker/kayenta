@@ -16,6 +16,9 @@
 
 package com.netflix.kayenta.atlas.config;
 
+import com.netflix.kayenta.atlas.backends.BackendDatabase;
+import com.netflix.kayenta.atlas.backends.BackendUpdater;
+import com.netflix.kayenta.atlas.backends.BackendUpdaterService;
 import com.netflix.kayenta.atlas.metrics.AtlasMetricsService;
 import com.netflix.kayenta.atlas.security.AtlasCredentials;
 import com.netflix.kayenta.atlas.security.AtlasNamedAccountCredentials;
@@ -23,6 +26,7 @@ import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -41,6 +45,9 @@ import java.util.List;
 @Slf4j
 public class AtlasConfiguration {
 
+  @Autowired
+  BackendUpdaterService backendUpdaterService;
+
   @Bean
   @ConfigurationProperties("kayenta.atlas")
   AtlasConfigurationProperties atlasConfigurationProperties() {
@@ -55,6 +62,7 @@ public class AtlasConfiguration {
     for (AtlasManagedAccount atlasManagedAccount : atlasConfigurationProperties.getAccounts()) {
       String name = atlasManagedAccount.getName();
       List<AccountCredentials.Type> supportedTypes = atlasManagedAccount.getSupportedTypes();
+      String backendsJsonUriPrefix = atlasManagedAccount.getBackendsJsonBaseUrl();
 
       log.info("Registering Atlas account {} with supported types {}.", name, supportedTypes);
 
@@ -62,11 +70,14 @@ public class AtlasConfiguration {
         AtlasCredentials
           .builder()
           .build();
+
+      BackendUpdater updater = BackendUpdater.builder().uri(backendsJsonUriPrefix).build();
       AtlasNamedAccountCredentials.AtlasNamedAccountCredentialsBuilder atlasNamedAccountCredentialsBuilder =
         AtlasNamedAccountCredentials
           .builder()
           .name(name)
-          .credentials(atlasCredentials);
+          .credentials(atlasCredentials)
+          .backendUpdater(updater);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         atlasNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
@@ -75,6 +86,8 @@ public class AtlasConfiguration {
       AtlasNamedAccountCredentials atlasNamedAccountCredentials = atlasNamedAccountCredentialsBuilder.build();
       accountCredentialsRepository.save(name, atlasNamedAccountCredentials);
       atlasMetricsServiceBuilder.accountName(name);
+
+      backendUpdaterService.add(atlasNamedAccountCredentials.getBackendUpdater());
     }
 
     AtlasMetricsService atlasMetricsService = atlasMetricsServiceBuilder.build();
