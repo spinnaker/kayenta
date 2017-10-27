@@ -33,9 +33,7 @@ public class BackendUpdater {
   public boolean run(RetrofitClientFactory retrofitClientFactory, ObjectMapper objectMapper) {
     OkHttpClient okHttpClient = new OkHttpClient();
 
-    log.info("Updating backends.json from " + uri);
     RemoteService remoteService = new RemoteService();
-    // TODO: get the url from the config for this account
     remoteService.setBaseUrl(uri);
     BackendsRemoteService backendsRemoteService = retrofitClientFactory.createClient(BackendsRemoteService.class,
                                                                                        new JacksonConverter(objectMapper),
