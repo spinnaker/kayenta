@@ -106,6 +106,7 @@ public class AtlasMetricsService implements MetricsService {
                                       atlasCanaryScope.getRegion(),
                                       atlasCanaryScope.getEnvironment());
     RemoteService remoteService = new RemoteService();
+    log.info("Using Atlas backend {}", uri);
     remoteService.setBaseUrl(uri);
     AtlasRemoteService atlasRemoteService = retrofitClientFactory.createClient(AtlasRemoteService.class,
                                                                                atlasSSEConverter,

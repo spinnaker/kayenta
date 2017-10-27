@@ -108,10 +108,10 @@ public class BackendsTest {
   @Test
   public void formattingReplacesAllThethings() {
     Backend backend = Backend.builder()
-      .cname("deployment=$(deployment).region=$(region).env=$(env).dataset=$(dataset)")
+      .cname("deployment=$(deployment).region=$(region).env=$(env).dataset=$(dataset).envAgain=$(env)")
       .port(80)
       .build();
-    assertEquals("http://deployment=main.region=xregion.env=test.dataset=global",
-                 backend.getUri("http", "main", "global", "xregion", "test"));
+    assertEquals("http://deployment=xmain.region=xregion.env=xtest.dataset=xglobal.envAgain=xtest",
+                 backend.getUri("http", "xmain", "xglobal", "xregion", "xtest"));
   }
 }

@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Builder
 @ToString
@@ -65,10 +66,10 @@ public class Backend {
 
   public String getUri(String method, String deployment, String dataset, String region, String environment) {
     String ret = cname
-      .replaceAll("\\$\\(deployment\\)", deployment)
-      .replaceAll("\\$\\(dataset\\)", dataset)
-      .replaceAll("\\$\\(region\\)", region)
-      .replaceAll("\\$\\(env\\)", environment);
+      .replace("$(deployment)", deployment)
+      .replace("$(dataset)", dataset)
+      .replace("$(region)", region)
+      .replace("$(env)", environment);
     if ((method.equals("http") && port != 80) || (method.equals("https") && port != 443))
       ret += ":" + port;
     return method + "://" + ret;
