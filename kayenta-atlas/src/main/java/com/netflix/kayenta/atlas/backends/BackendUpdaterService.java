@@ -49,10 +49,11 @@ public class BackendUpdaterService extends AbstractHealthIndicator {
 
   @Override
   protected synchronized void doHealthCheck(Health.Builder builder) throws Exception {
-    if (checksCompleted == backendUpdaters.size())
+    if (checksCompleted == backendUpdaters.size()) {
       builder.up();
-    else
+    } else {
       builder.down();
+    }
     builder.withDetail("checksCompleted", checksCompleted);
     builder.withDetail("checksExpected", backendUpdaters.size());
   }

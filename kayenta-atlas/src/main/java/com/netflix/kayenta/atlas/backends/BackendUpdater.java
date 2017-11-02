@@ -9,7 +9,6 @@ import com.squareup.okhttp.OkHttpClient;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import retrofit.RetrofitError;
 import retrofit.converter.JacksonConverter;
 
@@ -32,13 +31,12 @@ public class BackendUpdater {
 
   public boolean run(RetrofitClientFactory retrofitClientFactory, ObjectMapper objectMapper) {
     OkHttpClient okHttpClient = new OkHttpClient();
-
     RemoteService remoteService = new RemoteService();
     remoteService.setBaseUrl(uri);
     BackendsRemoteService backendsRemoteService = retrofitClientFactory.createClient(BackendsRemoteService.class,
-                                                                                       new JacksonConverter(objectMapper),
-                                                                                       remoteService,
-                                                                                       okHttpClient);
+                                                                                     new JacksonConverter(objectMapper),
+                                                                                     remoteService,
+                                                                                     okHttpClient);
     try {
       List<Backend> backends = backendsRemoteService.fetch();
       backendDatabase.update(backends);
