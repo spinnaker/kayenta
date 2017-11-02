@@ -194,7 +194,15 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
     //Use the Mann-Whitney algorithm to compare the experiment and control populations
     val mannWhitney = new MannWhitneyClassifier(fraction = 0.25, confLevel = 0.98, mw)
 
-    val metricClassification = mannWhitney.classify(transformedControl, transformedExperiment, MetricDirection.Either)
+    // TODO: (mgraff) this feels gross and fragile.
+    val canaryOptions: Map[String, Any] = if (metricConfig.getAnalysisConfigurations == null) Map() else metricConfig.getAnalysisConfigurations.asScala.toMap
+    val directionalityString = canaryOptions
+      .getOrElse("canary", Map()).asInstanceOf[Map[String, Any]]
+      .getOrElse("directionality", "either").asInstanceOf[String]
+
+    val directionality = MetricDirection.parse(directionalityString)
+
+    val metricClassification = mannWhitney.classify(transformedControl, transformedExperiment, directionality)
 
     CanaryAnalysisResult.builder()
       .name(metric.getName)
