@@ -16,7 +16,6 @@
 
 package com.netflix.kayenta.judge
 
-import java.util
 import java.util.Collections
 
 import org.scalatest.FunSuite
