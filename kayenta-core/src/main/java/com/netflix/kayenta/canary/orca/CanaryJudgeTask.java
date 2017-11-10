@@ -32,15 +32,18 @@ import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class CanaryJudgeTask implements RetryableTask {
 
@@ -107,8 +110,14 @@ public class CanaryJudgeTask implements RetryableTask {
       canaryJudge = canaryJudges.get(0);
     }
 
-    Map<String, Object> canaryExecutionRequestMap = (Map<String, Object>)context.get("canaryExecutionRequest");
-    CanaryExecutionRequest canaryExecutionRequest = objectMapper.convertValue(canaryExecutionRequestMap, CanaryExecutionRequest.class);
+    String canaryExecutionRequestJSON = (String)context.get("canaryExecutionRequest");
+    CanaryExecutionRequest canaryExecutionRequest = null;
+    try {
+      canaryExecutionRequest = objectMapper.readValue(canaryExecutionRequestJSON, CanaryExecutionRequest.class);
+    } catch (IOException e) {
+      log.error("Cannot deserialize canaryExecutionRequest", e);
+      throw new IllegalArgumentException("Cannot deserialize canaryExecutionRequest", e);
+    }
 
     CanaryJudgeResult result = canaryJudge.judge(canaryConfig, orchestratorScoreThresholds, metricSetPairList);
     String canaryJudgeResultId = UUID.randomUUID() + "";

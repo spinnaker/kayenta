@@ -18,7 +18,6 @@ package com.netflix.kayenta.storage;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.netflix.kayenta.canary.CanaryConfig;
-import com.netflix.kayenta.canary.results.CanaryJudgeResult;
 import com.netflix.kayenta.canary.results.CanaryResult;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricSetPair;

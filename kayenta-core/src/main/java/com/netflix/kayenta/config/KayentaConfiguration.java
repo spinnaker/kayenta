@@ -16,6 +16,9 @@
 
 package com.netflix.kayenta.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.netflix.kayenta.metrics.MapBackedMetricsServiceRepository;
 import com.netflix.kayenta.metrics.MetricSetMixerService;
 import com.netflix.kayenta.metrics.MetricsServiceRepository;
@@ -27,6 +30,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 @Configuration
 @ComponentScan({
@@ -61,5 +68,19 @@ public class KayentaConfiguration {
   @ConditionalOnMissingBean(StorageServiceRepository.class)
   StorageServiceRepository storageServiceRepository() {
     return new MapBackedStorageServiceRepository();
+  }
+
+  @Bean
+  @Primary
+  ObjectMapper kayentaObjectMapper() {
+    ObjectMapper objectMapper = new ObjectMapper()
+      .setSerializationInclusion(NON_NULL)
+      .disable(FAIL_ON_UNKNOWN_PROPERTIES)
+      .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+    JavaTimeModule module = new JavaTimeModule();
+    objectMapper.registerModule(module);
+
+    return objectMapper;
   }
 }
