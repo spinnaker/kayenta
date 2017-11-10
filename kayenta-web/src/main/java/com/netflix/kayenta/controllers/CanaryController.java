@@ -208,6 +208,7 @@ public class CanaryController {
           .put("storageAccountName", resolvedStorageAccountName)
           .put("metricSetPairListId", "${ #stage('Mix Control and Experiment Results')['context']['metricSetPairListId']}")
           .put("orchestratorScoreThresholds", orchestratorScoreThresholds)
+          .put("canaryExecutionRequest", canaryExecutionRequest)
           .build());
 
     Duration controlDuration = Duration.between(controlScopeModel.getStart(), controlScopeModel.getEnd());
@@ -295,7 +296,7 @@ public class CanaryController {
     if (isComplete && pipelineStatus.equals("succeeded")) {
       if (judgeContext.containsKey("canaryJudgeResultId")) {
         String canaryJudgeResultId = (String)judgeContext.get("canaryJudgeResultId");
-        canaryExecutionStatusResponseBuilder.result(storageService.loadObject(resolvedStorageAccountName, ObjectType.CANARY_JUDGE_RESULT, canaryJudgeResultId));
+        canaryExecutionStatusResponseBuilder.result(storageService.loadObject(resolvedStorageAccountName, ObjectType.CANARY_RESULT, canaryJudgeResultId));
       }
     }
 

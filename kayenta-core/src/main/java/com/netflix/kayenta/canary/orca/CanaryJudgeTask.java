@@ -18,11 +18,9 @@ package com.netflix.kayenta.canary.orca;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.netflix.kayenta.canary.CanaryClassifierThresholdsConfig;
-import com.netflix.kayenta.canary.CanaryConfig;
-import com.netflix.kayenta.canary.CanaryJudge;
-import com.netflix.kayenta.canary.CanaryJudgeConfig;
+import com.netflix.kayenta.canary.*;
 import com.netflix.kayenta.canary.results.CanaryJudgeResult;
+import com.netflix.kayenta.canary.results.CanaryResult;
 import com.netflix.kayenta.metrics.MetricSetPair;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -109,10 +107,19 @@ public class CanaryJudgeTask implements RetryableTask {
       canaryJudge = canaryJudges.get(0);
     }
 
+    Map<String, Object> canaryExecutionRequestMap = (Map<String, Object>)context.get("canaryExecutionRequest");
+    CanaryExecutionRequest canaryExecutionRequest = objectMapper.convertValue(canaryExecutionRequestMap, CanaryExecutionRequest.class);
+
     CanaryJudgeResult result = canaryJudge.judge(canaryConfig, orchestratorScoreThresholds, metricSetPairList);
     String canaryJudgeResultId = UUID.randomUUID() + "";
 
-    storageService.storeObject(resolvedStorageAccountName, ObjectType.CANARY_JUDGE_RESULT, canaryJudgeResultId, result);
+    CanaryResult canaryResult = CanaryResult.builder()
+      .judgeResult(result)
+      .config(canaryConfig)
+      .canaryExecutionRequest(canaryExecutionRequest)
+      .build();
+
+    storageService.storeObject(resolvedStorageAccountName, ObjectType.CANARY_RESULT, canaryJudgeResultId, canaryResult);
 
     Map<String, Object> outputs =
       ImmutableMap.<String, Object>builder()
