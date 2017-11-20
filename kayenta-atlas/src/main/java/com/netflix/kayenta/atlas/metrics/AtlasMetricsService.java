@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -84,6 +85,8 @@ public class AtlasMetricsService implements MetricsService {
                                       CanaryScope canaryScope) throws IOException {
 
     OkHttpClient okHttpClient = new OkHttpClient();
+    okHttpClient.setConnectTimeout(90, TimeUnit.SECONDS);
+    okHttpClient.setReadTimeout(90, TimeUnit.SECONDS);
 
     if (!(canaryScope instanceof AtlasCanaryScope)) {
       throw new IllegalArgumentException("Canary scope not instance of AtlasCanaryScope: " + canaryScope);
