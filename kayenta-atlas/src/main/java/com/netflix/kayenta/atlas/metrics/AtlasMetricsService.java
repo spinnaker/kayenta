@@ -42,10 +42,7 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -85,6 +82,7 @@ public class AtlasMetricsService implements MetricsService {
                                       CanaryScope canaryScope) throws IOException {
 
     OkHttpClient okHttpClient = new OkHttpClient();
+    // TODO: (mgraff, duftler) -- we should find out the defaults, and if too small, make this reasonable / configurable
     okHttpClient.setConnectTimeout(90, TimeUnit.SECONDS);
     okHttpClient.setReadTimeout(90, TimeUnit.SECONDS);
 
@@ -127,7 +125,8 @@ public class AtlasMetricsService implements MetricsService {
                                                                    atlasCanaryScope.getStart().toEpochMilli(),
                                                                    atlasCanaryScope.getEnd().toEpochMilli(),
                                                                    isoStep,
-                                                                   credentials.getFetchId());
+                                                                   credentials.getFetchId(),
+                                                                   UUID.randomUUID() + "");
     Map<String, AtlasResults> idToAtlasResultsMap = AtlasResultsHelper.merge(atlasResultsList);
     List<MetricSet> metricSetList = new ArrayList<>();
 
