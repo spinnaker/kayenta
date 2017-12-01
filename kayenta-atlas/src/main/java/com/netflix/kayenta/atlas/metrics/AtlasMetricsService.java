@@ -38,6 +38,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
@@ -50,33 +51,26 @@ import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
+@Builder
 @Slf4j
 public class AtlasMetricsService implements MetricsService {
 
   @NotNull
   @Singular
   @Getter
-  protected List<String> accountNames;
+  private List<String> accountNames;
 
+  @Autowired
   private final AccountCredentialsRepository accountCredentialsRepository;
+
+  @Autowired
   private final RetrofitClientFactory retrofitClientFactory;
+
+  @Autowired
   private final AtlasSSEConverter atlasSSEConverter;
+
+  @Autowired
   private final Registry registry;
-
-  Timer atlasRequestTimer;
-
-  @Inject
-  public AtlasMetricsService(AccountCredentialsRepository accountCredentialsRepository,
-                             RetrofitClientFactory retrofitClientFactory,
-                             AtlasSSEConverter atlasSSEConverter,
-                             Registry registry) {
-    this.accountCredentialsRepository = accountCredentialsRepository;
-    this.retrofitClientFactory = retrofitClientFactory;
-    this.atlasSSEConverter = atlasSSEConverter;
-    this.registry = registry;
-
-    atlasRequestTimer = registry.timer("atlas.fetchTime");
-  }
 
   @Override
   public String getType() {
@@ -145,7 +139,7 @@ public class AtlasMetricsService implements MetricsService {
                                                   UUID.randomUUID() + "");
     } finally {
       long end = registry.clock().monotonicTime();
-      atlasRequestTimer.record(end - start, TimeUnit.NANOSECONDS);
+      registry.timer("atlas.fetchTime").record(end - start, TimeUnit.NANOSECONDS);
     }
     Map<String, AtlasResults> idToAtlasResultsMap = AtlasResultsHelper.merge(atlasResultsList);
     List<MetricSet> metricSetList = new ArrayList<>();
