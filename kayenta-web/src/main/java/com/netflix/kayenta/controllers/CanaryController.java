@@ -66,6 +66,7 @@ public class CanaryController {
   private final Registry registry;
   private final ObjectMapper kayentaObjectMapper;
   private final Id pipelineRunId;
+  private final Id failureId;
 
   @Autowired
   public CanaryController(String currentInstanceId,
@@ -91,6 +92,7 @@ public class CanaryController {
     this.registry = registry;
     this.kayentaObjectMapper = kayentaObjectMapper;
     this.pipelineRunId = registry.createId("canary.pipelines.initiated");
+    this.failureId = registry.createId("canary.pipelines.startupFailed");
   }
 
   //
@@ -316,6 +318,8 @@ public class CanaryController {
     log.error("Failed to start {} {}", execution.getType(), execution.getId(), failure);
     executionRepository.updateStatus(execution.getId(), status);
     executionRepository.cancel(execution.getId(), canceledBy, reason);
+
+    registry.counter(failureId).increment();
 
     return executionRepository.retrieve(execution.getType(), execution.getId());
   }

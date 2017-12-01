@@ -31,13 +31,15 @@ import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
+import com.netflix.spectator.api.Registry;
+import com.netflix.spectator.api.Timer;
 import com.squareup.okhttp.OkHttpClient;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.Duration;
@@ -48,23 +50,33 @@ import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
-@Builder
 @Slf4j
 public class AtlasMetricsService implements MetricsService {
 
   @NotNull
   @Singular
   @Getter
-  private List<String> accountNames;
+  protected List<String> accountNames;
 
-  @Autowired
-  AccountCredentialsRepository accountCredentialsRepository;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final RetrofitClientFactory retrofitClientFactory;
+  private final AtlasSSEConverter atlasSSEConverter;
+  private final Registry registry;
 
-  @Autowired
-  RetrofitClientFactory retrofitClientFactory;
+  Timer atlasRequestTimer;
 
-  @Autowired
-  AtlasSSEConverter atlasSSEConverter;
+  @Inject
+  public AtlasMetricsService(AccountCredentialsRepository accountCredentialsRepository,
+                             RetrofitClientFactory retrofitClientFactory,
+                             AtlasSSEConverter atlasSSEConverter,
+                             Registry registry) {
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.retrofitClientFactory = retrofitClientFactory;
+    this.atlasSSEConverter = atlasSSEConverter;
+    this.registry = registry;
+
+    atlasRequestTimer = registry.timer("atlas.fetchTime");
+  }
 
   @Override
   public String getType() {
@@ -121,12 +133,20 @@ public class AtlasMetricsService implements MetricsService {
     AtlasCanaryMetricSetQueryConfig atlasMetricSetQuery = (AtlasCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
     String decoratedQuery = atlasMetricSetQuery.getQ() + "," + atlasCanaryScope.cq();
     String isoStep = Duration.of(atlasCanaryScope.getStep(), SECONDS) + "";
-    List<AtlasResults> atlasResultsList = atlasRemoteService.fetch(decoratedQuery,
-                                                                   atlasCanaryScope.getStart().toEpochMilli(),
-                                                                   atlasCanaryScope.getEnd().toEpochMilli(),
-                                                                   isoStep,
-                                                                   credentials.getFetchId(),
-                                                                   UUID.randomUUID() + "");
+
+    long start = registry.clock().monotonicTime();
+    List < AtlasResults > atlasResultsList;
+    try {
+      atlasResultsList = atlasRemoteService.fetch(decoratedQuery,
+                                                  atlasCanaryScope.getStart().toEpochMilli(),
+                                                  atlasCanaryScope.getEnd().toEpochMilli(),
+                                                  isoStep,
+                                                  credentials.getFetchId(),
+                                                  UUID.randomUUID() + "");
+    } finally {
+      long end = registry.clock().monotonicTime();
+      atlasRequestTimer.record(end - start, TimeUnit.NANOSECONDS);
+    }
     Map<String, AtlasResults> idToAtlasResultsMap = AtlasResultsHelper.merge(atlasResultsList);
     List<MetricSet> metricSetList = new ArrayList<>();
 
