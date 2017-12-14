@@ -107,9 +107,9 @@ public class SynchronousQueryProcessor {
                                                      CanaryScope canaryScope) {
     try {
       String metricSetListId = processQuery(metricsAccountName, storageAccountName, canaryConfig, metricIndex, canaryScope);
-      Map outputs = Collections.singletonMap("metricSetListId", metricSetListId);
+      Map outputs = Collections.singletonMap("metricSetId", metricSetListId);
 
-      return new TaskResult(ExecutionStatus.SUCCEEDED, outputs);
+      return new TaskResult(ExecutionStatus.SUCCEEDED, Collections.emptyMap(), outputs);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

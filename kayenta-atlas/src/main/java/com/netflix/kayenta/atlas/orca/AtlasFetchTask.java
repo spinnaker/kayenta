@@ -92,8 +92,8 @@ public class AtlasFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     Map<String, Object> canaryConfigMap = (Map<String, Object>)context.get("canaryConfig");
     CanaryConfig canaryConfig = kayentaObjectMapper.convertValue(canaryConfigMap, CanaryConfig.class);
-    String scopeJson = (String)stage.getContext().get("canaryScope");
-    int metricIndex = (Integer)stage.getContext().get("metricIndex");
+    String scopeJson = (String)context.get("canaryScope");
+    int metricIndex = (Integer)context.get("metricIndex");
     AtlasCanaryScope atlasCanaryScope;
     try {
       atlasCanaryScope = kayentaObjectMapper.readValue(scopeJson, AtlasCanaryScope.class);

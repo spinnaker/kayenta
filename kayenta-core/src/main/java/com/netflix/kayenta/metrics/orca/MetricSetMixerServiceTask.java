@@ -115,8 +115,12 @@ public class MetricSetMixerServiceTask implements RetryableTask {
   }
 
   private List<String> getMetricSetListIds(Execution execution, String stagePrefix) {
-    return execution.getStages().stream()
-      .filter(stage -> stage.getRefId().startsWith(stagePrefix))
+    List<Stage> stages = execution.getStages();
+    return stages.stream()
+      .filter(stage -> {
+        String refId = stage.getRefId();
+        return refId != null && refId.startsWith(stagePrefix);
+      })
       .map(stage -> (String)stage.getOutputs().get("metricSetId"))
       .collect(Collectors.toList());
   }

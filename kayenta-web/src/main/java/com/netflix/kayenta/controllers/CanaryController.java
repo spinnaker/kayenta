@@ -183,8 +183,14 @@ public class CanaryController {
         .withStage("metricSetMixer", "Mix Control and Experiment Results", mixMetricSetsContext)
         .withStage("canaryJudge", "Perform Analysis", canaryJudgeContext);
 
-    controlFetchContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("stageType"), (String)context.get("refId")));
-    fetchExperimentContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("stageType"), (String)context.get("refId")));
+    controlFetchContexts.forEach((context) ->
+                                   pipelineBuilder.withStage((String)context.get("stageType"),
+                                                             (String)context.get("refId"),
+                                                             context));
+    fetchExperimentContexts.forEach((context) ->
+                                      pipelineBuilder.withStage((String)context.get("stageType"),
+                                                                (String)context.get("refId"),
+                                                                context));
 
     Execution pipeline = pipelineBuilder
       .withLimitConcurrent(false)

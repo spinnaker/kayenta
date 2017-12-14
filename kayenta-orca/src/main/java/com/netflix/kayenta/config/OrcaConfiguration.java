@@ -82,9 +82,4 @@ public class OrcaConfiguration {
   DefaultExceptionHandler defaultExceptionHandler() {
     return new DefaultExceptionHandler();
   }
-
-  @Bean
-  public ObjectMapper mapper(ObjectMapper kayentaObjectMapper) {
-    return kayentaObjectMapper;
-  }
 }
