@@ -58,8 +58,8 @@ import java.util.stream.Stream;
 public class CanaryController {
 
   private final String REFID_SET_CONTEXT = "setupContext";
-  private final String REFID_FETCH_CONTROL = "fetchControl";
-  private final String REFID_FETCH_EXPERIMENT = "fetchExperiment";
+  private final String REFID_FETCH_CONTROL_PREFIX = "fetchControl";
+  private final String REFID_FETCH_EXPERIMENT_PREFIX = "fetchExperiment";
   private final String REFID_MIX_METRICS = "mixMetrics";
   private final String REFID_JUDGE = "judge";
 
@@ -89,11 +89,7 @@ public class CanaryController {
     this.accountCredentialsRepository = accountCredentialsRepository;
     this.storageServiceRepository = storageServiceRepository;
 
-    if (canaryScopeFactories.isPresent()) {
-      this.canaryScopeFactories = canaryScopeFactories.get();
-    } else {
-      this.canaryScopeFactories = Collections.emptyList();
-    }
+    this.canaryScopeFactories = canaryScopeFactories.orElseGet(Collections::emptyList);
 
     this.registry = registry;
     this.kayentaObjectMapper = kayentaObjectMapper;
@@ -139,52 +135,22 @@ public class CanaryController {
           .put("configurationAccountName", resolvedConfigurationAccountName)
           .build());
 
-    int metricCount = canaryConfig.getMetrics().size();
+    List<Map<String, Object>> fetchExperimentContexts = generateFetchScopes(canaryConfig, canaryExecutionRequest, true,resolvedMetricsAccountName, resolvedStorageAccountName);
+    List<Map<String, Object>> controlFetchContexts = generateFetchScopes(canaryConfig, canaryExecutionRequest, false,resolvedMetricsAccountName, resolvedStorageAccountName);
 
-    List<Map<String, Object>> list = IntStream.range(0, metricCount)
-      .mapToObj(index -> {
-        CanaryMetricConfig metric = canaryConfig.getMetrics().get(index);
-        String serviceType = metric.getQuery().getServiceType();
-        CanaryScopeFactory canaryScopeFactory = getScopeFactoryForServiceType(serviceType);
-        CanaryScope controlScopeModel = canaryScopeFactory.buildCanaryScope(canaryExecutionRequest.getControlScope());
+    int maxMetricIndex = canaryConfig.getMetrics().size() - 1; // 0 based naming, so we want the last index value, not the count
+    String lastControlFetchRefid = REFID_FETCH_CONTROL_PREFIX + maxMetricIndex;
+    String lastExperimentFetchRefid = REFID_FETCH_EXPERIMENT_PREFIX + maxMetricIndex;
 
-        String scopeJson;
-        try {
-          scopeJson = kayentaObjectMapper.writeValueAsString(controlScopeModel);
-        } catch (JsonProcessingException e) {
-          throw new IllegalArgumentException("Cannot render scope to json"); // TODO: this seems like cheating
-        }
-
-        String currentStageId = "fetchControl" + index;
-        String previousStageId;
-        if (index == 0) {
-          previousStageId = REFID_SET_CONTEXT;
-        } else {
-          previousStageId = "fetchControl" + (index - 1);
-        }
-
-        return Maps.newHashMap(
-          new ImmutableMap.Builder<String, Object>()
-            .put("refId", currentStageId)
-            .put("metricIndex", index)
-            .put("requisiteStageRefIds", Collections.singletonList(previousStageId))
-            .put("user", "[anonymous]")
-            .put("metricsAccountName", resolvedMetricsAccountName) // TODO: How can this work?  We'd need to look this up per type
-            .put("storageAccountName", resolvedStorageAccountName)
-            .put(serviceType + "CanaryScope", scopeJson)
-            .build());
-
-      }).collect(Collectors.toList());
-
-    int maxMetricIndex = metricCount - 1; // 0 based naming, so we want the last index value, not the count
     Map<String, Object> mixMetricSetsContext =
       Maps.newHashMap(
         new ImmutableMap.Builder<String, Object>()
           .put("refId", REFID_MIX_METRICS)
-          .put("requisiteStageRefIds", new ImmutableList.Builder().add("fetchControl" + maxMetricIndex).add("fetchExperiment" + maxMetricIndex))
+          .put("requisiteStageRefIds", new ImmutableList.Builder().add(lastControlFetchRefid).add(lastExperimentFetchRefid).build())
           .put("user", "[anonymous]")
           .put("storageAccountName", resolvedStorageAccountName)
-          // TODO: make the stage itself find the list of metrics, or write a stage that does this.
+          .put("controlRefidPrefix", REFID_FETCH_CONTROL_PREFIX)
+          .put("experimentRefidPrefix", REFID_FETCH_EXPERIMENT_PREFIX)
           .build());
 
     CanaryClassifierThresholdsConfig orchestratorScoreThresholds = canaryExecutionRequest.getThresholds();
@@ -214,10 +180,11 @@ public class CanaryController {
         .withPipelineConfigId(UUID.randomUUID() + "")
         .withStage("setupCanary", "Setup Canary", setupCanaryContext)
         .withStage("setupCanary", "Setup Canary", setupCanaryContext)
-        .withStage("fetchControl", "Fetch Control from " + serviceType, fetchControlContext)
-        .withStage("fetchExperiment", "Fetch Experiment from " + serviceType, fetchExperimentContext)
         .withStage("metricSetMixer", "Mix Control and Experiment Results", mixMetricSetsContext)
         .withStage("canaryJudge", "Perform Analysis", canaryJudgeContext);
+
+    controlFetchContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("refId"), (String)context.get("refId")));
+    fetchExperimentContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("refId"), (String)context.get("refId")));
 
     Execution pipeline = pipelineBuilder
       .withLimitConcurrent(false)
@@ -340,5 +307,41 @@ public class CanaryController {
       .stream()
       .filter((f) -> f.handles(serviceType)).findFirst()
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve canary scope factory for '" + serviceType + "'."));
+  }
+
+  private List<Map<String, Object>> generateFetchScopes(CanaryConfig canaryConfig,
+                                                        CanaryExecutionRequest executionRequest,
+                                                        boolean isCanary,
+                                                        String resolvedMetricsAccountName,
+                                                        String resolvedStorageAccountName) {
+    return IntStream.range(0, canaryConfig.getMetrics().size())
+      .mapToObj(index -> {
+        CanaryMetricConfig metric = canaryConfig.getMetrics().get(index);
+        String serviceType = metric.getQuery().getServiceType();
+        CanaryScopeFactory canaryScopeFactory = getScopeFactoryForServiceType(serviceType);
+        CanaryScope inspecificScope = (isCanary ? executionRequest.getExperimentScope() : executionRequest.getControlScope());
+        CanaryScope scopeModel = canaryScopeFactory.buildCanaryScope(inspecificScope);
+        String stagePrefix = (isCanary ? REFID_FETCH_EXPERIMENT_PREFIX : REFID_FETCH_CONTROL_PREFIX);
+        String scopeJson;
+        try {
+          scopeJson = kayentaObjectMapper.writeValueAsString(scopeModel);
+        } catch (JsonProcessingException e) {
+          throw new IllegalArgumentException("Cannot render scope to json"); // TODO: this seems like cheating
+        }
+
+        String currentStageId = stagePrefix + index;
+        String previousStageId = (index == 0) ? REFID_SET_CONTEXT : stagePrefix + (index - 1);
+
+        return Maps.newHashMap(
+          new ImmutableMap.Builder<String, Object>()
+            .put("refId", currentStageId)
+            .put("metricIndex", index)
+            .put("requisiteStageRefIds", Collections.singletonList(previousStageId))
+            .put("user", "[anonymous]")
+            .put("metricsAccountName", resolvedMetricsAccountName) // TODO: How can this work?  We'd need to look this up per type
+            .put("storageAccountName", resolvedStorageAccountName)
+            .put(serviceType + "CanaryScope", scopeJson)
+            .build());
+      }).collect(Collectors.toList());
   }
 }

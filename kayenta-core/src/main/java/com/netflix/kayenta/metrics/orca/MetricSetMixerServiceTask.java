@@ -28,12 +28,14 @@ import com.netflix.kayenta.storage.StorageServiceRepository;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
+import com.netflix.spinnaker.orca.pipeline.model.Execution;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class MetricSetMixerServiceTask implements RetryableTask {
@@ -63,8 +65,8 @@ public class MetricSetMixerServiceTask implements RetryableTask {
   public TaskResult execute(Stage stage) {
     Map<String, Object> context = stage.getContext();
     String storageAccountName = (String)context.get("storageAccountName");
-    List<String> controlMetricSetListIds = (List<String>)context.get("controlMetricSetListIds");
-    List<String> experimentMetricSetListIds = (List<String>)context.get("experimentMetricSetListIds");
+    List<String> controlMetricSetListIds = getMetricSetListIds(stage.getExecution(), (String)context.get("controlRefidPrefix"));
+    List<String> experimentMetricSetListIds = getMetricSetListIds(stage.getExecution(), (String)context.get("experimentRefidPrefix"));
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
                                                                               AccountCredentials.Type.OBJECT_STORE,
                                                                               accountCredentialsRepository);
@@ -101,5 +103,12 @@ public class MetricSetMixerServiceTask implements RetryableTask {
     Map outputs = Collections.singletonMap("metricSetPairListId", aggregatedMetricSetPairListId);
 
     return new TaskResult(ExecutionStatus.SUCCEEDED, outputs);
+  }
+
+  private List<String> getMetricSetListIds(Execution execution, String stagePrefix) {
+    return execution.getStages().stream()
+      .filter(stage -> stage.getRefId().startsWith(stagePrefix))
+      .map(stage -> (String)stage.getContext().get("metricSetId"))
+      .collect(Collectors.toList());
   }
 }
