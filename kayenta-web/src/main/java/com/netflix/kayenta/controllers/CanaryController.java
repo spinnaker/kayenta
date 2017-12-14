@@ -183,8 +183,8 @@ public class CanaryController {
         .withStage("metricSetMixer", "Mix Control and Experiment Results", mixMetricSetsContext)
         .withStage("canaryJudge", "Perform Analysis", canaryJudgeContext);
 
-    controlFetchContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("refId"), (String)context.get("refId")));
-    fetchExperimentContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("refId"), (String)context.get("refId")));
+    controlFetchContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("stageType"), (String)context.get("refId")));
+    fetchExperimentContexts.forEach((context) -> pipelineBuilder.withStage((String)context.get("stageType"), (String)context.get("refId")));
 
     Execution pipeline = pipelineBuilder
       .withLimitConcurrent(false)
@@ -340,7 +340,8 @@ public class CanaryController {
             .put("user", "[anonymous]")
             .put("metricsAccountName", resolvedMetricsAccountName) // TODO: How can this work?  We'd need to look this up per type
             .put("storageAccountName", resolvedStorageAccountName)
-            .put(serviceType + "CanaryScope", scopeJson)
+            .put("stageType", serviceType + "Fetch") // TODO: this feels too magical.
+            .put("canaryScope", scopeJson)
             .build());
       }).collect(Collectors.toList());
   }

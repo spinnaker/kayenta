@@ -40,17 +40,28 @@ import java.util.Map;
 @Slf4j
 public class AtlasFetchTask implements RetryableTask {
 
-  @Autowired
+  private final
   ObjectMapper kayentaObjectMapper;
 
-  @Autowired
+  private final
   AccountCredentialsRepository accountCredentialsRepository;
 
-  @Autowired
+  private final
   SynchronousQueryProcessor synchronousQueryProcessor;
 
-  @Autowired
+  private final
   AtlasConfigurationProperties atlasConfigurationProperties;
+
+  @Autowired
+  public AtlasFetchTask(ObjectMapper kayentaObjectMapper,
+                        AccountCredentialsRepository accountCredentialsRepository,
+                        SynchronousQueryProcessor synchronousQueryProcessor,
+                        AtlasConfigurationProperties atlasConfigurationProperties) {
+    this.kayentaObjectMapper = kayentaObjectMapper;
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.synchronousQueryProcessor = synchronousQueryProcessor;
+    this.atlasConfigurationProperties = atlasConfigurationProperties;
+  }
 
   @Override
   public long getBackoffPeriod() {
@@ -81,7 +92,8 @@ public class AtlasFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     Map<String, Object> canaryConfigMap = (Map<String, Object>)context.get("canaryConfig");
     CanaryConfig canaryConfig = kayentaObjectMapper.convertValue(canaryConfigMap, CanaryConfig.class);
-    String scopeJson = (String)stage.getContext().get("atlasCanaryScope");
+    String scopeJson = (String)stage.getContext().get("canaryScope");
+    int metricIndex = (Integer)stage.getContext().get("metricIndex");
     AtlasCanaryScope atlasCanaryScope;
     try {
       atlasCanaryScope = kayentaObjectMapper.readValue(scopeJson, AtlasCanaryScope.class);
@@ -99,6 +111,7 @@ public class AtlasFetchTask implements RetryableTask {
     return synchronousQueryProcessor.processQueryAndProduceTaskResult(resolvedMetricsAccountName,
                                                                       resolvedStorageAccountName,
                                                                       canaryConfig,
+                                                                      metricIndex,
                                                                       atlasCanaryScope);
   }
 }

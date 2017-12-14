@@ -40,14 +40,23 @@ import java.util.stream.Collectors;
 @Component
 public class MetricSetMixerServiceTask implements RetryableTask {
 
-  @Autowired
+  private final
   AccountCredentialsRepository accountCredentialsRepository;
 
-  @Autowired
+  private final
   StorageServiceRepository storageServiceRepository;
 
-  @Autowired
+  private final
   MetricSetMixerService metricSetMixerService;
+
+  @Autowired
+  public MetricSetMixerServiceTask(AccountCredentialsRepository accountCredentialsRepository,
+                                   StorageServiceRepository storageServiceRepository,
+                                   MetricSetMixerService metricSetMixerService) {
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.storageServiceRepository = storageServiceRepository;
+    this.metricSetMixerService = metricSetMixerService;
+  }
 
   @Override
   public long getBackoffPeriod() {
@@ -108,7 +117,7 @@ public class MetricSetMixerServiceTask implements RetryableTask {
   private List<String> getMetricSetListIds(Execution execution, String stagePrefix) {
     return execution.getStages().stream()
       .filter(stage -> stage.getRefId().startsWith(stagePrefix))
-      .map(stage -> (String)stage.getContext().get("metricSetId"))
+      .map(stage -> (String)stage.getOutputs().get("metricSetId"))
       .collect(Collectors.toList());
   }
 }

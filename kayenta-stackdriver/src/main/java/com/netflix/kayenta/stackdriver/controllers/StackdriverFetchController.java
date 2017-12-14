@@ -45,11 +45,18 @@ import java.util.Map;
 @Slf4j
 public class StackdriverFetchController {
 
-  @Autowired
+  private final
   AccountCredentialsRepository accountCredentialsRepository;
 
-  @Autowired
+  private final
   SynchronousQueryProcessor synchronousQueryProcessor;
+
+  @Autowired
+  public StackdriverFetchController(AccountCredentialsRepository accountCredentialsRepository,
+                                    SynchronousQueryProcessor synchronousQueryProcessor) {
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.synchronousQueryProcessor = synchronousQueryProcessor;
+  }
 
   @RequestMapping(value = "/query", method = RequestMethod.POST)
   public Map queryMetrics(@RequestParam(required = false) final String metricsAccountName,
@@ -107,7 +114,8 @@ public class StackdriverFetchController {
     String metricSetListId = synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,
                                                                     resolvedStorageAccountName,
                                                                     CanaryConfig.builder().metric(canaryMetricConfig).build(),
-                                                                    stackdriverCanaryScope).get(0);
+                                                                    0,
+                                                                    stackdriverCanaryScope);
 
     return Collections.singletonMap("metricSetListId", metricSetListId);
   }

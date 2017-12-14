@@ -39,14 +39,23 @@ import java.util.Map;
 @Slf4j
 public class StackdriverFetchTask implements RetryableTask {
 
-  @Autowired
+  private final
   ObjectMapper kayentaObjectMapper;
 
-  @Autowired
+  private final
   AccountCredentialsRepository accountCredentialsRepository;
 
-  @Autowired
+  private final
   SynchronousQueryProcessor synchronousQueryProcessor;
+
+  @Autowired
+  public StackdriverFetchTask(ObjectMapper kayentaObjectMapper,
+                              AccountCredentialsRepository accountCredentialsRepository,
+                              SynchronousQueryProcessor synchronousQueryProcessor) {
+    this.kayentaObjectMapper = kayentaObjectMapper;
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.synchronousQueryProcessor = synchronousQueryProcessor;
+  }
 
   @Override
   public long getBackoffPeriod() {
@@ -68,9 +77,10 @@ public class StackdriverFetchTask implements RetryableTask {
     String storageAccountName = (String)context.get("storageAccountName");
     Map<String, Object> canaryConfigMap = (Map<String, Object>)context.get("canaryConfig");
     CanaryConfig canaryConfig = kayentaObjectMapper.convertValue(canaryConfigMap, CanaryConfig.class);
+    int metricIndex = (Integer)stage.getContext().get("metricIndex");
     StackdriverCanaryScope stackdriverCanaryScope;
     try {
-      stackdriverCanaryScope = kayentaObjectMapper.readValue((String)stage.getContext().get("stackdriverCanaryScope"), StackdriverCanaryScope.class);
+      stackdriverCanaryScope = kayentaObjectMapper.readValue((String)stage.getContext().get("canaryScope"), StackdriverCanaryScope.class);
     } catch (IOException e) {
       log.warn("Unable to parse JSON scope", e);
       throw new RuntimeException(e);
@@ -85,6 +95,7 @@ public class StackdriverFetchTask implements RetryableTask {
     return synchronousQueryProcessor.processQueryAndProduceTaskResult(resolvedMetricsAccountName,
                                                                       resolvedStorageAccountName,
                                                                       canaryConfig,
+                                                                      metricIndex,
                                                                       stackdriverCanaryScope);
   }
 }
