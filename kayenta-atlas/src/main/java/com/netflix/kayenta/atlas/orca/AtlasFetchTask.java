@@ -40,28 +40,17 @@ import java.util.Map;
 @Slf4j
 public class AtlasFetchTask implements RetryableTask {
 
-  private final
-  ObjectMapper kayentaObjectMapper;
-
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  SynchronousQueryProcessor synchronousQueryProcessor;
-
-  private final
-  AtlasConfigurationProperties atlasConfigurationProperties;
+  @Autowired
+  private ObjectMapper kayentaObjectMapper;
 
   @Autowired
-  public AtlasFetchTask(ObjectMapper kayentaObjectMapper,
-                        AccountCredentialsRepository accountCredentialsRepository,
-                        SynchronousQueryProcessor synchronousQueryProcessor,
-                        AtlasConfigurationProperties atlasConfigurationProperties) {
-    this.kayentaObjectMapper = kayentaObjectMapper;
-    this.accountCredentialsRepository = accountCredentialsRepository;
-    this.synchronousQueryProcessor = synchronousQueryProcessor;
-    this.atlasConfigurationProperties = atlasConfigurationProperties;
-  }
+  private AccountCredentialsRepository accountCredentialsRepository;
+
+  @Autowired
+  private SynchronousQueryProcessor synchronousQueryProcessor;
+
+  @Autowired
+  private AtlasConfigurationProperties atlasConfigurationProperties;
 
   @Override
   public long getBackoffPeriod() {
