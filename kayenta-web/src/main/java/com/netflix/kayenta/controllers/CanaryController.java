@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -170,16 +169,7 @@ public class CanaryController {
           .put("canaryExecutionRequest", canaryExecutionRequestJSON)
           .build());
 
-    Duration controlDuration = Duration.between(canaryExecutionRequest.getControlScope().getStart(),
-                                                canaryExecutionRequest.getControlScope().getEnd());
-    Duration experimentDuration = Duration.between(canaryExecutionRequest.getExperimentScope().getStart(),
-                                                   canaryExecutionRequest.getExperimentScope().getEnd());
-
-    if (controlDuration.equals(experimentDuration)) {
-      canaryJudgeContext.put("durationString", controlDuration.toString());
-    }
-
-    PipelineBuilder pipelineBuilder =
+    Execution pipeline =
       new PipelineBuilder("kayenta-" + currentInstanceId)
         .withName("Standard Canary Pipeline")
         .withPipelineConfigId(UUID.randomUUID() + "")
@@ -240,13 +230,13 @@ public class CanaryController {
     Stage contextStage = pipeline.getStages().stream()
       .filter(stage -> stage.getRefId().equals(REFID_SET_CONTEXT))
       .findFirst()
-      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_JUDGE + "' in pipeline ID '" + canaryExecutionId + "'"));
+      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_SET_CONTEXT + "' in pipeline ID '" + canaryExecutionId + "'"));
     Map<String, Object> contextContext = contextStage.getContext();
 
     Stage mixerStage = pipeline.getStages().stream()
       .filter(stage -> stage.getRefId().equals(REFID_MIX_METRICS))
       .findFirst()
-      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_JUDGE + "' in pipeline ID '" + canaryExecutionId + "'"));
+      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + REFID_MIX_METRICS + "' in pipeline ID '" + canaryExecutionId + "'"));
     Map<String, Object> mixerContext = mixerStage.getContext();
 
     if (!contextContext.containsKey("canaryConfigId")) {
@@ -287,6 +277,7 @@ public class CanaryController {
       canaryExecutionStatusResponseBuilder.endTimeIso(Instant.ofEpochMilli(endTime) + "");
     }
 
+    // TODO: (mgraff) Remove this once our UIs are set up to get it from the canary result itself
     canaryExecutionStatusResponseBuilder.metricSetPairListId((String)mixerContext.get("metricSetPairListId"));
 
     if (isComplete && pipelineStatus.equals("succeeded")) {
