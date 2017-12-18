@@ -41,14 +41,9 @@ import java.util.UUID;
 @Component
 @Slf4j
 public class SynchronousQueryProcessor {
-  private final
-  MetricsServiceRepository metricsServiceRepository;
-
-  private final
-  StorageServiceRepository storageServiceRepository;
-
-  private final
-  Registry registry;
+  private final MetricsServiceRepository metricsServiceRepository;
+  private final StorageServiceRepository storageServiceRepository;
+  private final Registry registry;
 
   @Autowired
   public SynchronousQueryProcessor(MetricsServiceRepository metricsServiceRepository,

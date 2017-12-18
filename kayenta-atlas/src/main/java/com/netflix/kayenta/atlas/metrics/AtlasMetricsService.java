@@ -53,7 +53,6 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Builder
 @Slf4j
-@Component
 public class AtlasMetricsService implements MetricsService {
 
   @NotNull

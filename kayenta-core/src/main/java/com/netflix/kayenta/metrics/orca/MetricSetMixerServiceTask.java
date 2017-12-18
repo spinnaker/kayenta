@@ -40,14 +40,9 @@ import java.util.stream.Collectors;
 @Component
 public class MetricSetMixerServiceTask implements RetryableTask {
 
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  StorageServiceRepository storageServiceRepository;
-
-  private final
-  MetricSetMixerService metricSetMixerService;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final StorageServiceRepository storageServiceRepository;
+  private final MetricSetMixerService metricSetMixerService;
 
   @Autowired
   public MetricSetMixerServiceTask(AccountCredentialsRepository accountCredentialsRepository,

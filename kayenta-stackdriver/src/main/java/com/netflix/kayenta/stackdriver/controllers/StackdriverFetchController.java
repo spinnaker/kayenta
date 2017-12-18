@@ -45,11 +45,8 @@ import java.util.Map;
 @Slf4j
 public class StackdriverFetchController {
 
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  SynchronousQueryProcessor synchronousQueryProcessor;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final SynchronousQueryProcessor synchronousQueryProcessor;
 
   @Autowired
   public StackdriverFetchController(AccountCredentialsRepository accountCredentialsRepository,

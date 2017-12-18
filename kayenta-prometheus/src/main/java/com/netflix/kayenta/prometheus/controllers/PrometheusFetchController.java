@@ -43,11 +43,8 @@ import java.util.Map;
 @Slf4j
 public class PrometheusFetchController {
 
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  SynchronousQueryProcessor synchronousQueryProcessor;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final SynchronousQueryProcessor synchronousQueryProcessor;
 
   @Autowired
   public PrometheusFetchController(AccountCredentialsRepository accountCredentialsRepository,

@@ -39,14 +39,9 @@ import java.util.Map;
 @Slf4j
 public class PrometheusFetchTask implements RetryableTask {
 
-  private final
-  ObjectMapper kayentaObjectMapper;
-
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  SynchronousQueryProcessor synchronousQueryProcessor;
+  private final ObjectMapper kayentaObjectMapper;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final SynchronousQueryProcessor synchronousQueryProcessor;
 
   @Autowired
   public PrometheusFetchTask(ObjectMapper kayentaObjectMapper, AccountCredentialsRepository accountCredentialsRepository, SynchronousQueryProcessor synchronousQueryProcessor) {

@@ -42,11 +42,8 @@ import java.util.Map;
 @Slf4j
 public class AtlasFetchController {
 
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  SynchronousQueryProcessor synchronousQueryProcessor;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final SynchronousQueryProcessor synchronousQueryProcessor;
 
   @Autowired
   public AtlasFetchController(AccountCredentialsRepository accountCredentialsRepository, SynchronousQueryProcessor synchronousQueryProcessor) {
