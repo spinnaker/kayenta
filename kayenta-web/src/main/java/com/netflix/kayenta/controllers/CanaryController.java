@@ -22,9 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.netflix.kayenta.canary.*;
-import com.netflix.kayenta.canary.providers.AtlasCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.canary.providers.PrometheusCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.canary.providers.StackdriverCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
@@ -50,7 +47,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/canary")
@@ -173,6 +169,15 @@ public class CanaryController {
           .put("orchestratorScoreThresholds", orchestratorScoreThresholds)
           .put("canaryExecutionRequest", canaryExecutionRequestJSON)
           .build());
+
+    Duration controlDuration = Duration.between(canaryExecutionRequest.getControlScope().getStart(),
+                                                canaryExecutionRequest.getControlScope().getEnd());
+    Duration experimentDuration = Duration.between(canaryExecutionRequest.getExperimentScope().getStart(),
+                                                   canaryExecutionRequest.getExperimentScope().getEnd());
+
+    if (controlDuration.equals(experimentDuration)) {
+      canaryJudgeContext.put("durationString", controlDuration.toString());
+    }
 
     PipelineBuilder pipelineBuilder =
       new PipelineBuilder("kayenta-" + currentInstanceId)
@@ -346,7 +351,7 @@ public class CanaryController {
             .put("user", "[anonymous]")
             .put("metricsAccountName", resolvedMetricsAccountName) // TODO: How can this work?  We'd need to look this up per type
             .put("storageAccountName", resolvedStorageAccountName)
-            .put("stageType", serviceType + "Fetch") // TODO: this feels too magical.
+            .put("stageType", serviceType + "Fetch")
             .put("canaryScope", scopeJson)
             .build());
       }).collect(Collectors.toList());
