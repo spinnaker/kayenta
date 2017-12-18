@@ -18,17 +18,12 @@ package com.netflix.kayenta.canary;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import java.util.Map;
 
 @Data
-public class CanaryExecutionRequest {
-  protected Map<String, CanaryScopePair> scopes;
+public class CanaryScopePair {
+  @NotNull
+  CanaryScope control;
 
   @NotNull
-  protected CanaryScope experimentScope;
-
-  @NotNull
-  protected CanaryScope controlScope;
-
-  protected CanaryClassifierThresholdsConfig thresholds;
+  CanaryScope experiment;
 }
