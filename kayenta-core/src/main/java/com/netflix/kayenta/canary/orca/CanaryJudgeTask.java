@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
@@ -47,17 +48,25 @@ import java.util.UUID;
 @Component
 public class CanaryJudgeTask implements RetryableTask {
 
-  @Autowired
+  private final
   AccountCredentialsRepository accountCredentialsRepository;
 
-  @Autowired
+  private final
   StorageServiceRepository storageServiceRepository;
 
-  @Autowired
+  private final
   List<CanaryJudge> canaryJudges;
 
-  @Autowired
+  private final
   ObjectMapper objectMapper;
+
+  @Autowired
+  public CanaryJudgeTask(AccountCredentialsRepository accountCredentialsRepository, StorageServiceRepository storageServiceRepository, List<CanaryJudge> canaryJudges, ObjectMapper objectMapper) {
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.storageServiceRepository = storageServiceRepository;
+    this.canaryJudges = canaryJudges;
+    this.objectMapper = objectMapper;
+  }
 
   @Override
   public long getBackoffPeriod() {
@@ -71,8 +80,9 @@ public class CanaryJudgeTask implements RetryableTask {
     return Duration.ofMinutes(2).toMillis();
   }
 
+  @Nonnull
   @Override
-  public TaskResult execute(Stage stage) {
+  public TaskResult execute(@Nonnull Stage stage) {
     Map<String, Object> context = stage.getContext();
     String storageAccountName = (String)context.get("storageAccountName");
     String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
