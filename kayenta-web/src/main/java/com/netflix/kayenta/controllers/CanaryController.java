@@ -169,7 +169,7 @@ public class CanaryController {
           .put("canaryExecutionRequest", canaryExecutionRequestJSON)
           .build());
 
-    Execution pipeline =
+    PipelineBuilder pipelineBuilder =
       new PipelineBuilder("kayenta-" + currentInstanceId)
         .withName("Standard Canary Pipeline")
         .withPipelineConfigId(UUID.randomUUID() + "")
