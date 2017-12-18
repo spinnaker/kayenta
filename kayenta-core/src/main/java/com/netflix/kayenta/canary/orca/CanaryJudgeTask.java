@@ -48,17 +48,10 @@ import java.util.UUID;
 @Component
 public class CanaryJudgeTask implements RetryableTask {
 
-  private final
-  AccountCredentialsRepository accountCredentialsRepository;
-
-  private final
-  StorageServiceRepository storageServiceRepository;
-
-  private final
-  List<CanaryJudge> canaryJudges;
-
-  private final
-  ObjectMapper objectMapper;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final StorageServiceRepository storageServiceRepository;
+  private final List<CanaryJudge> canaryJudges;
+  private final ObjectMapper objectMapper;
 
   @Autowired
   public CanaryJudgeTask(AccountCredentialsRepository accountCredentialsRepository, StorageServiceRepository storageServiceRepository, List<CanaryJudge> canaryJudges, ObjectMapper objectMapper) {
