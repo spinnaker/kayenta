@@ -22,8 +22,8 @@ import javax.validation.constraints.NotNull;
 @Data
 public class CanaryScopePair {
   @NotNull
-  CanaryScope control;
+  CanaryScope controlScope;
 
   @NotNull
-  CanaryScope experiment;
+  CanaryScope experimentScope;
 }

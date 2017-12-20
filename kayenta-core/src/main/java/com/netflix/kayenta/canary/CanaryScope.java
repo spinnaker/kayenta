@@ -20,6 +20,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
@@ -46,4 +47,8 @@ public class CanaryScope {
   // Metric source specific parameters which may be used to further
   // alter the canary scope.
   Map<String, String> extendedScopeParams;
+
+  public Duration calculateDuration() {
+    return Duration.between(start, end);
+  }
 }
