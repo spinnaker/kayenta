@@ -129,7 +129,7 @@ public class CanaryController {
     if (requiredScopes.size() > 0 && canaryExecutionRequest.getScopes() == null) {
       throw new IllegalArgumentException("Canary metrics require scopes, but no scopes were provided in the execution request.");
     }
-    Set<String> providedScopes = canaryExecutionRequest.getScopes().keySet();
+    Set<String> providedScopes = canaryExecutionRequest.getScopes() == null ? Collections.emptySet() : canaryExecutionRequest.getScopes().keySet();
     requiredScopes.removeAll(providedScopes);
     if (requiredScopes.size() > 0) {
       throw new IllegalArgumentException("Canary metrics require scopes which were not provided in the execution request: " + requiredScopes);
