@@ -19,6 +19,7 @@ package com.netflix.kayenta.config;
 import com.netflix.kayenta.metrics.MapBackedMetricsServiceRepository;
 import com.netflix.kayenta.metrics.MetricSetMixerService;
 import com.netflix.kayenta.metrics.MetricsServiceRepository;
+import com.netflix.kayenta.metrics.limiters.NamedConcurrencyLimiter;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.MapBackedAccountCredentialsRepository;
 import com.netflix.kayenta.storage.MapBackedStorageServiceRepository;
@@ -38,6 +39,13 @@ import org.springframework.context.annotation.Configuration;
   "com.netflix.kayenta.retrofit.config"
 })
 public class KayentaConfiguration {
+
+  private final NamedConcurrencyLimiter namedConcurrencyLimiter;
+
+  KayentaConfiguration() {
+    // TODO: (mgraff) Make this externally configurable.
+    namedConcurrencyLimiter = new NamedConcurrencyLimiter(20);
+  }
 
   @Bean
   @ConditionalOnMissingBean(AccountCredentialsRepository.class)
@@ -61,5 +69,11 @@ public class KayentaConfiguration {
   @ConditionalOnMissingBean(StorageServiceRepository.class)
   StorageServiceRepository storageServiceRepository() {
     return new MapBackedStorageServiceRepository();
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  NamedConcurrencyLimiter namedConcurrencyLimiter() {
+    return namedConcurrencyLimiter;
   }
 }

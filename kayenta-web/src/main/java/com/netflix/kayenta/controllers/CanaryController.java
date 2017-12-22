@@ -269,22 +269,28 @@ public class CanaryController {
                                                                             canaryExecutionRequest,
                                                                             true,
                                                                             resolvedMetricsAccountName,
-                                                                            resolvedStorageAccountName);
+                                                                            resolvedStorageAccountName,
+                                                                            REFID_SET_CONTEXT);
     List<Map<String, Object>> controlFetchContexts = generateFetchScopes(canaryConfig,
                                                                          canaryExecutionRequest,
                                                                          false,
                                                                          resolvedMetricsAccountName,
-                                                                         resolvedStorageAccountName);
+                                                                         resolvedStorageAccountName,
+                                                                         REFID_SET_CONTEXT);
 
-    int maxMetricIndex = canaryConfig.getMetrics().size() - 1; // 0 based naming, so we want the last index value, not the count
-    String lastControlFetchRefid = REFID_FETCH_CONTROL_PREFIX + maxMetricIndex;
-    String lastExperimentFetchRefid = REFID_FETCH_EXPERIMENT_PREFIX + maxMetricIndex;
+    List<String> fetchControlRefIds = IntStream.range(0, canaryConfig.getMetrics().size())
+      .mapToObj(index -> REFID_FETCH_CONTROL_PREFIX + index)
+      .collect(Collectors.toList());
+    List<String> fetchExperimentRefIds = IntStream.range(0, canaryConfig.getMetrics().size())
+      .mapToObj(index -> REFID_FETCH_EXPERIMENT_PREFIX + index)
+      .collect(Collectors.toList());
+    List<String> allFetchRefIds = new ImmutableList.Builder().addAll(fetchControlRefIds).addAll(fetchExperimentRefIds).build();
 
     Map<String, Object> mixMetricSetsContext =
       Maps.newHashMap(
         new ImmutableMap.Builder<String, Object>()
           .put("refId", REFID_MIX_METRICS)
-          .put("requisiteStageRefIds", new ImmutableList.Builder().add(lastControlFetchRefid).add(lastExperimentFetchRefid).build())
+          .put("requisiteStageRefIds", allFetchRefIds)
           .put("user", "[anonymous]")
           .put("storageAccountName", resolvedStorageAccountName)
           .put("controlRefidPrefix", REFID_FETCH_CONTROL_PREFIX)
@@ -382,7 +388,8 @@ public class CanaryController {
                                                         CanaryExecutionRequest executionRequest,
                                                         boolean isCanary,
                                                         String resolvedMetricsAccountName,
-                                                        String resolvedStorageAccountName) {
+                                                        String resolvedStorageAccountName,
+                                                        String parentStageRefId) {
     return IntStream.range(0, canaryConfig.getMetrics().size())
       .mapToObj(index -> {
         CanaryMetricConfig metric = canaryConfig.getMetrics().get(index);
@@ -402,13 +409,12 @@ public class CanaryController {
         }
 
         String currentStageId = stagePrefix + index;
-        String previousStageId = (index == 0) ? REFID_SET_CONTEXT : stagePrefix + (index - 1);
 
         return Maps.newHashMap(
           new ImmutableMap.Builder<String, Object>()
             .put("refId", currentStageId)
             .put("metricIndex", index)
-            .put("requisiteStageRefIds", Collections.singletonList(previousStageId))
+            .put("requisiteStageRefIds", Collections.singletonList(parentStageRefId))
             .put("user", "[anonymous]")
             .put("metricsAccountName", resolvedMetricsAccountName) // TODO: How can this work?  We'd need to look this up per type
             .put("storageAccountName", resolvedStorageAccountName)

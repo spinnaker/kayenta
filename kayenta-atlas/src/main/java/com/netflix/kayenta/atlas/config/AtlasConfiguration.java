@@ -22,6 +22,7 @@ import com.netflix.kayenta.atlas.metrics.AtlasMetricsService;
 import com.netflix.kayenta.atlas.security.AtlasCredentials;
 import com.netflix.kayenta.atlas.security.AtlasNamedAccountCredentials;
 import com.netflix.kayenta.metrics.MetricsService;
+import com.netflix.kayenta.metrics.limiters.NamedConcurrencyLimiter;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -59,11 +60,13 @@ public class AtlasConfiguration {
 
   @Bean
   MetricsService atlasMetricsService(AtlasConfigurationProperties atlasConfigurationProperties,
-                                     AccountCredentialsRepository accountCredentialsRepository) throws IOException {
+                                     AccountCredentialsRepository accountCredentialsRepository,
+                                     NamedConcurrencyLimiter namedConcurrencyLimiter) throws IOException {
     AtlasMetricsService.AtlasMetricsServiceBuilder atlasMetricsServiceBuilder = AtlasMetricsService.builder();
 
     for (AtlasManagedAccount atlasManagedAccount : atlasConfigurationProperties.getAccounts()) {
       String name = atlasManagedAccount.getName();
+      namedConcurrencyLimiter.setConcurrencyLimit(name, atlasManagedAccount.getConcurrency());
       List<AccountCredentials.Type> supportedTypes = atlasManagedAccount.getSupportedTypes();
       String backendsJsonUriPrefix = atlasManagedAccount.getBackendsJsonBaseUrl();
 

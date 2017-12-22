@@ -21,9 +21,11 @@ import com.netflix.kayenta.atlas.canary.AtlasCanaryScope;
 import com.netflix.kayenta.atlas.config.AtlasConfigurationProperties;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
+import com.netflix.kayenta.metrics.limiters.NamedConcurrencyLimiter;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
+import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
@@ -40,17 +42,26 @@ import java.util.Map;
 @Slf4j
 public class AtlasFetchTask implements RetryableTask {
 
-  @Autowired
-  private ObjectMapper kayentaObjectMapper;
-
-  @Autowired
-  private AccountCredentialsRepository accountCredentialsRepository;
-
-  @Autowired
-  private SynchronousQueryProcessor synchronousQueryProcessor;
-
-  @Autowired
+  private final ObjectMapper kayentaObjectMapper;
+  private final AccountCredentialsRepository accountCredentialsRepository;
+  private final SynchronousQueryProcessor synchronousQueryProcessor;
   private AtlasConfigurationProperties atlasConfigurationProperties;
+  private final NamedConcurrencyLimiter namedConcurrencyLimiter;
+
+  private boolean queryRunning = false;
+
+  @Autowired
+  public AtlasFetchTask(ObjectMapper kayentaObjectMapper,
+                        AccountCredentialsRepository accountCredentialsRepository,
+                        SynchronousQueryProcessor synchronousQueryProcessor,
+                        AtlasConfigurationProperties atlasConfigurationProperties,
+                        NamedConcurrencyLimiter namedConcurrencyLimiter) {
+    this.kayentaObjectMapper = kayentaObjectMapper;
+    this.accountCredentialsRepository = accountCredentialsRepository;
+    this.synchronousQueryProcessor = synchronousQueryProcessor;
+    this.atlasConfigurationProperties = atlasConfigurationProperties;
+    this.namedConcurrencyLimiter = namedConcurrencyLimiter;
+  }
 
   @Override
   public long getBackoffPeriod() {
@@ -64,12 +75,19 @@ public class AtlasFetchTask implements RetryableTask {
 
   @Override
   public long getDynamicBackoffPeriod(Duration taskDuration) {
+    if (queryRunning) {
+      return calculateDynamicBackoffPeriod(taskDuration);
+    } else {
+      return Duration.ofSeconds(2).toMillis();
+    }
+  }
+
+  public long calculateDynamicBackoffPeriod(Duration taskDuration) {
     int numZeros = Long.numberOfLeadingZeros(taskDuration.getSeconds());
     int floorLog = 63 - numZeros;
     // If the first iteration fails quickly, we still want a one second backoff period.
     int exponent = Math.max(floorLog, 0);
-    int backoffPeriodSeconds = Math.min(atlasConfigurationProperties.getMaxBackoffPeriodSeconds(), (int)Math.pow(2, exponent));
-
+    int backoffPeriodSeconds = Math.min(atlasConfigurationProperties.getMaxBackoffPeriodSeconds(), (int) Math.pow(2, exponent));
     return Duration.ofSeconds(backoffPeriodSeconds).toMillis();
   }
 
@@ -78,29 +96,40 @@ public class AtlasFetchTask implements RetryableTask {
   public TaskResult execute(@Nonnull Stage stage) {
     Map<String, Object> context = stage.getContext();
     String metricsAccountName = (String)context.get("metricsAccountName");
-    String storageAccountName = (String)context.get("storageAccountName");
-    Map<String, Object> canaryConfigMap = (Map<String, Object>)context.get("canaryConfig");
-    CanaryConfig canaryConfig = kayentaObjectMapper.convertValue(canaryConfigMap, CanaryConfig.class);
-    String scopeJson = (String)context.get("canaryScope");
-    int metricIndex = (Integer)context.get("metricIndex");
-    AtlasCanaryScope atlasCanaryScope;
-    try {
-      atlasCanaryScope = kayentaObjectMapper.readValue(scopeJson, AtlasCanaryScope.class);
-    } catch (IOException e) {
-      log.error("Unable to parse JSON scope: " + scopeJson, e);
-      throw new RuntimeException(e);
-    }
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
                                                                                      accountCredentialsRepository);
-    String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
-                                                                                     AccountCredentials.Type.OBJECT_STORE,
-                                                                                     accountCredentialsRepository);
 
-    return synchronousQueryProcessor.processQueryAndProduceTaskResult(resolvedMetricsAccountName,
-                                                                      resolvedStorageAccountName,
-                                                                      canaryConfig,
-                                                                      metricIndex,
-                                                                      atlasCanaryScope);
+    if (!namedConcurrencyLimiter.canRun(metricsAccountName, stage.getId())) {
+      return new TaskResult(ExecutionStatus.RUNNING);
+    }
+    queryRunning = true;
+
+    try {
+      String storageAccountName = (String) context.get("storageAccountName");
+      String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
+                                                                                       AccountCredentials.Type.OBJECT_STORE,
+                                                                                       accountCredentialsRepository);
+
+      Map<String, Object> canaryConfigMap = (Map<String, Object>) context.get("canaryConfig");
+      CanaryConfig canaryConfig = kayentaObjectMapper.convertValue(canaryConfigMap, CanaryConfig.class);
+      String scopeJson = (String) context.get("canaryScope");
+      int metricIndex = (Integer) context.get("metricIndex");
+      AtlasCanaryScope atlasCanaryScope;
+      try {
+        atlasCanaryScope = kayentaObjectMapper.readValue(scopeJson, AtlasCanaryScope.class);
+      } catch (IOException e) {
+        log.error("Unable to parse JSON scope: " + scopeJson, e);
+        throw new RuntimeException(e);
+      }
+
+      return synchronousQueryProcessor.processQueryAndProduceTaskResult(resolvedMetricsAccountName,
+                                                                        resolvedStorageAccountName,
+                                                                        canaryConfig,
+                                                                        metricIndex,
+                                                                        atlasCanaryScope);
+    } finally {
+      namedConcurrencyLimiter.release(metricsAccountName, stage.getId());
+    }
   }
 }
