@@ -31,6 +31,8 @@ public class AtlasManagedAccount {
   @NotNull
   String backendsJsonBaseUrl;
 
+  long concurrency = 20;
+
   String fetchId;
 
   private List<AccountCredentials.Type> supportedTypes;

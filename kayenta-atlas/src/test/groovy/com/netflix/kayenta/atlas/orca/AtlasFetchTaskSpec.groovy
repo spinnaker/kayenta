@@ -16,22 +16,27 @@
 
 package com.netflix.kayenta.atlas.orca
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.netflix.discovery.converters.Auto
 import com.netflix.kayenta.atlas.config.AtlasConfigurationProperties
+import com.netflix.kayenta.metrics.SynchronousQueryProcessor
+import com.netflix.kayenta.metrics.limiters.NamedConcurrencyLimiter
+import com.netflix.kayenta.security.AccountCredentialsRepository
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.Duration
 
 class AtlasFetchTaskSpec extends Specification {
-
   @Unroll
   void "dynamic backoff period is exponential when durationMS is #durationMS, while respecting mins/maxes"() {
     given:
-    AtlasFetchTask atlasFetchTask = new AtlasFetchTask()
-    atlasFetchTask.atlasConfigurationProperties = new AtlasConfigurationProperties()
+    AtlasFetchTask atlasFetchTask = new AtlasFetchTask(null, null, null, new AtlasConfigurationProperties(), null)
 
     expect:
-    atlasFetchTask.getDynamicBackoffPeriod(Duration.ofMillis(durationMS)) == backoffPeriodMS
+    atlasFetchTask.calculateDynamicBackoffPeriod(Duration.ofMillis(durationMS)) == backoffPeriodMS
 
     where:
     durationMS || backoffPeriodMS
