@@ -105,9 +105,9 @@ object Test extends App{
     override def get: Double = Random.nextGaussian() * stdev + mean
   }
 
-  def getInstance(numSamples: Int): LabeledInstance = {
-    val experiment = normal(10, 1).sample(60)
-    val control = normal(10, 1).sample(60)
+  def getPassInstance(numSamples: Int): LabeledInstance = {
+    val experiment = normal(25, 1).sample(numSamples)
+    val control = normal(25, 1).sample(numSamples)
 
     val experimentMetric = Metric("metric", experiment.toArray, "canary")
     val controlMetric = Metric("metric", control.toArray, "baseline")
@@ -115,11 +115,21 @@ object Test extends App{
     LabeledInstance(experimentMetric, controlMetric, Pass)
   }
 
-  def getInstances(numInstance: Int, numSamples: Int): List[LabeledInstance] ={
-    List.fill(numInstance)(getInstance(numSamples))
+  def getFailInstance(numSamples: Int): LabeledInstance = {
+    val experiment = normal(26, 1).sample(numSamples)
+    val control = normal(25, 1).sample(numSamples)
+
+    val experimentMetric = Metric("metric", experiment.toArray, "canary")
+    val controlMetric = Metric("metric", control.toArray, "baseline")
+
+    LabeledInstance(experimentMetric, controlMetric, High)
   }
 
-  val dataset = getInstances(100, 60)
+  def getInstances(numInstance: Int, numSamples: Int): List[LabeledInstance] ={
+    List.fill(numInstance)(getPassInstance(numSamples)) ++ List.fill(numInstance)(getFailInstance(numSamples))
+  }
+
+  val dataset = getInstances(1000, 60)
   val evaluation = Evaluate.evaluate(mannWhitney, dataset)
 
   evaluation
