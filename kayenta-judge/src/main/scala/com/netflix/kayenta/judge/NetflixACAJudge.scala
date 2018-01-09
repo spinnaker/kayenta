@@ -207,7 +207,6 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
       .controlMetadata(Map("stats" -> DescriptiveStatistics.toMap(controlStats).asJava.asInstanceOf[Object]).asJava)
 
     try {
-      //Use the Mann-Whitney algorithm to compare the experiment and control populations
       val metricClassification = mannWhitney.classify(transformedControl, transformedExperiment, directionality)
       resultBuilder
         .classification(metricClassification.classification.toString)
@@ -217,10 +216,10 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
 
     } catch {
       case e: RExecutionException =>
-        logger.error("Mann-Whitney Test Failed", e)
+        logger.error("Metric Classification Failed", e)
         resultBuilder
           .classification(Error.toString)
-          .classificationReason("Mann-Whitney Test Failed")
+          .classificationReason("Metric Classification Failed")
           .build()
     }
 
