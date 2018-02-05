@@ -29,6 +29,7 @@ import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.AtlasCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
+import com.netflix.kayenta.metrics.RetryableQueryException;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -39,7 +40,6 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
