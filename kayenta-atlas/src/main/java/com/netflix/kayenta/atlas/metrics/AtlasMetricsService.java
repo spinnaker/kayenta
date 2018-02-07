@@ -29,7 +29,6 @@ import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.AtlasCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
-import com.netflix.kayenta.metrics.RetryableQueryException;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -180,6 +179,21 @@ public class AtlasMetricsService implements MetricsService {
       metricSetBuilder.attribute("baseURL", uri);
 
       metricSetList.add(metricSetBuilder.build());
+    }
+
+    // If nothing was returned, add a placeholder for us to add metadata about this query.
+    if (metricSetList.size() == 0) {
+      MetricSet metricSet = MetricSet.builder()
+        .name(canaryMetricConfig.getName())
+        .startTimeMillis(atlasCanaryScope.getStart().toEpochMilli())
+        .tags(Collections.emptyMap())
+        .stepMillis(atlasCanaryScope.getStep() * 1000)
+        .startTimeIso(atlasCanaryScope.getStart().toString())
+        .values(Collections.emptyList())
+        .attribute("query", decoratedQuery)
+        .attribute("baseURL", uri)
+        .build();
+      metricSetList.add(metricSet);
     }
 
     return metricSetList;
