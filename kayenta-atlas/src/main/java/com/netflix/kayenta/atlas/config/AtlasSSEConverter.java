@@ -18,6 +18,7 @@ package com.netflix.kayenta.atlas.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.atlas.model.AtlasResults;
+import com.netflix.kayenta.metrics.FatalQueryException;
 import com.netflix.kayenta.metrics.RetryableQueryException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +31,11 @@ import retrofit.mime.TypedOutput;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -59,9 +58,8 @@ public class AtlasSSEConverter implements Converter {
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
       return processInput(reader);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Cannot process Atlas results", e);
     }
-
     return null;
   }
 
@@ -88,7 +86,7 @@ public class AtlasSSEConverter implements Converter {
 
     if (!atlasResultsList.get(atlasResultsList.size() - 1).getType().equals("close")) {
       log.error("Received data from Atlas that did not terminate with a 'close'.");
-      throw new IllegalStateException("Atlas response did not end in a 'close', we cannot guarantee all data was received.");
+      throw new RetryableQueryException("Atlas response did not end in a 'close', we cannot guarantee all data was received.");
     }
 
     return atlasResultsList;
@@ -102,7 +100,7 @@ public class AtlasSSEConverter implements Converter {
       if (StringUtils.isEmpty(atlasResultsType) || !EXPECTED_RESULTS_TYPE_LIST.contains(atlasResultsType)) {
         if (atlasResultsType.equals("error")) {
           if (atlasResults.getMessage().contains("IllegalStateException")) {
-            throw new IllegalStateException("Atlas query failed: " + atlasResults.getMessage());
+            throw new FatalQueryException("Atlas query failed: " + atlasResults.getMessage());
           } else {
             throw new RetryableQueryException("Atlas query failed: " + atlasResults.getMessage());
           }
@@ -114,8 +112,7 @@ public class AtlasSSEConverter implements Converter {
 
       return atlasResults;
     } catch (IOException e) {
-      e.printStackTrace();
-
+      log.error("Cannot process Atlas results", e);
       return null;
     }
   }

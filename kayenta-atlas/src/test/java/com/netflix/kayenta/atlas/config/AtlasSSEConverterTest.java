@@ -2,10 +2,12 @@ package com.netflix.kayenta.atlas.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.atlas.model.AtlasResults;
+import com.netflix.kayenta.metrics.FatalQueryException;
 import com.netflix.kayenta.metrics.RetryableQueryException;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
@@ -18,62 +20,36 @@ public class AtlasSSEConverterTest {
   private String errorMessageIllegalStateMessage = "data: {\"type\":\"error\",\"message\":\"IllegalStateException: unknown word ':eqx'\"}\n";
   private String retryableErrorMessage = "data: {\"type\":\"error\",\"message\":\"something went wrong\"}\n";
 
+  private List<AtlasResults> atlasResultsFromSSE(String sse) {
+    BufferedReader bufferedReader = new BufferedReader(new StringReader(sse));
+    AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter(new ObjectMapper());
+    return atlasSSEConverter.processInput(bufferedReader);
+  }
+
   @Test
   public void loneClose() {
-    AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter(new ObjectMapper());
-
-    String sse = closeMessage;
-
-    BufferedReader reader = new BufferedReader(new StringReader(sse));
-
-    List<AtlasResults> results = atlasSSEConverter.processInput(reader);
-
+    List<AtlasResults> results = atlasResultsFromSSE(closeMessage);
     assertEquals(1, results.size());
   }
 
   @Test
   public void dataPlusClose() {
-    AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter(new ObjectMapper());
-
-    String sse = timeseriesMessage + closeMessage;
-
-    BufferedReader reader = new BufferedReader(new StringReader(sse));
-
-    List<AtlasResults> results = atlasSSEConverter.processInput(reader);
-
+    List<AtlasResults> results = atlasResultsFromSSE(timeseriesMessage + closeMessage);
     assertEquals(2, results.size());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = RetryableQueryException.class)
   public void missingCloseThrows() {
-    AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter(new ObjectMapper());
-
-    String sse = timeseriesMessage;
-
-    BufferedReader reader = new BufferedReader(new StringReader(sse));
-
-    List<AtlasResults> results = atlasSSEConverter.processInput(reader);
+    atlasResultsFromSSE(timeseriesMessage);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void containsRetryableErrorWithoutClose() {
-    AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter(new ObjectMapper());
-
-    String sse = errorMessageIllegalStateMessage;
-
-    BufferedReader reader = new BufferedReader(new StringReader(sse));
-
-    List<AtlasResults> results = atlasSSEConverter.processInput(reader);
+  @Test(expected = FatalQueryException.class)
+  public void fatalErrorWithoutClose() {
+    atlasResultsFromSSE(errorMessageIllegalStateMessage);
   }
 
   @Test(expected = RetryableQueryException.class)
-  public void containsRetryableErrorWithClose() {
-    AtlasSSEConverter atlasSSEConverter = new AtlasSSEConverter(new ObjectMapper());
-
-    String sse = retryableErrorMessage;
-
-    BufferedReader reader = new BufferedReader(new StringReader(sse));
-
-    List<AtlasResults> results = atlasSSEConverter.processInput(reader);
+  public void retryableErrorWithoutClose() {
+    atlasResultsFromSSE(retryableErrorMessage);
   }
 }
