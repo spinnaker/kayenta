@@ -28,6 +28,18 @@ public class ExecutionMapper {
     this.accountCredentialsRepository = accountCredentialsRepository;
   }
 
+  public CanaryExecutionStatusResponse fromExecution(Execution pipeline) {
+    String canaryExecutionId = pipeline.getId();
+
+    Stage contextStage = pipeline.getStages().stream()
+      .filter(stage -> stage.getRefId().equals(CanaryStageNames.REFID_SET_CONTEXT))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + CanaryStageNames.REFID_SET_CONTEXT + "' in pipeline ID '" + canaryExecutionId + "'"));
+    Map<String, Object> contextContext = contextStage.getContext();
+
+    String storageAccountName = (String)contextContext.get("storageAccountName");
+    return fromExecution(storageAccountName, pipeline);
+  }
 
   public CanaryExecutionStatusResponse fromExecution(String unresolvedStorageAccountName, Execution pipeline) {
     String storageAccountName = CredentialsHelper.resolveAccountByNameOrType(unresolvedStorageAccountName,

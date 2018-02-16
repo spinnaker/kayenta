@@ -226,6 +226,7 @@ public class CanaryController {
           .put("application", application)
           .put("parentPipelineExecutionId", parentPipelineExecutionId)
           .put("canaryConfigId", canaryConfigId)
+          .put("storageAccountName", resolvedStorageAccountName)
           .build());
     if (resolvedConfigurationAccountName != null) {
       setupCanaryContext.put("configurationAccountName", resolvedConfigurationAccountName);
