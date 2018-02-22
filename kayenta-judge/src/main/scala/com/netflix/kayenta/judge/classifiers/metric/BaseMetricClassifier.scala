@@ -26,7 +26,7 @@ case object Nodata extends MetricClassificationLabel
 case object Error extends MetricClassificationLabel
 
 sealed trait MetricDirection
-object MetricDirection{
+object MetricDirection {
   case object Increase extends MetricDirection
   case object Decrease extends MetricDirection
   case object Either extends MetricDirection
@@ -37,6 +37,20 @@ object MetricDirection{
       case "decrease" => MetricDirection.Decrease
       case "either" => MetricDirection.Either
       case _ =>  MetricDirection.Either
+    }
+  }
+}
+
+sealed trait NanStrategy
+object NanStrategy {
+  case object None extends NanStrategy
+  case object Remove extends NanStrategy
+
+  def parse(nanStrategy: String): NanStrategy = {
+    nanStrategy match {
+      case "none" => NanStrategy.None
+      case "remove" => NanStrategy.Remove
+      case _ => NanStrategy.None
     }
   }
 }
