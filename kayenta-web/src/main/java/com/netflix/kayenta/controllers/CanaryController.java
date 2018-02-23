@@ -56,42 +56,20 @@ public class CanaryController {
 
   private final String AD_HOC = "ad-hoc";
 
-  private final String currentInstanceId;
-  private final ExecutionLauncher executionLauncher;
   private final ExecutionRepository executionRepository;
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final StorageServiceRepository storageServiceRepository;
-  private final List<CanaryScopeFactory> canaryScopeFactories;
-  private final Registry registry;
-  private final ObjectMapper kayentaObjectMapper;
   private final ExecutionMapper executionMapper;
 
-  private final Id pipelineRunId;
-  private final Id failureId;
-
   @Autowired
-  public CanaryController(String currentInstanceId,
-                          ExecutionLauncher executionLauncher,
-                          ExecutionRepository executionRepository,
+  public CanaryController(ExecutionRepository executionRepository,
                           AccountCredentialsRepository accountCredentialsRepository,
                           StorageServiceRepository storageServiceRepository,
-                          Optional<List<CanaryScopeFactory>> canaryScopeFactories,
-                          Registry registry,
-                          ObjectMapper kayentaObjectMapper,
                           ExecutionMapper executionMapper) {
-    this.currentInstanceId = currentInstanceId;
-    this.executionLauncher = executionLauncher;
     this.executionRepository = executionRepository;
     this.accountCredentialsRepository = accountCredentialsRepository;
     this.storageServiceRepository = storageServiceRepository;
     this.executionMapper = executionMapper;
-
-    this.canaryScopeFactories = canaryScopeFactories.orElseGet(Collections::emptyList);
-
-    this.registry = registry;
-    this.kayentaObjectMapper = kayentaObjectMapper;
-    this.pipelineRunId = registry.createId("canary.pipelines.initiated");
-    this.failureId = registry.createId("canary.pipelines.startupFailed");
   }
 
   //
@@ -123,14 +101,14 @@ public class CanaryController {
         .orElseThrow(() -> new IllegalArgumentException("No configuration service was configured."));
     CanaryConfig canaryConfig = configurationService.loadObject(resolvedConfigurationAccountName, ObjectType.CANARY_CONFIG, canaryConfigId);
 
-    return buildExecution(application,
-                          parentPipelineExecutionId,
-                          canaryConfigId,
-                          canaryConfig,
-                          resolvedConfigurationAccountName,
-                          resolvedMetricsAccountName,
-                          resolvedStorageAccountName,
-                          canaryExecutionRequest);
+    return executionMapper.buildExecution(application,
+                                          parentPipelineExecutionId,
+                                          canaryConfigId,
+                                          canaryConfig,
+                                          resolvedConfigurationAccountName,
+                                          resolvedMetricsAccountName,
+                                          resolvedStorageAccountName,
+                                          canaryExecutionRequest);
   }
 
   //
@@ -157,14 +135,14 @@ public class CanaryController {
       throw new IllegalArgumentException("executionRequest must be provided for ad-hoc requests");
     }
 
-    return buildExecution(AD_HOC,
-                          AD_HOC,
-                          AD_HOC,
-                          canaryAdhocExecutionRequest.getCanaryConfig(),
-                          null,
-                          resolvedMetricsAccountName,
-                          resolvedStorageAccountName,
-                          canaryAdhocExecutionRequest.getExecutionRequest());
+    return executionMapper.buildExecution(AD_HOC,
+                                          AD_HOC,
+                                          AD_HOC,
+                                          canaryAdhocExecutionRequest.getCanaryConfig(),
+                                          null,
+                                          resolvedMetricsAccountName,
+                                          resolvedStorageAccountName,
+                                          canaryAdhocExecutionRequest.getExecutionRequest());
   }
 
   //
