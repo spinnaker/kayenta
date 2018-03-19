@@ -103,14 +103,16 @@ class MannWhitneyRSuite extends FunSuite{
     }
     import org.apache.commons.math3.analysis.UnivariateFunction
     import org.apache.commons.math3.analysis.solvers.BrentSolver
-    val zq = -1.9599639845400536 //alpha/2
+    import org.apache.commons.math3.distribution.NormalDistribution
+    val zq = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2) //-1.9599639845400536 //alpha/2
     val f = new UnivariateFunction {
       override def value(x2: Double): Double = wilcoxonDiff(x, y, x2, zq)
     }
-    val fLower = wilcoxonDiff(x, y, muMin, zq)
-    val fUpper = wilcoxonDiff(x, y, muMax, zq)
     val blah = new BrentSolver(1000, 1e-4).solve(1000, f, muMin, muMax)
 
+    println(muMin + " " +muMax)
+    println("break")
+    println(zq)
     println("break")
     println(blah)
 
