@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/metricSetPairList")
@@ -53,7 +54,7 @@ public class MetricSetPairListController {
   @ApiOperation(value = "Retrieve a metric set pair list from object storage")
   @RequestMapping(value = "/{metricSetPairListId:.+}", method = RequestMethod.GET)
   public List<MetricSetPair> loadMetricSetPairList(@RequestParam(required = false) final String accountName,
-                                                   @PathVariable String metricSetPairListId) {
+                                                   @PathVariable final String metricSetPairListId) {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
                                                                               AccountCredentials.Type.OBJECT_STORE,
                                                                               accountCredentialsRepository);
@@ -65,10 +66,29 @@ public class MetricSetPairListController {
     return storageService.loadObject(resolvedAccountName, ObjectType.METRIC_SET_PAIR_LIST, metricSetPairListId);
   }
 
+  @ApiOperation(value = "Retrieve a single metric set pair from a metricSetPairList from object storage")
+  @RequestMapping(value = "/{metricSetPairListId:.+}/{metricId:.+}", method = RequestMethod.GET)
+  public List<MetricSetPair> loadMetricSetPair(@RequestParam(required = false) final String accountName,
+                                         @PathVariable final String metricSetPairListId,
+                                         @PathVariable final String metricId) {
+    String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
+                                                                              AccountCredentials.Type.OBJECT_STORE,
+                                                                              accountCredentialsRepository);
+    StorageService storageService =
+      storageServiceRepository
+        .getOne(resolvedAccountName)
+        .orElseThrow(() -> new IllegalArgumentException("No storage service was configured; unable to read metric set pair list from bucket."));
+
+    List<MetricSetPair> metricSetPairList = storageService.loadObject(resolvedAccountName, ObjectType.METRIC_SET_PAIR_LIST, metricSetPairListId);
+    return metricSetPairList.stream()
+      .filter(metric -> metric.getId().equals(metricId))
+      .collect(Collectors.toList());
+  }
+
   @ApiOperation(value = "Write a metric set pair list to object storage")
   @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
   public Map storeMetricSetPairList(@RequestParam(required = false) final String accountName,
-                                    @RequestBody List<MetricSetPair> metricSetPairList) throws IOException {
+                                    @RequestBody final List<MetricSetPair> metricSetPairList) throws IOException {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
                                                                               AccountCredentials.Type.OBJECT_STORE,
                                                                               accountCredentialsRepository);
@@ -86,7 +106,7 @@ public class MetricSetPairListController {
   @ApiOperation(value = "Delete a metric set pair list")
   @RequestMapping(value = "/{metricSetPairListId:.+}", method = RequestMethod.DELETE)
   public void deleteMetricSetPairList(@RequestParam(required = false) final String accountName,
-                                      @PathVariable String metricSetPairListId,
+                                      @PathVariable final String metricSetPairListId,
                                       HttpServletResponse response) {
     String resolvedAccountName = CredentialsHelper.resolveAccountByNameOrType(accountName,
                                                                               AccountCredentials.Type.OBJECT_STORE,
