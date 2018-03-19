@@ -127,6 +127,7 @@ public class ExecutionMapper {
       .findFirst()
       .orElseThrow(() -> new IllegalArgumentException("Unable to find stage '" + CanaryStageNames.REFID_MIX_METRICS + "' in pipeline ID '" + canaryExecutionId + "'"));
     Map<String, Object> mixerContext = mixerStage.getContext();
+    Map<String, Object> mixerOutputs = mixerStage.getOutputs();
 
     CanaryExecutionStatusResponse.CanaryExecutionStatusResponseBuilder canaryExecutionStatusResponseBuilder =
       CanaryExecutionStatusResponse.builder()
@@ -144,6 +145,10 @@ public class ExecutionMapper {
     }
     canaryExecutionStatusResponseBuilder.config(getCanaryConfig(pipeline));
     canaryExecutionStatusResponseBuilder.canaryExecutionRequest(getCanaryExecutionRequest(pipeline));
+
+    if (mixerOutputs.containsKey("metricSetPairListId")) {
+      canaryExecutionStatusResponseBuilder.metricSetPairListId((String)mixerOutputs.get("metricSetPairListId"));
+    }
 
     Map<String, String> stageStatus = pipeline.getStages()
       .stream()
