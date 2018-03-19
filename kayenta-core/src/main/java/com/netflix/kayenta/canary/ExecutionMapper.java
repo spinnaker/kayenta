@@ -206,6 +206,9 @@ public class ExecutionMapper {
     Map<String, Object> context = contextStage.getContext();
 
     String canaryExecutionRequestJSON = (String)context.get("canaryExecutionRequest");
+    if (canaryExecutionRequestJSON == null) {
+      return null;
+    }
     CanaryExecutionRequest canaryExecutionRequest = null;
     try {
       canaryExecutionRequest = objectMapper.readValue(canaryExecutionRequestJSON, CanaryExecutionRequest.class);
