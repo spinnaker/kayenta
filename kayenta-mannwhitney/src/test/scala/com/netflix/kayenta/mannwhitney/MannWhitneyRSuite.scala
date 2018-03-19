@@ -2,6 +2,7 @@ package com.netflix.kayenta.mannwhitney
 
 import org.scalatest.FunSuite
 import junit.framework.TestCase.assertEquals
+import org.apache.commons.math3.analysis.solvers.BrentSolver
 import org.apache.commons.math3.stat.ranking.{NaNStrategy, NaturalRanking, TiesStrategy}
 
 class MannWhitneyRSuite extends FunSuite{
@@ -57,16 +58,20 @@ class MannWhitneyRSuite extends FunSuite{
         |                        stop("cannot compute confidence interval when all observations are tied", call.=FALSE)
         |                    (dz - CORRECTION.CI) / SIGMA.CI - zq
         |                }
-        |
-        |blah <- wdiff(mumin, alpha/2)
+        |zq <- qnorm(alpha/2)
+        |f.lower <- wdiff(mumin, zq)
+        |f.upper <- wdiff(mumax, zq)
+        |blah <- uniroot(wdiff, c(mumin, mumax),
+        |                            f.lower = f.lower, f.upper = f.upper,
+        |                            tol = 1e-4, zq = zq)$root
         |""".stripMargin
     )
 
     //println(R.get("foo")._2)
     //println(R.get("baz")._2)
+    println(R.get("zq")._1.asInstanceOf[Double])
     println("break")
     println(R.get("blah")._1.asInstanceOf[Double])
-
 
     val confidenceLevel = params.getConfidenceLevel
     val x = params.getExperimentData
@@ -85,7 +90,6 @@ class MannWhitneyRSuite extends FunSuite{
         for (e <- x.indices) yield dr(e)
       }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
       val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
-      val blah = xLen * yLen / 12
       val sigmaCi = Math.sqrt(
         (xLen * yLen / 12) *
           (
@@ -97,7 +101,15 @@ class MannWhitneyRSuite extends FunSuite{
       if (sigmaCi == 0) throw new Exception("cannot compute confidence interval when all observations are tied")
       (dz - correctionCi) / sigmaCi - quantile
     }
-    val blah = wilcoxonDiff(x, y, muMin, alpha/2)
+    import org.apache.commons.math3.analysis.UnivariateFunction
+    import org.apache.commons.math3.analysis.solvers.BrentSolver
+    val zq = -1.9599639845400536 //alpha/2
+    val f = new UnivariateFunction {
+      override def value(x2: Double): Double = wilcoxonDiff(x, y, x2, zq)
+    }
+    val fLower = wilcoxonDiff(x, y, muMin, zq)
+    val fUpper = wilcoxonDiff(x, y, muMax, zq)
+    val blah = new BrentSolver(1000, 1e-4).solve(1000, f, muMin, muMax)
 
     println("break")
     println(blah)
