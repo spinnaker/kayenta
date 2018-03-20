@@ -39,7 +39,7 @@ class MannWhitney {
       resultBuilder.pValue(new MannWhitneyUTest().mannWhitneyUTest(distribution1, distribution2))
 
     /*
-    * Derived from the R Wilcoxon Test implementation (asymptotic, two-sample confidence interval logic):
+    * Derived from the R Wilcoxon Test implementation (asymptotic, two-sample confidence interval logic only):
     * https://github.com/wch/r-source/blob/af7f52f70101960861e5d995d3a4bec010bc89e6/src/library/stats/R/wilcox.test.R
     */
     def calculateConfidenceInterval(distribution1: Array[Double],
@@ -70,7 +70,7 @@ class MannWhitney {
                 / ((xLen + yLen) * (xLen + yLen - 1))
               )
           )
-        if (sigmaCi == 0) throw new Exception("cannot compute confidence interval when all observations are tied")
+        if (sigmaCi == 0) throw new MannWhitneyException("cannot compute confidence interval when all observations are tied")
         (dz - correctionCi) / sigmaCi - quantile
       }
 

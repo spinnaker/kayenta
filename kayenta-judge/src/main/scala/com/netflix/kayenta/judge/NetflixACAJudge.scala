@@ -28,7 +28,7 @@ import com.netflix.kayenta.judge.scorers.{ScoreResult, WeightedSumScorer}
 import com.netflix.kayenta.judge.stats.DescriptiveStatistics
 import com.netflix.kayenta.judge.utils.MapUtils
 import com.netflix.kayenta.metrics.MetricSetPair
-import com.netflix.kayenta.mannwhitney.MannWhitney
+import com.netflix.kayenta.mannwhitney.{MannWhitney, MannWhitneyException}
 import com.typesafe.scalalogging.StrictLogging
 import org.springframework.stereotype.Component
 
@@ -214,8 +214,7 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
         .build()
 
     } catch {
-      //case e: RExecutionException =>
-      case e: Exception =>
+      case e: MannWhitneyException =>
         logger.error("Metric Classification Failed", e)
         resultBuilder
           .classification(Error.toString)
