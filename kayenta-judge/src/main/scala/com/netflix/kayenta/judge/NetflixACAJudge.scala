@@ -28,7 +28,7 @@ import com.netflix.kayenta.judge.scorers.{ScoreResult, WeightedSumScorer}
 import com.netflix.kayenta.judge.stats.DescriptiveStatistics
 import com.netflix.kayenta.judge.utils.MapUtils
 import com.netflix.kayenta.metrics.MetricSetPair
-import com.netflix.kayenta.r.{MannWhitney, RExecutionException}
+import com.netflix.kayenta.mannwhitney.MannWhitney
 import com.typesafe.scalalogging.StrictLogging
 import org.springframework.stereotype.Component
 
@@ -55,9 +55,6 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
     val metricResults = metricSetPairList.asScala.toList.map { metricPair =>
       classifyMetric(canaryConfig, metricPair, mw)
     }
-
-    //Disconnect from RServe
-    mw.disconnect()
 
     //Get the group weights from the canary configuration
     val groupWeights = Option(canaryConfig.getClassifier.getGroupWeights) match {
@@ -217,7 +214,8 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
         .build()
 
     } catch {
-      case e: RExecutionException =>
+      //case e: RExecutionException =>
+      case e: Exception =>
         logger.error("Metric Classification Failed", e)
         resultBuilder
           .classification(Error.toString)

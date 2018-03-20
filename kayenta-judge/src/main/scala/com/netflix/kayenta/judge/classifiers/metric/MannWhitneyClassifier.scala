@@ -17,7 +17,7 @@
 package com.netflix.kayenta.judge.classifiers.metric
 
 import com.netflix.kayenta.judge.Metric
-import com.netflix.kayenta.r.{MannWhitney, MannWhitneyParams}
+import com.netflix.kayenta.mannwhitney.{MannWhitney, MannWhitneyParams}
 import org.apache.commons.math3.stat.StatUtils
 
 case class MannWhitneyResult(pValue: Double, lowerConfidence: Double, upperConfidence: Double, estimate: Double)

@@ -18,7 +18,7 @@ package com.netflix.kayenta.mannwhitney
 
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest
 import org.apache.commons.math3.analysis.UnivariateFunction
-import org.apache.commons.math3.analysis.solvers.BrentSolver
+import org.apache.commons.math3.analysis.solvers.{BracketingNthOrderBrentSolver, BrentSolver}
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.ranking._
 
@@ -69,7 +69,7 @@ class MannWhitney {
                 - ntiesCi.mapValues(v => Math.pow(v, 3) - v).values.sum
                 / ((xLen + yLen) * (xLen + yLen - 1))
               )
-        )
+          )
         if (sigmaCi == 0) throw new Exception("cannot compute confidence interval when all observations are tied")
         (dz - correctionCi) / sigmaCi - quantile
       }
@@ -83,7 +83,7 @@ class MannWhitney {
         val fUpper = wilcoxonDiff(muMax, zq)
         if (fLower <= 0) muMin
         else if (fUpper >= 0) muMax
-        else new BrentSolver(1000, 1e-4).solve(1000, wilcoxonDiffWrapper(zq), muMin, muMax)
+        else new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zq), muMin, muMax)
       }
 
       val zQuant = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
@@ -94,7 +94,7 @@ class MannWhitney {
         )
 
       resultBuilder.confidenceInterval(confidenceInterval)
-      resultBuilder.estimate(new BrentSolver(1000, 1e-4).solve(1000, wilcoxonDiffWrapper(0), muMin, muMax))
+      resultBuilder.estimate(new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(0), muMin, muMax))
     }
   }
 }
