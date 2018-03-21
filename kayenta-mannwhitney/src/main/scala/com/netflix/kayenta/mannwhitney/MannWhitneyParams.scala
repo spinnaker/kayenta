@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,6 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.mannwhitney;
+package com.netflix.kayenta.mannwhitney
 
-import lombok.Builder;
-import lombok.Getter;
-
-@Builder
-public class MannWhitneyParams {
-  @Getter
-  private double mu;
-
-  @Getter
-  private double confidenceLevel;
-
-  @Getter
-  private double[] controlData;
-
-  @Getter
-  private double[] experimentData;
-
-}
+case class MannWhitneyParams(mu: Double, confidenceLevel: Double, controlData: Array[Double], experimentData: Array[Double])

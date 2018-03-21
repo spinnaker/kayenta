@@ -34,17 +34,12 @@ class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.95, mw: M
     */
   def MannWhitneyUTest(experimentValues: Array[Double], controlValues: Array[Double]): MannWhitneyResult ={
     //todo: move this to its own package
-    val params = MannWhitneyParams.builder()
-      .mu(0)
-      .confidenceLevel(confLevel)
-      .controlData(controlValues)
-      .experimentData(experimentValues)
-      .build()
-
+    val params =
+      MannWhitneyParams(mu = 0, confidenceLevel = confLevel, controlData = controlValues, experimentData = experimentValues)
     val testResult = mw.eval(params)
-    val confInterval = testResult.getConfidenceInterval
-    val pValue = testResult.getPValue
-    val estimate = testResult.getEstimate
+    val confInterval = testResult.confidenceInterval
+    val pValue = testResult.pValue
+    val estimate = testResult.estimate
 
     MannWhitneyResult(pValue, confInterval(0), confInterval(1), estimate)
   }

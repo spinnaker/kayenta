@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.mannwhitney;
+package com.netflix.kayenta.mannwhitney
 
-public class MannWhitneyException extends Exception {
-  public MannWhitneyException(String message) {
-    super(message);
-  }
+case class MannWhitneyResult(confidenceInterval: Array[Double], pValue: Double, estimate: Double) {
 
-  public MannWhitneyException(String message, Throwable t) {
-    super(message, t);
-  }
 }
