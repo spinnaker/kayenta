@@ -1,7 +1,5 @@
 dependencies {
-    compile "org.projectlombok:lombok:1.16.18"
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-    compile group: 'com.google.guava', name: 'guava', version: '24.0-jre'
     compile group: 'org.ddahl', name: 'rscala_2.12', version: '2.5.1'
 
     // scala support
