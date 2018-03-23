@@ -413,7 +413,6 @@ public class ExecutionMapper {
 
     Execution pipeline = pipelineBuilder
       .withLimitConcurrent(false)
-      .withExecutionEngine(Execution.ExecutionEngine.v3)
       .build();
 
     executionRepository.store(pipeline);
