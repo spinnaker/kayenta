@@ -76,7 +76,7 @@ class MannWhitney {
       override def value(input: Double): Double = wilcoxonDiff(input, zq)
     }
 
-    def findRoot(f1: (Double, Double) => Double, zq: Double): Double = {
+    def findRoot(zq: Double): Double = {
       val fLower = wilcoxonDiff(muMin, zq)
       val fUpper = wilcoxonDiff(muMax, zq)
       if (fLower <= 0) muMin
@@ -87,11 +87,35 @@ class MannWhitney {
     val zQuant = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
     val confidenceInterval: Array[Double] =
       Array(
-        findRoot(wilcoxonDiff, zQuant * -1),
-        findRoot(wilcoxonDiff, zQuant)
+        findRoot(zQuant * -1),
+        findRoot(zQuant)
       )
     val estimate = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(0), muMin, muMax)
     (confidenceInterval, estimate)
   }
 
+
+  //todo: REMOVE  for debug purposes only
+  import org.ddahl.rscala.RClient
+  protected def calculateConfidenceInterval2(distribution1: Array[Double],
+                                            distribution2: Array[Double],
+                                            confidenceLevel: Double,
+                                            mu: Double): (Array[Double], Double) = {
+    val R = RClient()
+    R.set("conf.level", confidenceLevel)
+    R.set("x", distribution2)
+    R.set("y", distribution1)
+    R.eval(
+      """
+        |res <- wilcox.test(x,y,conf.int=TRUE,mu=%s,conf.level=%s)
+        |pval <- res$p.value
+        |lcint <- res$conf.int[1]
+        |hcint <- res$conf.int[2]
+        |est <- res$estimate
+        |""".stripMargin.format(mu.toString, confidenceLevel.toString)
+    )
+    (Array(R.get("lcint")._1.asInstanceOf[Double], R.get("hcint")._1.asInstanceOf[Double]), R.get("est")._1.asInstanceOf[Double])
+  }
+
 }
+

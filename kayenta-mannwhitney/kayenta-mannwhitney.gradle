@@ -2,6 +2,8 @@ apply plugin: 'scala'
 
 dependencies {
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+
+    //todo: remove. for debugging only
     compile group: 'org.ddahl', name: 'rscala_2.12', version: '2.5.1'
 
     // scala support

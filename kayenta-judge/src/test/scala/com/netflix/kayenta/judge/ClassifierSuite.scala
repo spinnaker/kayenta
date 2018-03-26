@@ -349,4 +349,42 @@ class ClassifierSuite extends FunSuite{
     assert(result.classification == Pass)
   }
 
+
+
+
+
+
+  //todo: Remove all tests below...  temporary dummy tests for adhoc tie-outs during development
+  test("run Chris S's data thru new logic"){
+
+    val experimentData = Array(2.5, 2.5, 2.0, 2.5, 3.5, 2.0, 3.5, 1.5, 3.0, 3.0, 2.5, 3.5, 2.0, 2.5, 2.0, 2.0, 5.0, 3.0, 2.0, 1.5, 2.0, 4.0, 3.0, 2.5, 3.0, 2.0, 2.0, 2.0, 2.5, 3.5, 1.5, 1.5, 3.5, 2.0, 2.5, 2.5, 3.0, 3.5, 2.5, 6.5, 2.5, 4.0, 2.5, 3.0, 2.5, 6.5, 2.5, 3.0, 1.5, 2.0, 2.5, 3.0, 7.5, 1.5, 2.0, 4.0, 2.5, 2.0, 2.5, 3.5, 4.0, 2.5, 3.0, 2.5, 2.0, 3.5, 3.0, 16.5, 3.0, 3.0, 7.0, 4.5, 5.0, 2.0, 3.5, 6.0, 1.5, 3.0, 2.5, 4.0, 3.0, 1.5, 5.0, 3.0, 2.5, 5.5, 3.0, 1.5, 2.5, 6.0)
+    val controlData = Array(1.5, 6.0, 5.0, 2.5, 2.5, 2.0, 2.0, 3.5, 3.0, 3.0, 3.0, 2.0, 3.0, 8.0, 4.0, 2.5, 3.0, 2.5, 2.5, 2.0, 2.5, 2.0, 2.0, 2.5, 3.5, 3.0, 1.5, 5.0, 2.5, 5.5, 2.0, 2.5, 3.5, 2.0, 2.5, 4.0, 2.0, 2.0, 2.0, 2.0, 5.5, 4.5, 4.0, 3.0, 3.0, 3.5, 2.5, 3.0, 2.5, 4.0, 6.0, 2.0, 5.0, 6.0, 3.5, 3.0, 54.5, 3.0, 5.0, 6.0, 3.5, 4.5, 2.5, 2.0, 6.0, 5.0, 2.5, 3.5, 2.0, 3.0, 2.5, 3.5, 3.5, 2.5, 3.0, 4.5, 3.0, 15.5, 5.0, 2.5, 3.0, 4.0, 3.5, 4.0, 4.0, 2.0, 4.5, 2.5, 4.0, 3.0)
+
+    val experimentMetric = Metric("pass-metric", experimentData, "canary")
+    val controlMetric = Metric("pass-metric", controlData, "baseline")
+
+    val mw = new MannWhitney()
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
+
+    println(result.reason)
+    assert(result.classification == Pass)
+  }
+
+  test("run Chris S's data thru old logic"){
+
+    val experimentData = Array(2.5, 2.5, 2.0, 2.5, 3.5, 2.0, 3.5, 1.5, 3.0, 3.0, 2.5, 3.5, 2.0, 2.5, 2.0, 2.0, 5.0, 3.0, 2.0, 1.5, 2.0, 4.0, 3.0, 2.5, 3.0, 2.0, 2.0, 2.0, 2.5, 3.5, 1.5, 1.5, 3.5, 2.0, 2.5, 2.5, 3.0, 3.5, 2.5, 6.5, 2.5, 4.0, 2.5, 3.0, 2.5, 6.5, 2.5, 3.0, 1.5, 2.0, 2.5, 3.0, 7.5, 1.5, 2.0, 4.0, 2.5, 2.0, 2.5, 3.5, 4.0, 2.5, 3.0, 2.5, 2.0, 3.5, 3.0, 16.5, 3.0, 3.0, 7.0, 4.5, 5.0, 2.0, 3.5, 6.0, 1.5, 3.0, 2.5, 4.0, 3.0, 1.5, 5.0, 3.0, 2.5, 5.5, 3.0, 1.5, 2.5, 6.0)
+    val controlData = Array(1.5, 6.0, 5.0, 2.5, 2.5, 2.0, 2.0, 3.5, 3.0, 3.0, 3.0, 2.0, 3.0, 8.0, 4.0, 2.5, 3.0, 2.5, 2.5, 2.0, 2.5, 2.0, 2.0, 2.5, 3.5, 3.0, 1.5, 5.0, 2.5, 5.5, 2.0, 2.5, 3.5, 2.0, 2.5, 4.0, 2.0, 2.0, 2.0, 2.0, 5.5, 4.5, 4.0, 3.0, 3.0, 3.5, 2.5, 3.0, 2.5, 4.0, 6.0, 2.0, 5.0, 6.0, 3.5, 3.0, 54.5, 3.0, 5.0, 6.0, 3.5, 4.5, 2.5, 2.0, 6.0, 5.0, 2.5, 3.5, 2.0, 3.0, 2.5, 3.5, 3.5, 2.5, 3.0, 4.5, 3.0, 15.5, 5.0, 2.5, 3.0, 4.0, 3.5, 4.0, 4.0, 2.0, 4.5, 2.5, 4.0, 3.0)
+
+    val experimentMetric = Metric("pass-metric", experimentData, "canary")
+    val controlMetric = Metric("pass-metric", controlData, "baseline")
+
+    val mw: com.netflix.kayenta.r.MannWhitney = new com.netflix.kayenta.r.MannWhitney()
+    val classifier = new MannWhitneyClassifierOld(fraction = 0.10, confLevel = 0.95, mw)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
+    mw.disconnect()
+
+    assert(result.classification == Pass)
+  }
+
 }

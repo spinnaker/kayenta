@@ -33,10 +33,18 @@ class MannWhitneySuite extends FunSuite {
     //assertEquals(0.02857142857142857, result.pValue, E)
   }
 
-  //todo: Remove...  temporary dummy test for adhoc tie-outs during development
+  //todo: Remove all tests below...  temporary dummy tests for adhoc tie-outs during development
   import org.ddahl.rscala.RClient
-  test("foo"){
-    val params = MannWhitneyParams(mu = 0.0, confidenceLevel = 0.95, controlData = Array(1.0, 2.0, 3.0, 4.0), experimentData = Array(10.0, 20.0, 30.0, 40.0))
+  test("tie out with R version"){
+    val params =
+      MannWhitneyParams(
+        mu = 0.0,
+        confidenceLevel = 0.95,
+        controlData =
+          Array(1.5, 6.0, 5.0, 2.5, 2.5, 2.0, 2.0, 3.5, 3.0, 3.0, 3.0, 2.0, 3.0, 8.0, 4.0, 2.5, 3.0, 2.5, 2.5, 2.0, 2.5, 2.0, 2.0, 2.5, 3.5, 3.0, 1.5, 5.0, 2.5, 5.5, 2.0, 2.5, 3.5, 2.0, 2.5, 4.0, 2.0, 2.0, 2.0, 2.0, 5.5, 4.5, 4.0, 3.0, 3.0, 3.5, 2.5, 3.0, 2.5, 4.0, 6.0, 2.0, 5.0, 6.0, 3.5, 3.0, 54.5, 3.0, 5.0, 6.0, 3.5, 4.5, 2.5, 2.0, 6.0, 5.0, 2.5, 3.5, 2.0, 3.0, 2.5, 3.5, 3.5, 2.5, 3.0, 4.5, 3.0, 15.5, 5.0, 2.5, 3.0, 4.0, 3.5, 4.0, 4.0, 2.0, 4.5, 2.5, 4.0, 3.0),
+        experimentData =
+          Array(2.5, 2.5, 2.0, 2.5, 3.5, 2.0, 3.5, 1.5, 3.0, 3.0, 2.5, 3.5, 2.0, 2.5, 2.0, 2.0, 5.0, 3.0, 2.0, 1.5, 2.0, 4.0, 3.0, 2.5, 3.0, 2.0, 2.0, 2.0, 2.5, 3.5, 1.5, 1.5, 3.5, 2.0, 2.5, 2.5, 3.0, 3.5, 2.5, 6.5, 2.5, 4.0, 2.5, 3.0, 2.5, 6.5, 2.5, 3.0, 1.5, 2.0, 2.5, 3.0, 7.5, 1.5, 2.0, 4.0, 2.5, 2.0, 2.5, 3.5, 4.0, 2.5, 3.0, 2.5, 2.0, 3.5, 3.0, 16.5, 3.0, 3.0, 7.0, 4.5, 5.0, 2.0, 3.5, 6.0, 1.5, 3.0, 2.5, 4.0, 3.0, 1.5, 5.0, 3.0, 2.5, 5.5, 3.0, 1.5, 2.5, 6.0)
+      )
     val R = RClient()
     R.set("conf.level", params.confidenceLevel)
     R.set("x", params.experimentData)
@@ -63,6 +71,156 @@ class MannWhitneySuite extends FunSuite {
     println("ci high " + result.confidenceInterval.last)
     println("est " + result.estimate)
     println("pval " + result.pValue)
+
+  }
+
+
+  import org.apache.commons.math3.stat.ranking.{NaNStrategy, NaturalRanking, TiesStrategy}
+  import org.apache.commons.math3.analysis.solvers.BracketingNthOrderBrentSolver
+  import org.apache.commons.math3.analysis.UnivariateFunction
+  import org.apache.commons.math3.distribution.NormalDistribution
+  test("tie out intermediate variables"){
+    val params =
+      MannWhitneyParams(
+        mu = 0.0,
+        confidenceLevel = 0.95,
+        controlData =
+          Array(1.5, 6.0, 5.0, 2.5, 2.5, 2.0, 2.0, 3.5, 3.0, 3.0, 3.0, 2.0, 3.0, 8.0, 4.0, 2.5, 3.0, 2.5, 2.5, 2.0, 2.5, 2.0, 2.0, 2.5, 3.5, 3.0, 1.5, 5.0, 2.5, 5.5, 2.0, 2.5, 3.5, 2.0, 2.5, 4.0, 2.0, 2.0, 2.0, 2.0, 5.5, 4.5, 4.0, 3.0, 3.0, 3.5, 2.5, 3.0, 2.5, 4.0, 6.0, 2.0, 5.0, 6.0, 3.5, 3.0, 54.5, 3.0, 5.0, 6.0, 3.5, 4.5, 2.5, 2.0, 6.0, 5.0, 2.5, 3.5, 2.0, 3.0, 2.5, 3.5, 3.5, 2.5, 3.0, 4.5, 3.0, 15.5, 5.0, 2.5, 3.0, 4.0, 3.5, 4.0, 4.0, 2.0, 4.5, 2.5, 4.0, 3.0),
+        experimentData =
+          Array(2.5, 2.5, 2.0, 2.5, 3.5, 2.0, 3.5, 1.5, 3.0, 3.0, 2.5, 3.5, 2.0, 2.5, 2.0, 2.0, 5.0, 3.0, 2.0, 1.5, 2.0, 4.0, 3.0, 2.5, 3.0, 2.0, 2.0, 2.0, 2.5, 3.5, 1.5, 1.5, 3.5, 2.0, 2.5, 2.5, 3.0, 3.5, 2.5, 6.5, 2.5, 4.0, 2.5, 3.0, 2.5, 6.5, 2.5, 3.0, 1.5, 2.0, 2.5, 3.0, 7.5, 1.5, 2.0, 4.0, 2.5, 2.0, 2.5, 3.5, 4.0, 2.5, 3.0, 2.5, 2.0, 3.5, 3.0, 16.5, 3.0, 3.0, 7.0, 4.5, 5.0, 2.0, 3.5, 6.0, 1.5, 3.0, 2.5, 4.0, 3.0, 1.5, 5.0, 3.0, 2.5, 5.5, 3.0, 1.5, 2.5, 6.0)
+      )
+    val R = RClient()
+    R.set("conf.level", params.confidenceLevel)
+    R.set("x", params.experimentData)
+    R.set("y", params.controlData)
+
+    R.eval(
+      """
+        |alpha <- 1 - conf.level
+        |mumin <- min(x) - max(y)
+        |mumax <- max(x) - min(y)
+        |
+        |n.x <- as.double(length(x))
+        |n.y <- as.double(length(y))
+        |correct <- TRUE
+        |alternative <- "two.sided"
+        |
+        |wdiff <- function(d, zq) {
+        |                    dr <- rank(c(x - d, y))
+        |                    NTIES.CI <- table(dr)
+        |                    dz <- (sum(dr[seq_along(x)])
+        |                           - n.x * (n.x + 1) / 2 - n.x * n.y / 2)
+        |		                CORRECTION.CI <-
+        |			                 if(correct) {
+        |                            switch(alternative,
+        |                                   "two.sided" = sign(dz) * 0.5,
+        |                                   "greater" = 0.5,
+        |                                   "less" = -0.5)
+        |			                 } else 0
+        |                    SIGMA.CI <- sqrt((n.x * n.y / 12) *
+        |                                     ((n.x + n.y + 1)
+        |                                      - sum(NTIES.CI^3 - NTIES.CI)
+        |                                      / ((n.x + n.y) * (n.x + n.y - 1))))
+        |                    if (SIGMA.CI == 0)
+        |                        stop("cannot compute confidence interval when all observations are tied", call.=FALSE)
+        |                    (dz - CORRECTION.CI) / SIGMA.CI - zq
+        |                }
+        |root <- function(zq) {
+        |                    ## in extreme cases we need to return endpoints,
+        |                    ## e.g.  wilcox.test(1, 2:60, conf.int=TRUE)
+        |                    f.lower <- wdiff(mumin, zq)
+        |                    if(f.lower <= 0) return(mumin)
+        |                    f.upper <- wdiff(mumax, zq)
+        |                    if(f.upper >= 0) return(mumax)
+        |                    uniroot(wdiff, c(mumin, mumax),
+        |                            f.lower = f.lower, f.upper = f.upper,
+        |                            tol = 1e-4, zq = zq)$root
+        |                }
+        |
+        |zq.lower <- qnorm(alpha/2, lower.tail = FALSE)
+        |zq.upper <- qnorm(alpha/2)
+        |fl1 <- wdiff(mumin, zq.lower)
+        |fu1 <- wdiff(mumax, zq.lower)
+        |fl2 <- wdiff(mumin, zq.upper)
+        |fu2 <- wdiff(mumax, zq.upper)
+        |l <- root(zq = qnorm(alpha/2, lower.tail = FALSE))
+        |u <- root(zq = qnorm(alpha/2))
+        |est <- uniroot(wdiff, c(mumin, mumax),
+        |                         tol = 1e-4, zq = 0)$root
+        |""".stripMargin
+    )
+
+    println("mumin " + R.get("mumin")._1.asInstanceOf[Double])
+    println("mumax " + R.get("mumax")._1.asInstanceOf[Double])
+    println("zq.lower " + R.get("zq.lower")._1.asInstanceOf[Double])
+    println("zq.upper " + R.get("zq.upper")._1.asInstanceOf[Double])
+    println("f.lower1 " + R.get("fl1")._1.asInstanceOf[Double])
+    println("f.upper1 " + R.get("fu1")._1.asInstanceOf[Double])
+    println("f.lower2 " + R.get("fl2")._1.asInstanceOf[Double])
+    println("f.upper2 " + R.get("fu2")._1.asInstanceOf[Double])
+    println("ci.lower " + R.get("l")._1.asInstanceOf[Double])
+    println("ci.upper " + R.get("u")._1.asInstanceOf[Double])
+    println("est " + R.get("est")._1.asInstanceOf[Double])
+
+    val confidenceLevel1 = params.confidenceLevel
+    val x = params.experimentData
+    val y = params.controlData
+    val xLen = x.length.toDouble
+    val yLen = y.length.toDouble
+
+    val alpha: Double = 1.0 - confidenceLevel1
+    val muMin: Double = x.min - y.max
+    val muMax: Double = x.max - y.min
+
+    val wilcoxonDiff = (mu: Double, quantile: Double) => {
+      val dr = new NaturalRanking(NaNStrategy.MAXIMAL, TiesStrategy.AVERAGE).rank(x.map(_ - mu) ++ y)
+      val ntiesCi = dr.groupBy(identity).mapValues(_.length)
+      val dz = {
+        for (e <- x.indices) yield dr(e)
+      }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
+      val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
+      val sigmaCi = Math.sqrt(
+        (xLen * yLen / 12) *
+          (
+            (xLen + yLen + 1)
+              - ntiesCi.mapValues(v => Math.pow(v, 3) - v).values.sum
+              / ((xLen + yLen) * (xLen + yLen - 1))
+            )
+      )
+      if (sigmaCi == 0) throw new MannWhitneyException("cannot compute confidence interval when all observations are tied")
+      (dz - correctionCi) / sigmaCi - quantile
+    }
+
+    val wilcoxonDiffWrapper = (zq: Double) => new UnivariateFunction {
+      override def value(input: Double): Double = wilcoxonDiff(input, zq)
+    }
+
+    val zqLower = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2) * -1
+    val zqUpper = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
+    val fLower1 = wilcoxonDiff(muMin, zqLower)
+    val fUpper1 = wilcoxonDiff(muMax, zqLower)
+    val fLower2 = wilcoxonDiff(muMin, zqUpper)
+    val fUpper2 = wilcoxonDiff(muMax, zqUpper)
+    val ciLower = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zqLower), muMin, muMax)
+    val ciUpper = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zqUpper), muMin, muMax)
+    val est = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(0), muMin, muMax)
+
+    //1e-4, 5
+    //diff: -3.5347077141 × 10-5
+    //
+
+    println("---------------")
+    println("muMin " + muMin)
+    println("muMax " + muMax)
+    println("zqLower " + zqLower)
+    println("zqUpper " + zqUpper)
+    println("fLower1 " + fLower1)
+    println("fUpper1 " + fUpper1)
+    println("fLower2 " + fLower2)
+    println("fUpper2 " + fUpper2)
+    println("ciLower " + ciLower)
+    println("ciUpper " + ciUpper)
+    println("est " + est)
 
   }
 }
