@@ -2,10 +2,11 @@ package com.netflix.kayenta.mannwhitney
 
 import com.netflix.kayenta.mannwhitney.Alternative.Alternative
 import com.netflix.kayenta.mannwhitney.Operation.Operation
+import com.netflix.kayenta.mannwhitney.WilcoxPath.WilcoxPath
 import org.apache.commons.math3.special.Gamma
 import org.apache.commons.math3.stat.ranking.{NaturalRanking, TiesStrategy}
 
-case class WilcoxResult(lower: Double, upper: Double)
+case class WilcoxResult(lower: Double, upper: Double, path: WilcoxPath = WilcoxPath.EXACT)
 
 object Alternative extends Enumeration {
   type Alternative = Value
@@ -19,9 +20,14 @@ object Operation extends Enumeration {
   val ADD, SUBTRACT, MULTIPLY, DIVIDE = Value
 }
 
+object WilcoxPath extends Enumeration {
+  type WilcoxPath = Value
+
+  val EXACT, ASYMPTOTIC = Value
+}
+
 object Wilcox {
 
-  //<editor-fold desc="Private Variables">
   private val wilcoxCount: Int = 50
   private val k_small_max: Double = 30
   private val M_LN_SQRT_2PI: Double = 0.918938533204672741780329736406
@@ -122,7 +128,6 @@ object Wilcox {
     0.005951370112758847735624416, /* 14.0 */
     0.005746216513010115682023589, /* 14.5 */
     0.005554733551962801371038690 /* 15.0 */)
-  //</editor-fold>
 
   def ~=(x: Double, y: Double, precision: Double): Boolean = {
     if ((x - y).abs < precision) true else false
@@ -148,7 +153,7 @@ object Wilcox {
       b0 = twox * b1 - b2 + a(n - i)
     }
 
-    return (b0 - b2) * 0.5
+    (b0 - b2) * 0.5
   }
 
   def choose(n: Double, k: Double): Double = {
@@ -174,16 +179,16 @@ object Wilcox {
       case x if x < 0 => {
         r = choose(-n + local_k - 1, local_k)
         local_k match {
-          case o if isOdd(o) => return -r
-          case _ => return r
+          case o if isOdd(o) => -r
+          case _ => r
         }
       }
       case x if ~=(x, Math.floor(x), epsilon) && !x.isInfinite => {
         val in: Int = x.toInt
         in match {
-          case o if o < local_k => return 0.0
-          case o if o - local_k < k_small_max => return choose(x, x - local_k)
-          case _ => return Math.exp(lfastchoose(x, local_k))
+          case o if o < local_k => 0.0
+          case o if o - local_k < k_small_max => choose(x, x - local_k)
+          case _ => Math.exp(lfastchoose(x, local_k))
         }
       }
       case _ => Double.NaN
@@ -193,7 +198,7 @@ object Wilcox {
   def compare(d1: Double, d2: Double): Int = {
     if (~=(d1, d2, epsilon)) return 0
     else if (d1 < d2) return -1
-    return 1
+    1
   }
 
   def gammafn(x: Double): Double = {
@@ -255,14 +260,14 @@ object Wilcox {
           value /= (x + i)
         }
 
-        return value
+        value
       }
       else {
         for (i <- 1 to n) {
           value *= (y + i)
         }
 
-        return value
+        value
       }
     }
     else {
@@ -293,12 +298,12 @@ object Wilcox {
         return Double.PositiveInfinity
       }
 
-      return -Math.PI / (y * sinpiy * value)
+      -Math.PI / (y * sinpiy * value)
     }
   }
 
   def hasTies(x: Vector[Double]): Boolean = {
-    return x.length != x.distinct.length
+    x.length != x.distinct.length
   }
 
   def isEven(number: Double): Boolean = number % 2 == 0
@@ -321,17 +326,17 @@ object Wilcox {
 
     if (p >= 10) {
       corr = lgammacor(p) + lgammacor(q) - lgammacor(p + q)
-      return Math.log(q) * -0.5 + M_LN_SQRT_2PI + corr + (p - 0.5) *
-      Math.log(p / (p + q)) + q * Math.log1p(-p / (p + q))
+      Math.log(q) * -0.5 + M_LN_SQRT_2PI + corr + (p - 0.5) *
+        Math.log(p / (p + q)) + q * Math.log1p(-p / (p + q))
     }
     else if (q >= 10) {
       corr = lgammacor(q) - lgammacor(p + q)
-      return lgammafn(p) + corr + p - q * Math.log(p + q) +
+      lgammafn(p) + corr + p - q * Math.log(p + q) +
         (q - 0.5) * Math.log1p(-p / (p + q))
     }
     else {
-      if (p < 1e-306) return Gamma.logGamma(p) + (Gamma.logGamma(q) - Gamma.logGamma(p + q))
-      else return Math.log(gammafn(p) * (gammafn(q) / gammafn(p + q)))
+      if (p < 1e-306) Gamma.logGamma(p) + (Gamma.logGamma(q) - Gamma.logGamma(p + q))
+      else Math.log(gammafn(p) * (gammafn(q) / gammafn(p + q)))
     }
   }
 
@@ -342,13 +347,13 @@ object Wilcox {
     val nalgm = 5
 
     x match {
-      case y if y < 10 => return Double.NaN
-      case y if y >= xmax => return Double.NaN
+      case y if y < 10 => Double.NaN
+      case y if y >= xmax => Double.NaN
       case y if y < xbig => {
         val tmp = 10 / y
-        return chebyshev_eval(tmp * tmp * 2 - 1, algmcs, nalgm) / x
+        chebyshev_eval(tmp * tmp * 2 - 1, algmcs, nalgm) / x
       }
-      case _ => return 1 / (x * 12)
+      case _ => 1 / (x * 12)
     }
   }
 
@@ -377,7 +382,7 @@ object Wilcox {
   }
 
   def lfastchoose(n:Double, k:Double): Double = {
-    return -1 * Math.log(n + 1.0) - lbeta(n - k + 1.0, k + 1.0)
+    -1 * Math.log(n + 1.0) - lbeta(n - k + 1.0, k + 1.0)
   }
 
   def outer(x: Array[Double], y: Array[Double], operation: Operation): Vector[Double] = {
@@ -397,7 +402,7 @@ object Wilcox {
       }
     }
 
-    return result.sortBy(v => v).toVector
+    result.sortBy(v => v).toVector
   }
 
   def pwilcox(q: Double, m: Double, n: Double, lowerTail: Boolean = true, logP: Boolean = false): Double = {
@@ -490,14 +495,14 @@ object Wilcox {
       }
     }
 
-    return q
+    q
   }
 
   def R_DT_qIv(p: Double, lowerTail: Boolean, logP: Boolean): Double = {
-    logP match {
-      case true => if (lowerTail) Math.exp(p) else -1 * Math.expm1(p)
-      case false => R_Q_P01_check(p, logP)
+    if (logP) {
+      if (lowerTail) Math.exp(p) else -1 * Math.expm1(p)
     }
+    else R_Q_P01_check(p, logP)
   }
 
   def R_Q_P01_check(p: Double, logP: Boolean): Double = {
@@ -545,7 +550,9 @@ object Wilcox {
            alternative: Alternative = Alternative.TWOSIDED,
            mu: Double = 0.0, paired: Boolean = false,
            exact: Option[Boolean] = None, correct: Boolean = true,
-           confidenceLevel: Double = 0.95): WilcoxResult = {
+           confidenceLevel: Double = 0.99): WilcoxResult = {
+
+    if (x.isEmpty || y.isEmpty) return WilcoxResult(Double.NaN, Double.NaN)
 
     val exactCase = exact match {
       case Some(exact) => exact
@@ -558,7 +565,7 @@ object Wilcox {
     var rankAlg = new NaturalRanking(TiesStrategy.AVERAGE)
     val r = rankAlg.rank(xy)
 
-    if (exactCase && hasTies(r.toVector)) {
+    if (exactCase && !hasTies(r.toVector)) {
 
       val confidenceIntervals = alternative match {
         case Alternative.TWOSIDED => {
@@ -596,11 +603,11 @@ object Wilcox {
     }
     else {
       val params = MannWhitneyParams(mu = mu, confidenceLevel = confidenceLevel,
-        controlData = x, experimentData = y)
+        controlData = y, experimentData = x)
       val mw = new MannWhitney
       val results = mw.eval(params)
 
-      WilcoxResult(results.confidenceInterval.head, results.confidenceInterval.last)
+      WilcoxResult(results.confidenceInterval.head, results.confidenceInterval.last, WilcoxPath.ASYMPTOTIC)
     }
   }
 
