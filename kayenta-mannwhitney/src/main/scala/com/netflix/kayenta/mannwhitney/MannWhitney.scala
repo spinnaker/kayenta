@@ -50,7 +50,7 @@ class MannWhitney {
       val fUpper = wilcoxonDiff(muMax, zq, x, y)
       if (fLower <= 0) muMin
       else if (fUpper >= 0) muMax
-      else KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(zq))
+      else KayentaBrentSolver.solve(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(zq))
     }
 
     val zQuant = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
@@ -62,7 +62,7 @@ class MannWhitney {
     val fLower = wilcoxonDiff(muMin, 0, x, y)
     val fUpper = wilcoxonDiff(muMax, 0, x, y)
 
-    val estimate = KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
+    val estimate = KayentaBrentSolver.solve(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
     (confidenceInterval, estimate)
   }
 }
@@ -81,7 +81,7 @@ object MannWhitney {
     val dz = {
       for (e <- x.indices) yield dr(e)
     }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
-    val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
+    val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5
     val sigmaCi = Math.sqrt(
       (xLen * yLen / 12) *
         (

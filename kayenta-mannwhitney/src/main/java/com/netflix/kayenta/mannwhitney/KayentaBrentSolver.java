@@ -29,8 +29,8 @@ public class KayentaBrentSolver {
    * @return the value where the function is zero.
    */
 
-  static double brentDirect(double ax, double bx, double fa, double fb,
-                     UnivariateFunction func)
+  static double solve(double ax, double bx, double fa, double fb,
+                      UnivariateFunction func)
   {
     double a,b,c, fc;
     double tol;
@@ -48,15 +48,14 @@ public class KayentaBrentSolver {
       return b;
     }
 
-    while (maxit-- > 0)	{	/* Main iteration loop	*/
-      double prev_step = b - a;		/* Distance from the last but one
-					   to the last approximation	*/
-      double tol_act;			/* Actual tolerance		*/
-      double p;			/* Interpolation step is calcu- */
-      double q;			/* lated in the form p/q; divi-
-       * sion operations is delayed
-       * until the last moment	*/
-      double new_step;		/* Step at this iteration	*/
+    while (maxit-- > 0)	{	        /* Main iteration loop	*/
+      double prev_step = b - a;		/* Distance from the last but one to the last approximation	*/
+      double tol_act;			    /* Actual tolerance		*/
+      double p;			            /* Interpolation step is calcu- */
+      double q;			            /* lated in the form p/q; divi-
+                                     * sion operations is delayed
+                                     * until the last moment	*/
+      double new_step;		         /* Step at this iteration	*/
 
       if (Math.abs(fc) < Math.abs(fb)) {
         /* Swap data for b to be the	*/
@@ -75,7 +74,7 @@ public class KayentaBrentSolver {
         double t1, cb, t2;
         cb = c-b;
         if (a == c) {		/* If we have only two distinct	*/
-          /* points linear interpolation	*/
+                            /* points linear interpolation	*/
           t1 = fb/fa;		/* can only be applied		*/
           p = cb*t1;
           q = 1.0 - t1;
@@ -86,12 +85,12 @@ public class KayentaBrentSolver {
         }
         if (p > 0.0)		/* p was calculated with the */
           q = -q;			/* opposite sign; make p positive */
-        else			/* and assign possible minus to	*/
+        else			    /* and assign possible minus to	*/
           p = -p;			/* q				*/
 
-        if (p < (0.75*cb*q-Math.abs(tol_act*q)/2) /* If b+p/q falls in [b,c]*/
-          && p < Math.abs(prev_step*q/2))	/* and isn't too large	*/
-          new_step = p/q;			/* it is accepted
+        if (p < (0.75*cb*q-Math.abs(tol_act*q)/2)   /* If b+p/q falls in [b,c]*/
+          && p < Math.abs(prev_step*q/2))	        /* and isn't too large	*/
+          new_step = p/q;			                /* it is accepted
            * If p/q is too large then the
            * bisection procedure can
            * reduce [b,c] range to more
@@ -99,12 +98,12 @@ public class KayentaBrentSolver {
       }
 
       if (Math.abs(new_step) < tol_act) {	/* Adjust the step to be not less*/
-        if (new_step > 0)	/* than tolerance		*/
+        if (new_step > 0)	                /* than tolerance		*/
           new_step = tol_act;
         else
           new_step = -tol_act;
       }
-      a = b;	fa = fb;			/* Save the previous approx. */
+      a = b;	fa = fb;			        /* Save the previous approx. */
       b += new_step;	fb = func.value(b);
       if ((fb > 0 && fc > 0) || (fb < 0 && fc < 0)) {
         /* Adjust c for it to have a sign opposite to that of b */

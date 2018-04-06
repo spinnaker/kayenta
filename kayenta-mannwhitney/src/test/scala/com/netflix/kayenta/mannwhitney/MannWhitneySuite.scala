@@ -180,9 +180,9 @@ class MannWhitneySuite extends FunSuite {
     val fUpper1 = MannWhitney.wilcoxonDiff(muMax, zqLower, x, y)
     val fLower2 = MannWhitney.wilcoxonDiff(muMin, zqUpper, x, y)
     val fUpper2 = MannWhitney.wilcoxonDiff(muMax, zqUpper, x, y)
-    val ciLower = KayentaBrentSolver.brentDirect(muMin, muMax, fLower1, fUpper1, wilcoxonDiffWrapper(zqLower))
-    val ciUpper = KayentaBrentSolver.brentDirect(muMin, muMax, fLower2, fUpper2, wilcoxonDiffWrapper(zqUpper))
-    val est = KayentaBrentSolver.brentDirect(muMin, muMax, fLower0, fUpper0, wilcoxonDiffWrapper(0))
+    val ciLower = KayentaBrentSolver.solve(muMin, muMax, fLower1, fUpper1, wilcoxonDiffWrapper(zqLower))
+    val ciUpper = KayentaBrentSolver.solve(muMin, muMax, fLower2, fUpper2, wilcoxonDiffWrapper(zqUpper))
+    val est = KayentaBrentSolver.solve(muMin, muMax, fLower0, fUpper0, wilcoxonDiffWrapper(0))
 
     //1e-4, 5
     //diff: -3.5347077141 × 10-5
