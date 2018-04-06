@@ -50,7 +50,7 @@ class MannWhitney {
       val fUpper = wilcoxonDiff(muMax, zq, x, y)
       if (fLower <= 0) muMin
       else if (fUpper >= 0) muMax
-      else KayentaBrentSolver.solve(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(zq))
+      else BrentSolver.solve(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(zq))
     }
 
     val zQuant = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
@@ -62,7 +62,7 @@ class MannWhitney {
     val fLower = wilcoxonDiff(muMin, 0, x, y)
     val fUpper = wilcoxonDiff(muMax, 0, x, y)
 
-    val estimate = KayentaBrentSolver.solve(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
+    val estimate = BrentSolver.solve(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
     (confidenceInterval, estimate)
   }
 }
