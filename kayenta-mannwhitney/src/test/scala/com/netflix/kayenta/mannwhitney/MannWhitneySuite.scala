@@ -19,6 +19,8 @@ package com.netflix.kayenta.mannwhitney
 import org.scalatest.FunSuite
 import junit.framework.TestCase.assertEquals
 import org.apache.commons.math3.distribution.NormalDistribution
+import org.apache.commons.math3.analysis.UnivariateFunction
+import org.ddahl.rscala.RClient
 
 class MannWhitneySuite extends FunSuite {
 
@@ -41,7 +43,6 @@ class MannWhitneySuite extends FunSuite {
     assertEquals(6.0, result.confidenceInterval.head, E)
     assertEquals(39.0, result.confidenceInterval.last, E)
     assertEquals(22.5, result.estimate, E)
-    //assertEquals(0.02857142857142857, result.pValue, E)
   }
 
   test("quant") {
@@ -58,11 +59,9 @@ class MannWhitneySuite extends FunSuite {
     assertEquals(-1.4808028936386108E-5, result.confidenceInterval.head, E)
     assertEquals(1.808255910873413E-5, result.confidenceInterval.last, E)
     assertEquals(1.808255910873413E-5, result.estimate, E)
-    //assertEquals(0.2189156968855636, result.pValue, E)
   }
 
   //todo: Remove all tests below...  temporary dummy tests for adhoc tie-outs during development
-  import org.ddahl.rscala.RClient
   test("tie out with R version"){
     val params =
       MannWhitneyParams(
@@ -87,10 +86,13 @@ class MannWhitneySuite extends FunSuite {
         |""".stripMargin.format(params.mu.toString, params.confidenceLevel.toString)
     )
 
-    println("ci low " + R.get("lcint")._1.asInstanceOf[Double])
-    println("ci high " + R.get("hcint")._1.asInstanceOf[Double])
-    println("est " + R.get("est")._1.asInstanceOf[Double])
-    println("pval " + R.get("pval")._1.asInstanceOf[Double])
+    val rCiLow = R.get("lcint")._1.asInstanceOf[Double]
+    val rCiHigh = R.get("hcint")._1.asInstanceOf[Double]
+    val rEst = R.get("est")._1.asInstanceOf[Double]
+
+    println(s"R ci low $rCiLow")
+    println(s"R ci high $rCiHigh")
+    println(s"R est $rEst")
 
     val mw = new MannWhitney
     val result = mw.eval(params)
@@ -98,15 +100,57 @@ class MannWhitneySuite extends FunSuite {
     println("ci low " + result.confidenceInterval.head)
     println("ci high " + result.confidenceInterval.last)
     println("est " + result.estimate)
-    println("pval " + result.pValue)
 
+    assertEquals(rCiLow, result.confidenceInterval.head, E)
+    assertEquals(rCiHigh, result.confidenceInterval.last, E)
+    //assertEquals(rEst, result.estimate, E)
   }
 
+  test("tie out with R version again"){
+    val params =
+      MannWhitneyParams(
+        mu = 0.0,
+        confidenceLevel = 0.98,
+        controlData =
+          Array(1.5, 1.5, 1.0, 2.0, 1.5, 1.5, 1.5, 2.0, 1.0, 1.0, 2.0, 1.5, 1.5, 1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0, 1.0, 1.5, 3.0, 2.0, 1.0, 1.5, 1.5, 1.5, 2.0, 1.5, 1.0, 1.0, 1.5, 2.5, 2.0, 0.0, 1.0, 2.0, 2.0, 1.5, 3.0, 2.0, 1.0, 2.5, 0.5, 1.5, 0.5, 2.5, 2.0, 1.5, 1.5, 2.0, 1.0, 4.5, 2.5, 0.5, 2.5, 1.5, 1.5, 1.0, 2.0, 1.0, 2.5, 1.5, 2.0, 1.5, 3.0, 1.5, 1.5, 1.5, 1.5, 2.0, 1.0, 2.5, 1.0, 1.5, 2.5, 1.5, 2.5, 2.0, 1.5, 1.5, 1.5, 2.5, 1.0, 7.5, 1.5, 3.0, 5.5, 1.0, 1.5, 2.0, 1.0, 1.5, 2.5, 2.5, 1.0, 1.0, 2.5, 1.5, 1.5, 3.0, 4.0, 1.0, 1.5, 2.0, 1.5, 1.5, 1.5, 2.5, 1.5, 3.5, 2.5, 1.5, 2.0, 1.0, 4.0, 1.5, 1.0, 1.5, 2.5, 2.5, 2.0, 2.5, 1.5, 1.5, 2.0, 1.0, 1.5, 2.0, 1.5, 1.0, 2.5, 1.5, 1.5, 2.0, 2.0, 1.0, 1.5, 2.5, 0.5, 2.0, 2.5, 2.0, 1.0, 2.0, 0.5, 1.5, 1.0, 2.5, 1.0, 1.5, 1.0, 7.0, 1.0, 3.5, 1.5, 2.0, 1.5, 1.5, 2.0, 3.0, 1.5, 1.5, 2.0, 1.5, 2.0, 1.5, 4.0, 2.0, 1.5, 1.5, 1.5, 1.5, 1.5, 0.5, 2.0, 1.0, 1.5, 0.5),
+        experimentData =
+          Array(1.5, 2.0, 5.0, 1.5, 1.5, 8.5, 1.0, 1.0, 2.0, 1.0, 1.5, 0.5, 2.0, 1.5, 2.0, 1.5, 1.0, 2.5, 1.5, 1.5, 2.0, 1.5, 1.5, 1.5, 2.0, 2.0, 1.0, 5.5, 1.5, 2.0, 1.5, 1.5, 1.0, 2.5, 1.0, 2.0, 1.5, 1.5, 2.0, 2.0, 1.5, 1.5, 1.0, 1.0, 2.0, 0.5, 1.5, 0.5, 3.5, 1.5, 3.0, 19.0, 0.5, 1.5, 0.5, 1.5, 2.0, 1.5, 1.5, 1.5, 1.5, 2.0, 1.5, 2.0, 2.0, 1.5, 1.0, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 1.5, 3.0, 2.0, 1.5, 1.5, 0.5, 2.0, 1.5, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0, 1.5, 1.0, 1.0, 2.0, 1.5, 1.5, 1.5, 0.5, 1.5, 1.5, 0.5, 1.0, 1.5, 1.5, 1.5, 1.0, 2.0, 2.0, 2.0, 1.5, 1.0, 1.5, 1.0, 1.0, 1.5, 3.5, 2.0, 1.5, 1.0, 2.0, 1.5, 5.5, 0.5, 2.0, 3.5, 1.5, 1.0, 2.0, 0.5, 2.5, 1.0, 1.5, 0.5, 2.0, 2.0, 1.0, 0.5, 1.5, 1.0, 1.5, 0.5, 0.5, 1.0, 1.5, 1.0, 1.5, 0.5, 1.5, 1.0, 1.0, 0.5, 1.0, 0.5, 4.0, 1.0, 1.5, 2.0, 5.5, 1.5, 0.5, 2.0, 1.0, 1.5, 1.0, 1.5, 1.5, 1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0, 0.5, 1.5, 1.0, 2.0, 1.0, 1.0, 0.5, 1.0)
+      )
 
-  import org.apache.commons.math3.stat.ranking.{NaNStrategy, NaturalRanking, TiesStrategy}
-  import org.apache.commons.math3.analysis.solvers.BracketingNthOrderBrentSolver
-  import org.apache.commons.math3.analysis.UnivariateFunction
-  import org.apache.commons.math3.distribution.NormalDistribution
+    val R = RClient()
+    R.set("conf.level", params.confidenceLevel)
+    R.set("x", params.experimentData)
+    R.set("y", params.controlData)
+    R.eval(
+      """
+        |res <- wilcox.test(x,y,conf.int=TRUE,mu=%s,conf.level=%s)
+        |pval <- res$p.value
+        |lcint <- res$conf.int[1]
+        |hcint <- res$conf.int[2]
+        |est <- res$estimate
+        |""".stripMargin.format(params.mu.toString, params.confidenceLevel.toString)
+    )
+
+    val rCiLow = R.get("lcint")._1.asInstanceOf[Double]
+    val rCiHigh = R.get("hcint")._1.asInstanceOf[Double]
+    val rEst = R.get("est")._1.asInstanceOf[Double]
+
+    println(s"R ci low $rCiLow")
+    println(s"R ci high $rCiHigh")
+    println(s"R est $rEst")
+
+    val mw = new MannWhitney
+    val result = mw.eval(params)
+
+    println("ci low " + result.confidenceInterval.head)
+    println("ci high " + result.confidenceInterval.last)
+    println("est " + result.estimate)
+
+    assertEquals(rCiLow, result.confidenceInterval.head, E)
+    assertEquals(rCiHigh, result.confidenceInterval.last, E)
+    //assertEquals(rEst, result.estimate, E)
+  }
+
   test("tie out intermediate variables"){
     val experimentData = Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6666666666666572, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.7037037037036811, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5625000000000142, 0.0, 0.0, 0.0, 0.0, 3.3333333333333428, 0.0, 1.7543859649122737, 0.0, 1.8518518518518476, 0.0, 0.0, 1.8518518518518476, 0.0, 0.0, 1.5151515151515156, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7857142857142776, 1.3333333333333286, 0.0, 3.1250000000000142, 1.9607843137255117, 1.4492753623188293, 2.4390243902438868, 1.6393442622950687, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6129032258064484, 1.9607843137255117, 1.5873015873015817, 0.0, 0.0, 2.8169014084507182, 0.0, 0.0, 3.0303030303030454, 0.0, 0.0, 3.3898305084745743, 0.0, 0.0, 1.234567901234584, 0.0, 0.0, 0.0, 0.0, 1.7241379310344769, 0.0, 0.0, 0.0, 0.0, 1.6949152542372872, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.470588235294116, 0.0, 0.0, 1.3698630136986196, 3.225806451612911, 1.7543859649122879, 3.4482758620689538, 0.0, 3.3333333333333428, 0.0, 0.0, 0.0, 1.818181818181813, 0.0, 0.0, 1.4285714285714448, 0.0, 0.0, 1.8867924528301927, 2.0000000000000284, 0.0, 0.0, 0.0, 2.985074626865682, 0.0, 0.0, 1.6666666666666714, 0.0, 0.0, 1.5625, 1.9230769230769198, 0.0, 1.8518518518518619, 0.0, 2.7027027027027088, 0.0, 0.0, 0.0, 1.3513513513513544, 0.0, 1.818181818181813, 0.0, 1.6666666666666572, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.818181818181813, 0.0, 1.4285714285714164, 0.0, 0.0, 4.1095890410959015, 0.0, 0.0, 0.0, 1.8518518518518619, 0.0, 0.0, 1.8518518518518476, 1.3888888888888857, 0.0, 0.0, 0.0, 0.0, 1.8867924528301785, 1.4285714285714164, 0.0, 0.0, 1.5625, 1.8867924528301927, 0.0, 0.0, 0.0, 0.0, 2.040816326530603, 1.818181818181813, 0.0, 0.0, 1.6393442622950687, 0.0, 1.7241379310344769, 1.5151515151515156, 2.564102564102555, 0.0, 0.0, 0.0, 0.0, 5.5555555555555571, 0.0, 0.0, 4.0816326530612059, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5714285714285836, 0.0, 2.040816326530603, 3.1746031746031633, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     val controlData = Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5625000000000142, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.3888888888888857, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5384615384615614, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 1.6949152542373014, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.470588235294116, 0.0, 0.0, 0.0, 0.0, 1.7543859649122879, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.8518518518518619, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6393442622950687, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7241379310344769, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5873015873015817, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 3.1249999999999858, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.9850746268656536, 0.0, 2.5000000000000284, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7857142857142776, 0.0, 0.0, 0.0)
@@ -179,17 +223,29 @@ class MannWhitneySuite extends FunSuite {
         |""".stripMargin
     )
 
-    println("mumin " + R.get("mumin")._1.asInstanceOf[Double])
-    println("mumax " + R.get("mumax")._1.asInstanceOf[Double])
-    println("zq.lower " + R.get("zq.lower")._1.asInstanceOf[Double])
-    println("zq.upper " + R.get("zq.upper")._1.asInstanceOf[Double])
-    println("f.lower1 " + R.get("fl1")._1.asInstanceOf[Double])
-    println("f.upper1 " + R.get("fu1")._1.asInstanceOf[Double])
-    println("f.lower2 " + R.get("fl2")._1.asInstanceOf[Double])
-    println("f.upper2 " + R.get("fu2")._1.asInstanceOf[Double])
-    println("ci.lower " + R.get("l")._1.asInstanceOf[Double])
-    println("ci.upper " + R.get("u")._1.asInstanceOf[Double])
-    println("est " + R.get("est")._1.asInstanceOf[Double])
+    val rMumin = R.get("mumin")._1.asInstanceOf[Double]
+    val rMumax = R.get("mumax")._1.asInstanceOf[Double]
+    val rZqLower = R.get("zq.lower")._1.asInstanceOf[Double]
+    val rZqUpper = R.get("zq.upper")._1.asInstanceOf[Double]
+    val rFlower1 = R.get("fl1")._1.asInstanceOf[Double]
+    val rFupper1 = R.get("fu1")._1.asInstanceOf[Double]
+    val rFlower2 = R.get("fl2")._1.asInstanceOf[Double]
+    val rFupper2 = R.get("fu2")._1.asInstanceOf[Double]
+    val rCil = R.get("l")._1.asInstanceOf[Double]
+    val rCiu = R.get("u")._1.asInstanceOf[Double]
+    val rEst = R.get("est")._1.asInstanceOf[Double]
+
+    println(s"mumin $rMumin")
+    println(s"mumax $rMumax")
+    println(s"zq.lower $rZqLower")
+    println(s"zq.upper $rZqUpper")
+    println(s"f.lower1 $rFlower1")
+    println(s"f.upper1 $rFupper1")
+    println(s"f.lower2 $rFlower2")
+    println(s"f.upper2 $rFupper2")
+    println(s"ci.lower $rCil")
+    println(s"ci.upper $rCiu")
+    println(s"est $rEst")
 
     val confidenceLevel1 = params.confidenceLevel
     val x = params.experimentData
@@ -207,13 +263,15 @@ class MannWhitneySuite extends FunSuite {
 
     val zqLower = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2) * -1
     val zqUpper = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
+    val fLower0 = MannWhitney.wilcoxonDiff(muMin, 0, x, y)
+    val fUpper0 = MannWhitney.wilcoxonDiff(muMax, 0, x, y)
     val fLower1 = MannWhitney.wilcoxonDiff(muMin, zqLower, x, y)
     val fUpper1 = MannWhitney.wilcoxonDiff(muMax, zqLower, x, y)
     val fLower2 = MannWhitney.wilcoxonDiff(muMin, zqUpper, x, y)
     val fUpper2 = MannWhitney.wilcoxonDiff(muMax, zqUpper, x, y)
-    val ciLower = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zqLower), muMin, muMax)
-    val ciUpper = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zqUpper), muMin, muMax)
-    val est = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(0), muMin, muMax)
+    val ciLower = KayentaBrentSolver.brentDirect(muMin, muMax, fLower1, fUpper1, wilcoxonDiffWrapper(zqLower))
+    val ciUpper = KayentaBrentSolver.brentDirect(muMin, muMax, fLower2, fUpper2, wilcoxonDiffWrapper(zqUpper))
+    val est = KayentaBrentSolver.brentDirect(muMin, muMax, fLower0, fUpper0, wilcoxonDiffWrapper(0))
 
     //1e-4, 5
     //diff: -3.5347077141 × 10-5
@@ -232,5 +290,16 @@ class MannWhitneySuite extends FunSuite {
     println("ciUpper " + ciUpper)
     println("est " + est)
 
+    assertEquals(rMumin, muMin, E)
+    assertEquals(rMumax, muMax, E)
+    assertEquals(rZqLower, zqLower, E)
+    assertEquals(rZqUpper, zqUpper, E)
+    assertEquals(rFlower1, fLower1, E)
+    assertEquals(rFupper1, fUpper1, E)
+    assertEquals(rFlower2, fLower2, E)
+    assertEquals(rFupper2, fUpper2, E)
+    assertEquals(rCil, ciLower, E)
+    assertEquals(rCiu, ciUpper, E)
+    assertEquals(rEst, est, E)
   }
 }

@@ -18,7 +18,6 @@ package com.netflix.kayenta.mannwhitney
 
 import org.apache.commons.math3.stat.inference.MannWhitneyUTest
 import org.apache.commons.math3.analysis.UnivariateFunction
-import org.apache.commons.math3.analysis.solvers.{BracketingNthOrderBrentSolver, BrentSolver}
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.ranking._
 
@@ -67,7 +66,7 @@ class MannWhitney {
     val zQuant = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
     val confidenceInterval: Array[Double] =
       Array(
-        findRoot(zQuant * -1),
+        findRoot(-zQuant),
         findRoot(zQuant)
       )
     val fLower = wilcoxonDiff(muMin, 0, x, y)

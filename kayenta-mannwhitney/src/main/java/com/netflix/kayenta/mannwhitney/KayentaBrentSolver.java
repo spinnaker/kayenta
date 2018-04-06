@@ -41,10 +41,10 @@ public class KayentaBrentSolver {
     maxit = 1000 + 1; tol = 1E-4;
 
     /* First test if we have found a root at an endpoint */
-    if (fa == 0.0) {
+    if (Precision.equals(fa, 0)) {
       return a;
     }
-    if (fb == 0.0) {
+    if (Precision.equals(fb, 0)) {
       return b;
     }
 
@@ -79,9 +79,7 @@ public class KayentaBrentSolver {
           t1 = fb/fa;		/* can only be applied		*/
           p = cb*t1;
           q = 1.0 - t1;
-        }
-        else {			/* Quadric inverse interpolation*/
-
+        } else {			/* Quadric inverse interpolation*/
           q = fa/fc;  t1 = fb/fc;	 t2 = fb/fa;
           p = t2 * ( cb*q*(q-t1) - (b-a)*(t1-1.0) );
           q = (q-1.0) * (t1-1.0) * (t2-1.0);
@@ -91,8 +89,8 @@ public class KayentaBrentSolver {
         else			/* and assign possible minus to	*/
           p = -p;			/* q				*/
 
-        if( p < (0.75*cb*q-Math.abs(tol_act*q)/2) /* If b+p/q falls in [b,c]*/
-          && p < Math.abs(prev_step*q/2) )	/* and isn't too large	*/
+        if (p < (0.75*cb*q-Math.abs(tol_act*q)/2) /* If b+p/q falls in [b,c]*/
+          && p < Math.abs(prev_step*q/2))	/* and isn't too large	*/
           new_step = p/q;			/* it is accepted
            * If p/q is too large then the
            * bisection procedure can
@@ -100,15 +98,15 @@ public class KayentaBrentSolver {
            * extent */
       }
 
-      if( Math.abs(new_step) < tol_act) {	/* Adjust the step to be not less*/
-        if( new_step > (double)0 )	/* than tolerance		*/
+      if (Math.abs(new_step) < tol_act) {	/* Adjust the step to be not less*/
+        if (new_step > 0)	/* than tolerance		*/
           new_step = tol_act;
         else
           new_step = -tol_act;
       }
       a = b;	fa = fb;			/* Save the previous approx. */
       b += new_step;	fb = func.value(b);
-      if( (fb > 0 && fc > 0) || (fb < 0 && fc < 0) ) {
+      if ((fb > 0 && fc > 0) || (fb < 0 && fc < 0)) {
         /* Adjust c for it to have a sign opposite to that of b */
         c = a;  fc = fa;
       }
