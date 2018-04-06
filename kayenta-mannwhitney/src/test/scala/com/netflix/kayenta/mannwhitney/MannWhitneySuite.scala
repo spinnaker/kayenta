@@ -20,7 +20,6 @@ import org.scalatest.FunSuite
 import junit.framework.TestCase.assertEquals
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.analysis.UnivariateFunction
-import org.ddahl.rscala.RClient
 
 class MannWhitneySuite extends FunSuite {
 
@@ -61,7 +60,6 @@ class MannWhitneySuite extends FunSuite {
     assertEquals(1.808255910873413E-5, result.estimate, E)
   }
 
-  //todo: Remove all tests below...  temporary dummy tests for adhoc tie-outs during development
   test("tie out with R version"){
     val params =
       MannWhitneyParams(
@@ -72,23 +70,10 @@ class MannWhitneySuite extends FunSuite {
         experimentData =
           Array(2.5, 2.5, 2.0, 2.5, 3.5, 2.0, 3.5, 1.5, 3.0, 3.0, 2.5, 3.5, 2.0, 2.5, 2.0, 2.0, 5.0, 3.0, 2.0, 1.5, 2.0, 4.0, 3.0, 2.5, 3.0, 2.0, 2.0, 2.0, 2.5, 3.5, 1.5, 1.5, 3.5, 2.0, 2.5, 2.5, 3.0, 3.5, 2.5, 6.5, 2.5, 4.0, 2.5, 3.0, 2.5, 6.5, 2.5, 3.0, 1.5, 2.0, 2.5, 3.0, 7.5, 1.5, 2.0, 4.0, 2.5, 2.0, 2.5, 3.5, 4.0, 2.5, 3.0, 2.5, 2.0, 3.5, 3.0, 16.5, 3.0, 3.0, 7.0, 4.5, 5.0, 2.0, 3.5, 6.0, 1.5, 3.0, 2.5, 4.0, 3.0, 1.5, 5.0, 3.0, 2.5, 5.5, 3.0, 1.5, 2.5, 6.0)
       )
-    val R = RClient()
-    R.set("conf.level", params.confidenceLevel)
-    R.set("x", params.experimentData)
-    R.set("y", params.controlData)
-    R.eval(
-      """
-        |res <- wilcox.test(x,y,conf.int=TRUE,mu=%s,conf.level=%s)
-        |pval <- res$p.value
-        |lcint <- res$conf.int[1]
-        |hcint <- res$conf.int[2]
-        |est <- res$estimate
-        |""".stripMargin.format(params.mu.toString, params.confidenceLevel.toString)
-    )
 
-    val rCiLow = R.get("lcint")._1.asInstanceOf[Double]
-    val rCiHigh = R.get("hcint")._1.asInstanceOf[Double]
-    val rEst = R.get("est")._1.asInstanceOf[Double]
+    val rCiLow = -0.500002521696696
+    val rCiHigh = -3.486287505871302E-5
+    val rEst = -0.4999393907180323
 
     println(s"R ci low $rCiLow")
     println(s"R ci high $rCiHigh")
@@ -117,23 +102,9 @@ class MannWhitneySuite extends FunSuite {
           Array(1.5, 2.0, 5.0, 1.5, 1.5, 8.5, 1.0, 1.0, 2.0, 1.0, 1.5, 0.5, 2.0, 1.5, 2.0, 1.5, 1.0, 2.5, 1.5, 1.5, 2.0, 1.5, 1.5, 1.5, 2.0, 2.0, 1.0, 5.5, 1.5, 2.0, 1.5, 1.5, 1.0, 2.5, 1.0, 2.0, 1.5, 1.5, 2.0, 2.0, 1.5, 1.5, 1.0, 1.0, 2.0, 0.5, 1.5, 0.5, 3.5, 1.5, 3.0, 19.0, 0.5, 1.5, 0.5, 1.5, 2.0, 1.5, 1.5, 1.5, 1.5, 2.0, 1.5, 2.0, 2.0, 1.5, 1.0, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 1.5, 3.0, 2.0, 1.5, 1.5, 0.5, 2.0, 1.5, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0, 1.5, 1.0, 1.0, 2.0, 1.5, 1.5, 1.5, 0.5, 1.5, 1.5, 0.5, 1.0, 1.5, 1.5, 1.5, 1.0, 2.0, 2.0, 2.0, 1.5, 1.0, 1.5, 1.0, 1.0, 1.5, 3.5, 2.0, 1.5, 1.0, 2.0, 1.5, 5.5, 0.5, 2.0, 3.5, 1.5, 1.0, 2.0, 0.5, 2.5, 1.0, 1.5, 0.5, 2.0, 2.0, 1.0, 0.5, 1.5, 1.0, 1.5, 0.5, 0.5, 1.0, 1.5, 1.0, 1.5, 0.5, 1.5, 1.0, 1.0, 0.5, 1.0, 0.5, 4.0, 1.0, 1.5, 2.0, 5.5, 1.5, 0.5, 2.0, 1.0, 1.5, 1.0, 1.5, 1.5, 1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0, 0.5, 1.5, 1.0, 2.0, 1.0, 1.0, 0.5, 1.0)
       )
 
-    val R = RClient()
-    R.set("conf.level", params.confidenceLevel)
-    R.set("x", params.experimentData)
-    R.set("y", params.controlData)
-    R.eval(
-      """
-        |res <- wilcox.test(x,y,conf.int=TRUE,mu=%s,conf.level=%s)
-        |pval <- res$p.value
-        |lcint <- res$conf.int[1]
-        |hcint <- res$conf.int[2]
-        |est <- res$estimate
-        |""".stripMargin.format(params.mu.toString, params.confidenceLevel.toString)
-    )
-
-    val rCiLow = R.get("lcint")._1.asInstanceOf[Double]
-    val rCiHigh = R.get("hcint")._1.asInstanceOf[Double]
-    val rEst = R.get("est")._1.asInstanceOf[Double]
+    val rCiLow = -0.4999173250549087
+    val rCiHigh = -6.912685789769486E-6
+    val rEst = -3.45044082729315E-5
 
     println(s"R ci low $rCiLow")
     println(s"R ci high $rCiHigh")
@@ -162,90 +133,30 @@ class MannWhitneySuite extends FunSuite {
         controlData = controlData,
         experimentData = experimentData
       )
-    val R = RClient()
-    R.set("conf.level", params.confidenceLevel)
-    R.set("x", params.experimentData)
-    R.set("y", params.controlData)
 
-    R.eval(
-      """
-        |alpha <- 1 - conf.level
-        |mumin <- min(x) - max(y)
-        |mumax <- max(x) - min(y)
-        |
-        |n.x <- as.double(length(x))
-        |n.y <- as.double(length(y))
-        |correct <- TRUE
-        |alternative <- "two.sided"
-        |
-        |wdiff <- function(d, zq) {
-        |                    dr <- rank(c(x - d, y))
-        |                    NTIES.CI <- table(dr)
-        |                    dz <- (sum(dr[seq_along(x)])
-        |                           - n.x * (n.x + 1) / 2 - n.x * n.y / 2)
-        |		                CORRECTION.CI <-
-        |			                 if(correct) {
-        |                            switch(alternative,
-        |                                   "two.sided" = sign(dz) * 0.5,
-        |                                   "greater" = 0.5,
-        |                                   "less" = -0.5)
-        |			                 } else 0
-        |                    SIGMA.CI <- sqrt((n.x * n.y / 12) *
-        |                                     ((n.x + n.y + 1)
-        |                                      - sum(NTIES.CI^3 - NTIES.CI)
-        |                                      / ((n.x + n.y) * (n.x + n.y - 1))))
-        |                    if (SIGMA.CI == 0)
-        |                        stop("cannot compute confidence interval when all observations are tied", call.=FALSE)
-        |                    (dz - CORRECTION.CI) / SIGMA.CI - zq
-        |                }
-        |root <- function(zq) {
-        |                    ## in extreme cases we need to return endpoints,
-        |                    ## e.g.  wilcox.test(1, 2:60, conf.int=TRUE)
-        |                    f.lower <- wdiff(mumin, zq)
-        |                    if(f.lower <= 0) return(mumin)
-        |                    f.upper <- wdiff(mumax, zq)
-        |                    if(f.upper >= 0) return(mumax)
-        |                    uniroot(wdiff, c(mumin, mumax),
-        |                            f.lower = f.lower, f.upper = f.upper,
-        |                            tol = 1e-4, zq = zq)$root
-        |                }
-        |
-        |zq.lower <- qnorm(alpha/2, lower.tail = FALSE)
-        |zq.upper <- qnorm(alpha/2)
-        |fl1 <- wdiff(mumin, zq.lower)
-        |fu1 <- wdiff(mumax, zq.lower)
-        |fl2 <- wdiff(mumin, zq.upper)
-        |fu2 <- wdiff(mumax, zq.upper)
-        |l <- root(zq = qnorm(alpha/2, lower.tail = FALSE))
-        |u <- root(zq = qnorm(alpha/2))
-        |est <- uniroot(wdiff, c(mumin, mumax),
-        |                         tol = 1e-4, zq = 0)$root
-        |""".stripMargin
-    )
+    val rMumin = -3.124999999999986
+    val rMumax = 5.555555555555557
+    val rZqLower = 1.9599639845400536
+    val rZqUpper = -1.9599639845400536
+    val rFlower1 = 17.090968923762254
+    val rFupper1 = -20.997687930433106
+    val rFlower2 = 21.01089689284236
+    val rFupper2 = -17.077759961353
+    val rCil = 3.521755377702165E-5
+    val rCiu = 2.02456461662334E-5
+    val rEst = 2.6279243045155653E-5
 
-    val rMumin = R.get("mumin")._1.asInstanceOf[Double]
-    val rMumax = R.get("mumax")._1.asInstanceOf[Double]
-    val rZqLower = R.get("zq.lower")._1.asInstanceOf[Double]
-    val rZqUpper = R.get("zq.upper")._1.asInstanceOf[Double]
-    val rFlower1 = R.get("fl1")._1.asInstanceOf[Double]
-    val rFupper1 = R.get("fu1")._1.asInstanceOf[Double]
-    val rFlower2 = R.get("fl2")._1.asInstanceOf[Double]
-    val rFupper2 = R.get("fu2")._1.asInstanceOf[Double]
-    val rCil = R.get("l")._1.asInstanceOf[Double]
-    val rCiu = R.get("u")._1.asInstanceOf[Double]
-    val rEst = R.get("est")._1.asInstanceOf[Double]
-
-    println(s"mumin $rMumin")
-    println(s"mumax $rMumax")
-    println(s"zq.lower $rZqLower")
-    println(s"zq.upper $rZqUpper")
-    println(s"f.lower1 $rFlower1")
-    println(s"f.upper1 $rFupper1")
-    println(s"f.lower2 $rFlower2")
-    println(s"f.upper2 $rFupper2")
-    println(s"ci.lower $rCil")
-    println(s"ci.upper $rCiu")
-    println(s"est $rEst")
+    println(s"R mumin $rMumin")
+    println(s"R mumax $rMumax")
+    println(s"R zq.lower $rZqLower")
+    println(s"R zq.upper $rZqUpper")
+    println(s"R f.lower1 $rFlower1")
+    println(s"R f.upper1 $rFupper1")
+    println(s"R f.lower2 $rFlower2")
+    println(s"R f.upper2 $rFupper2")
+    println(s"R ci.lower $rCil")
+    println(s"R ci.upper $rCiu")
+    println(s"R est $rEst")
 
     val confidenceLevel1 = params.confidenceLevel
     val x = params.experimentData

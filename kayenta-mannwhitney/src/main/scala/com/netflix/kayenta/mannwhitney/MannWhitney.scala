@@ -75,30 +75,6 @@ class MannWhitney {
     val estimate = KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
     (confidenceInterval, estimate)
   }
-
-
-  //todo: REMOVE  for debug purposes only
-  import org.ddahl.rscala.RClient
-  protected def calculateConfidenceInterval2(distribution1: Array[Double],
-                                            distribution2: Array[Double],
-                                            confidenceLevel: Double,
-                                            mu: Double): (Array[Double], Double) = {
-    val R = RClient()
-    R.set("conf.level", confidenceLevel)
-    R.set("x", distribution2)
-    R.set("y", distribution1)
-    R.eval(
-      """
-        |res <- wilcox.test(x,y,conf.int=TRUE,mu=%s,conf.level=%s)
-        |pval <- res$p.value
-        |lcint <- res$conf.int[1]
-        |hcint <- res$conf.int[2]
-        |est <- res$estimate
-        |""".stripMargin.format(mu.toString, confidenceLevel.toString)
-    )
-    (Array(R.get("lcint")._1.asInstanceOf[Double], R.get("hcint")._1.asInstanceOf[Double]), R.get("est")._1.asInstanceOf[Double])
-  }
-
 }
 
 object MannWhitney {

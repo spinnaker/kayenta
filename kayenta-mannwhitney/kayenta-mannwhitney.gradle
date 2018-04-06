@@ -4,12 +4,9 @@ apply plugin: 'java'
 dependencies {
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
 
-    //todo: remove. for debugging only
-    compile group: 'org.ddahl', name: 'rscala_2.12', version: '2.5.1'
-
-    // scala support
     compile 'org.scala-lang:scala-library-all:2.12.2'
     compile 'org.scala-lang:scala-reflect:2.12.2'
     compile 'com.typesafe.scala-logging:scala-logging_2.12:3.5.0'
+
     testCompile 'org.scalatest:scalatest_2.12:3.0.1'
 }
