@@ -81,7 +81,7 @@ class MannWhitney {
       val fUpper = wilcoxonDiff(muMax, zq)
       if (fLower <= 0) muMin
       else if (fUpper >= 0) muMax
-      else new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zq), muMin, muMax)
+      else KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(zq))
     }
 
     val zQuant = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
@@ -90,7 +90,10 @@ class MannWhitney {
         findRoot(zQuant * -1),
         findRoot(zQuant)
       )
-    val estimate = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(0), muMin, muMax)
+    val fLower = wilcoxonDiff(muMin, 0)
+    val fUpper = wilcoxonDiff(muMax, 0)
+
+    val estimate = KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
     (confidenceInterval, estimate)
   }
 
