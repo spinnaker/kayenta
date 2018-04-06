@@ -19,7 +19,6 @@ package com.netflix.kayenta.mannwhitney
 import org.scalatest.FunSuite
 import junit.framework.TestCase.assertEquals
 import org.apache.commons.math3.distribution.NormalDistribution
-import org.apache.commons.math3.stat.ranking.{NaNStrategy, NaturalRanking, TiesStrategy}
 
 class MannWhitneySuite extends FunSuite {
 
@@ -31,27 +30,8 @@ class MannWhitneySuite extends FunSuite {
     val xLen = x.length.toDouble
     val yLen = y.length.toDouble
 
-    val wilcoxonDiff = (mu: Double) => {
-      val dr = new NaturalRanking(NaNStrategy.MAXIMAL, TiesStrategy.AVERAGE).rank(x.map(_ - mu) ++ y)
-      val ntiesCi = dr.groupBy(identity).mapValues(_.length)
-      val dz = {
-        for (e <- x.indices) yield dr(e)
-      }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
-      val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
-      val sigmaCi = Math.sqrt(
-        (xLen * yLen / 12) *
-          (
-            (xLen + yLen + 1)
-              - ntiesCi.mapValues(v => Math.pow(v, 3) - v).values.sum
-              / ((xLen + yLen) * (xLen + yLen - 1))
-            )
-      )
-      if (sigmaCi == 0) throw new MannWhitneyException("cannot compute confidence interval when all observations are tied")
-      (dz - correctionCi) / sigmaCi
-    }
-
-    assertEquals(-1.229416, wilcoxonDiff(0), E)
-    assertEquals(-35.80606, wilcoxonDiff(5), E)
+    assertEquals(-1.229416, MannWhitney.wilcoxonDiff(0, 0, x, y), E)
+    assertEquals(-35.80606, MannWhitney.wilcoxonDiff(5, 0, x, y), E)
   }
 
   test("returns expected values") {
@@ -75,7 +55,6 @@ class MannWhitneySuite extends FunSuite {
     val params = MannWhitneyParams(mu = 0.0, confidenceLevel = 0.98, controlData = control, experimentData = experiment)
     val mw = new MannWhitney
     val result = mw.eval(params)
-    println(s"confidenceInterval [${result.confidenceInterval.head}, ${result.confidenceInterval.last}")
     assertEquals(-1.4808028936386108E-5, result.confidenceInterval.head, E)
     assertEquals(1.808255910873413E-5, result.confidenceInterval.last, E)
     assertEquals(1.808255910873413E-5, result.estimate, E)
@@ -222,35 +201,16 @@ class MannWhitneySuite extends FunSuite {
     val muMin: Double = x.min - y.max
     val muMax: Double = x.max - y.min
 
-    val wilcoxonDiff = (mu: Double, quantile: Double) => {
-      val dr = new NaturalRanking(NaNStrategy.MAXIMAL, TiesStrategy.AVERAGE).rank(x.map(_ - mu) ++ y)
-      val ntiesCi = dr.groupBy(identity).mapValues(_.length)
-      val dz = {
-        for (e <- x.indices) yield dr(e)
-      }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
-      val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
-      val sigmaCi = Math.sqrt(
-        (xLen * yLen / 12) *
-          (
-            (xLen + yLen + 1)
-              - ntiesCi.mapValues(v => Math.pow(v, 3) - v).values.sum
-              / ((xLen + yLen) * (xLen + yLen - 1))
-            )
-      )
-      if (sigmaCi == 0) throw new MannWhitneyException("cannot compute confidence interval when all observations are tied")
-      (dz - correctionCi) / sigmaCi - quantile
-    }
-
     val wilcoxonDiffWrapper = (zq: Double) => new UnivariateFunction {
-      override def value(input: Double): Double = wilcoxonDiff(input, zq)
+      override def value(input: Double): Double = MannWhitney.wilcoxonDiff(input, zq, x, y)
     }
 
     val zqLower = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2) * -1
     val zqUpper = new NormalDistribution(0,1).inverseCumulativeProbability(alpha/2)
-    val fLower1 = wilcoxonDiff(muMin, zqLower)
-    val fUpper1 = wilcoxonDiff(muMax, zqLower)
-    val fLower2 = wilcoxonDiff(muMin, zqUpper)
-    val fUpper2 = wilcoxonDiff(muMax, zqUpper)
+    val fLower1 = MannWhitney.wilcoxonDiff(muMin, zqLower, x, y)
+    val fUpper1 = MannWhitney.wilcoxonDiff(muMax, zqLower, x, y)
+    val fLower2 = MannWhitney.wilcoxonDiff(muMin, zqUpper, x, y)
+    val fUpper2 = MannWhitney.wilcoxonDiff(muMax, zqUpper, x, y)
     val ciLower = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zqLower), muMin, muMax)
     val ciUpper = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(zqUpper), muMin, muMax)
     val est = new BracketingNthOrderBrentSolver().solve(1000, wilcoxonDiffWrapper(0), muMin, muMax)

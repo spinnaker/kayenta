@@ -23,7 +23,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.ranking._
 
 class MannWhitney {
-
+  import MannWhitney._
 
   def eval(params: MannWhitneyParams): MannWhitneyResult = synchronized {
     val pValue = calculatePValue(params.controlData, params.experimentData)
@@ -32,10 +32,9 @@ class MannWhitney {
     MannWhitneyResult(confidenceInterval, pValue, estimate)
   }
 
-
-
   protected def calculatePValue(distribution1: Array[Double], distribution2: Array[Double]): Double =
     new MannWhitneyUTest().mannWhitneyUTest(distribution1, distribution2)
+
 
   /*
   * Derived from the R Wilcoxon Test implementation (asymptotic, two-sample confidence interval logic only)
@@ -53,32 +52,13 @@ class MannWhitney {
     val muMin: Double = x.min - y.max
     val muMax: Double = x.max - y.min
 
-    val wilcoxonDiff = (mu: Double, quantile: Double) => {
-      val dr = new NaturalRanking(NaNStrategy.MAXIMAL, TiesStrategy.AVERAGE).rank(x.map(_ - mu) ++ y)
-      val ntiesCi = dr.groupBy(identity).mapValues(_.length)
-      val dz = {
-        for (e <- x.indices) yield dr(e)
-      }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
-      val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
-      val sigmaCi = Math.sqrt(
-        (xLen * yLen / 12) *
-          (
-            (xLen + yLen + 1)
-              - ntiesCi.mapValues(v => Math.pow(v, 3) - v).values.sum
-              / ((xLen + yLen) * (xLen + yLen - 1))
-            )
-        )
-      if (sigmaCi == 0) throw new MannWhitneyException("cannot compute confidence interval when all observations are tied")
-      (dz - correctionCi) / sigmaCi - quantile
-    }
-
     val wilcoxonDiffWrapper = (zq: Double) => new UnivariateFunction {
-      override def value(input: Double): Double = wilcoxonDiff(input, zq)
+      override def value(input: Double): Double = wilcoxonDiff(input, zq, x, y)
     }
 
     def findRoot(zq: Double): Double = {
-      val fLower = wilcoxonDiff(muMin, zq)
-      val fUpper = wilcoxonDiff(muMax, zq)
+      val fLower = wilcoxonDiff(muMin, zq, x, y)
+      val fUpper = wilcoxonDiff(muMax, zq, x, y)
       if (fLower <= 0) muMin
       else if (fUpper >= 0) muMax
       else KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(zq))
@@ -90,8 +70,8 @@ class MannWhitney {
         findRoot(zQuant * -1),
         findRoot(zQuant)
       )
-    val fLower = wilcoxonDiff(muMin, 0)
-    val fUpper = wilcoxonDiff(muMax, 0)
+    val fLower = wilcoxonDiff(muMin, 0, x, y)
+    val fUpper = wilcoxonDiff(muMax, 0, x, y)
 
     val estimate = KayentaBrentSolver.brentDirect(muMin, muMax, fLower, fUpper, wilcoxonDiffWrapper(0))
     (confidenceInterval, estimate)
@@ -122,3 +102,29 @@ class MannWhitney {
 
 }
 
+object MannWhitney {
+  def wilcoxonDiff(mu: Double,
+                   quantile: Double,
+                   x: Array[Double],
+                   y: Array[Double]): Double = {
+    val xLen = x.length.toDouble
+    val yLen = y.length.toDouble
+
+    val dr = new NaturalRanking(NaNStrategy.MAXIMAL, TiesStrategy.AVERAGE).rank(x.map(_ - mu) ++ y)
+    val ntiesCi = dr.groupBy(identity).mapValues(_.length)
+    val dz = {
+      for (e <- x.indices) yield dr(e)
+    }.sum - xLen * (xLen + 1) / 2 - xLen * yLen / 2
+    val correctionCi = (if (dz.signum.isNaN) 0 else dz.signum) * 0.5 // assumes correct = true & alternative = 'two.sided'
+    val sigmaCi = Math.sqrt(
+      (xLen * yLen / 12) *
+        (
+          (xLen + yLen + 1)
+            - ntiesCi.mapValues(v => Math.pow(v, 3) - v).values.sum
+            / ((xLen + yLen) * (xLen + yLen - 1))
+          )
+    )
+    if (sigmaCi == 0) throw new MannWhitneyException("cannot compute confidence interval when all observations are tied")
+    (dz - correctionCi) / sigmaCi - quantile
+  }
+}
