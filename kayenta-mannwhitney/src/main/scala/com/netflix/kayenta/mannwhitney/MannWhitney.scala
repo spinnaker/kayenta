@@ -16,7 +16,6 @@
 
 package com.netflix.kayenta.mannwhitney
 
-import org.apache.commons.math3.stat.inference.MannWhitneyUTest
 import org.apache.commons.math3.analysis.UnivariateFunction
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.ranking._
@@ -25,25 +24,16 @@ class MannWhitney {
   import MannWhitney._
 
   def eval(params: MannWhitneyParams): MannWhitneyResult = synchronized {
-    val pValue = calculatePValue(params.controlData, params.experimentData)
     val (confidenceInterval, estimate) =
-      calculateConfidenceInterval(params.controlData, params.experimentData, params.confidenceLevel, params.mu)
-    MannWhitneyResult(confidenceInterval, pValue, estimate)
+      calculateConfidenceInterval(params.experimentData, params.controlData, params.confidenceLevel, params.mu)
+    MannWhitneyResult(confidenceInterval, estimate)
   }
 
-  protected def calculatePValue(distribution1: Array[Double], distribution2: Array[Double]): Double =
-    new MannWhitneyUTest().mannWhitneyUTest(distribution1, distribution2)
+  protected def calculateConfidenceInterval(x: Array[Double],
+                                            y: Array[Double],
+                                            confidenceLevel: Double,
+                                            mu: Double): (Array[Double], Double) = {
 
-
-  /*
-  * Derived from the R Wilcoxon Test implementation (asymptotic, two-sample confidence interval logic only)
-  */
-  protected def calculateConfidenceInterval(distribution1: Array[Double],
-                                  distribution2: Array[Double],
-                                  confidenceLevel: Double,
-                                  mu: Double): (Array[Double], Double) = {
-    val y = distribution1
-    val x = distribution2
     val xLen = x.length.toDouble
     val yLen = y.length.toDouble
 
@@ -82,6 +72,7 @@ object MannWhitney {
                    quantile: Double,
                    x: Array[Double],
                    y: Array[Double]): Double = {
+
     val xLen = x.length.toDouble
     val yLen = y.length.toDouble
 

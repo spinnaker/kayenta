@@ -16,6 +16,6 @@
 
 package com.netflix.kayenta.mannwhitney
 
-case class MannWhitneyResult(confidenceInterval: Array[Double], pValue: Double, estimate: Double) {
+case class MannWhitneyResult(confidenceInterval: Array[Double], estimate: Double) {
 
 }
