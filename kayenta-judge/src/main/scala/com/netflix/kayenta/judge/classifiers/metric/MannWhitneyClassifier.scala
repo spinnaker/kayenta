@@ -23,7 +23,7 @@ import org.apache.commons.math3.stat.StatUtils
 case class MannWhitneyResult(lowerConfidence: Double, upperConfidence: Double, estimate: Double)
 
 //todo (csanden) rename this classifier
-class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.95, mw: MannWhitney) extends BaseMetricClassifier{
+class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.95) extends BaseMetricClassifier{
 
   /**
     * Mann-Whitney U Test
@@ -33,7 +33,7 @@ class MannWhitneyClassifier(fraction: Double=0.25, confLevel: Double=0.95, mw: M
     * @return
     */
   def MannWhitneyUTest(experimentValues: Array[Double], controlValues: Array[Double]): MannWhitneyResult ={
-    //todo: move this to its own package
+    val mw = new MannWhitney()
     val params =
       MannWhitneyParams(mu = 0, confidenceLevel = confLevel, controlData = controlValues, experimentData = experimentValues)
     val testResult = mw.eval(params)

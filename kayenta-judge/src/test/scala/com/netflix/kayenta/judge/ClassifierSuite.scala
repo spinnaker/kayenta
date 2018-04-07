@@ -49,8 +49,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("pass-metric", experimentData, "canary")
     val controlMetric = Metric("pass-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
 
     assert(result.classification == Pass)
@@ -82,8 +81,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("high-metric", experimentData, "canary")
     val controlMetric = Metric("high-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
 
     assert(result.classification == High)
@@ -115,8 +113,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("low-metric", experimentData, "canary")
     val controlMetric = Metric("low-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
 
     assert(result.classification == Low)
@@ -148,8 +145,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("pass-metric", experimentData, "canary")
     val controlMetric = Metric("pass-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Increase)
 
     assert(result.classification == Pass)
@@ -181,8 +177,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("pass-metric", experimentData, "canary")
     val controlMetric = Metric("pass-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
 
     assert(result.classification == Pass)
@@ -214,8 +209,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("high-metric", experimentData, "canary")
     val controlMetric = Metric("high-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Increase)
 
     assert(result.classification == High)
@@ -247,11 +241,72 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("low-metric", experimentData, "canary")
     val controlMetric = Metric("low-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
 
     assert(result.classification == Low)
+  }
+
+  test("Mann-Whitney Classifier Test: High Metric (Large Input)"){
+
+    val experimentData = Array(
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6666666666666572, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 3.7037037037036811, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5625000000000142,
+      0.0, 0.0, 0.0, 0.0, 3.3333333333333428, 0.0, 1.7543859649122737, 0.0,
+      1.8518518518518476, 0.0, 0.0, 1.8518518518518476, 0.0, 0.0, 1.5151515151515156,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7857142857142776,
+      1.3333333333333286, 0.0, 3.1250000000000142, 1.9607843137255117,
+      1.4492753623188293, 2.4390243902438868, 1.6393442622950687, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 1.6129032258064484, 1.9607843137255117, 1.5873015873015817, 0.0,
+      0.0, 2.8169014084507182, 0.0, 0.0, 3.0303030303030454, 0.0, 0.0,
+      3.3898305084745743, 0.0, 0.0, 1.234567901234584, 0.0, 0.0, 0.0, 0.0,
+      1.7241379310344769, 0.0, 0.0, 0.0, 0.0, 1.6949152542372872, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 1.470588235294116, 0.0, 0.0, 1.3698630136986196,
+      3.225806451612911, 1.7543859649122879, 3.4482758620689538, 0.0,
+      3.3333333333333428, 0.0, 0.0, 0.0, 1.818181818181813, 0.0, 0.0,
+      1.4285714285714448, 0.0, 0.0, 1.8867924528301927, 2.0000000000000284, 0.0, 0.0,
+      0.0, 2.985074626865682, 0.0, 0.0, 1.6666666666666714, 0.0, 0.0, 1.5625,
+      1.9230769230769198, 0.0, 1.8518518518518619, 0.0, 2.7027027027027088, 0.0, 0.0,
+      0.0, 1.3513513513513544, 0.0, 1.818181818181813, 0.0, 1.6666666666666572, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.818181818181813, 0.0, 1.4285714285714164, 0.0,
+      0.0, 4.1095890410959015, 0.0, 0.0, 0.0, 1.8518518518518619, 0.0, 0.0,
+      1.8518518518518476, 1.3888888888888857, 0.0, 0.0, 0.0, 0.0, 1.8867924528301785,
+      1.4285714285714164, 0.0, 0.0, 1.5625, 1.8867924528301927, 0.0, 0.0, 0.0, 0.0,
+      2.040816326530603, 1.818181818181813, 0.0, 0.0, 1.6393442622950687, 0.0,
+      1.7241379310344769, 1.5151515151515156, 2.564102564102555, 0.0, 0.0, 0.0, 0.0,
+      5.5555555555555571, 0.0, 0.0, 4.0816326530612059, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 3.5714285714285836, 0.0, 2.040816326530603, 3.1746031746031633, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    )
+
+    val controlData = Array(
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5625000000000142, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.3888888888888857, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 1.5384615384615614, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0,
+      1.6949152542373014, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 1.470588235294116, 0.0, 0.0, 0.0, 0.0, 1.7543859649122879, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 1.8518518518518619, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6393442622950687, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 1.7241379310344769, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5873015873015817,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      1.4925373134328339, 0.0, 0.0, 0.0, 3.1249999999999858, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      2.9850746268656536, 0.0, 2.5000000000000284, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      1.7857142857142776, 0.0, 0.0, 0.0
+    )
+
+    val experimentMetric = Metric("pass-metric", experimentData, "canary")
+    val controlMetric = Metric("pass-metric", controlData, "baseline")
+
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
+
+    assert(result.classification == High)
   }
 
   test("Mann-Whitney Tied Observations") {
@@ -261,8 +316,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("test-metric", experimentData, "canary")
     val controlMetric = Metric("test-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
 
     assert(result.classification == Pass)
@@ -275,8 +329,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("test-metric", experimentData, "canary")
     val controlMetric = Metric("test-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
 
     assert(result.classification == Pass)
@@ -289,8 +342,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("test-metric", experimentData, "canary")
     val controlMetric = Metric("test-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
 
     assert(result.classification == Pass)
@@ -303,8 +355,7 @@ class ClassifierSuite extends FunSuite{
     val experimentMetric = Metric("test-metric", experimentData, "canary")
     val controlMetric = Metric("test-metric", controlData, "baseline")
 
-    val mw = new MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
+    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95)
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Decrease)
 
     assert(result.classification == Nodata)
@@ -347,20 +398,5 @@ class ClassifierSuite extends FunSuite{
     val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
 
     assert(result.classification == Pass)
-  }
-
-  test("Test new MW implementation"){
-
-    val experimentData = Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6666666666666572, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.7037037037036811, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5625000000000142, 0.0, 0.0, 0.0, 0.0, 3.3333333333333428, 0.0, 1.7543859649122737, 0.0, 1.8518518518518476, 0.0, 0.0, 1.8518518518518476, 0.0, 0.0, 1.5151515151515156, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7857142857142776, 1.3333333333333286, 0.0, 3.1250000000000142, 1.9607843137255117, 1.4492753623188293, 2.4390243902438868, 1.6393442622950687, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6129032258064484, 1.9607843137255117, 1.5873015873015817, 0.0, 0.0, 2.8169014084507182, 0.0, 0.0, 3.0303030303030454, 0.0, 0.0, 3.3898305084745743, 0.0, 0.0, 1.234567901234584, 0.0, 0.0, 0.0, 0.0, 1.7241379310344769, 0.0, 0.0, 0.0, 0.0, 1.6949152542372872, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.470588235294116, 0.0, 0.0, 1.3698630136986196, 3.225806451612911, 1.7543859649122879, 3.4482758620689538, 0.0, 3.3333333333333428, 0.0, 0.0, 0.0, 1.818181818181813, 0.0, 0.0, 1.4285714285714448, 0.0, 0.0, 1.8867924528301927, 2.0000000000000284, 0.0, 0.0, 0.0, 2.985074626865682, 0.0, 0.0, 1.6666666666666714, 0.0, 0.0, 1.5625, 1.9230769230769198, 0.0, 1.8518518518518619, 0.0, 2.7027027027027088, 0.0, 0.0, 0.0, 1.3513513513513544, 0.0, 1.818181818181813, 0.0, 1.6666666666666572, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.818181818181813, 0.0, 1.4285714285714164, 0.0, 0.0, 4.1095890410959015, 0.0, 0.0, 0.0, 1.8518518518518619, 0.0, 0.0, 1.8518518518518476, 1.3888888888888857, 0.0, 0.0, 0.0, 0.0, 1.8867924528301785, 1.4285714285714164, 0.0, 0.0, 1.5625, 1.8867924528301927, 0.0, 0.0, 0.0, 0.0, 2.040816326530603, 1.818181818181813, 0.0, 0.0, 1.6393442622950687, 0.0, 1.7241379310344769, 1.5151515151515156, 2.564102564102555, 0.0, 0.0, 0.0, 0.0, 5.5555555555555571, 0.0, 0.0, 4.0816326530612059, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5714285714285836, 0.0, 2.040816326530603, 3.1746031746031633, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-    val controlData = Array(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5625000000000142, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.3888888888888857, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5384615384615614, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 1.6949152542373014, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.470588235294116, 0.0, 0.0, 0.0, 0.0, 1.7543859649122879, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.8518518518518619, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.6393442622950687, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7241379310344769, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5873015873015817, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 3.1249999999999858, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.4925373134328339, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.9850746268656536, 0.0, 2.5000000000000284, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.7857142857142776, 0.0, 0.0, 0.0)
-
-    val experimentMetric = Metric("pass-metric", experimentData, "canary")
-    val controlMetric = Metric("pass-metric", controlData, "baseline")
-
-    val mw: com.netflix.kayenta.mannwhitney.MannWhitney = new com.netflix.kayenta.mannwhitney.MannWhitney()
-    val classifier = new MannWhitneyClassifier(fraction = 0.10, confLevel = 0.95, mw)
-    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
-
-    assert(result.classification == High)
   }
 }
