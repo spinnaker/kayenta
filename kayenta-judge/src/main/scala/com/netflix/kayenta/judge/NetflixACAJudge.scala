@@ -109,11 +109,13 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
   /**
     * Metric Transformations
     */
-  def transformMetric(metric: Metric): Metric = {
+  def transformMetric(metric: Metric, nanStrategy: NanStrategy): Metric = {
     val detector = new IQRDetector(factor = 3.0, reduceSensitivity = true)
-    val transform = Function.chain[Metric](Seq(
-      Transforms.removeNaNs(_),
-      Transforms.removeOutliers(_, detector)))
+    val transform = if (nanStrategy == NanStrategy.Remove) {
+      Function.chain[Metric](Seq(Transforms.removeNaNs(_), Transforms.removeOutliers(_, detector)))
+    } else {
+      Function.chain[Metric](Seq(Transforms.replaceNaNs(_), Transforms.removeOutliers(_, detector)))
+    }
     transform(metric)
   }
 
@@ -142,8 +144,8 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
     //=============================================
     // Metric Transformation (Remove NaN values, etc.)
     // ============================================
-    val transformedExperiment = transformMetric(experiment)
-    val transformedControl = transformMetric(control)
+    val transformedExperiment = transformMetric(experiment, nanStrategy)
+    val transformedControl = transformMetric(control, nanStrategy)
 
     //=============================================
     // Calculate metric statistics

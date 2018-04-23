@@ -43,14 +43,14 @@ object MetricDirection {
 
 sealed trait NanStrategy
 object NanStrategy {
-  case object None extends NanStrategy
   case object Remove extends NanStrategy
+  case object Replace extends NanStrategy
 
   def parse(nanStrategy: String): NanStrategy = {
     nanStrategy match {
-      case "none" => NanStrategy.None
       case "remove" => NanStrategy.Remove
-      case _ => NanStrategy.None
+      case "replace" => NanStrategy.Replace
+      case _ => NanStrategy.Remove
     }
   }
 }
@@ -58,5 +58,6 @@ object NanStrategy {
 case class MetricClassification(classification: MetricClassificationLabel, reason: Option[String], ratio: Double)
 
 abstract class BaseMetricClassifier {
-  def classify(control: Metric, experiment: Metric, direction: MetricDirection = MetricDirection.Either): MetricClassification
+  def classify(control: Metric, experiment: Metric,
+               direction: MetricDirection = MetricDirection.Either): MetricClassification
 }
