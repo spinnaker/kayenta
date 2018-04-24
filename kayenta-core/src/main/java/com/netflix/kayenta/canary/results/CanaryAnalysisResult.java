@@ -68,4 +68,13 @@ public class CanaryAnalysisResult {
   @NotNull
   @Getter
   private Map<String, Object> resultMetadata;
+
+  //
+  // Set to one of "normal", "critical", or "report-only" by the classifier,
+  // which is currently just copied from the config.  Having it here prevents
+  // having to look it up in the scorer.
+  //
+  @NotNull
+  @Getter
+  private String criticality;
 }

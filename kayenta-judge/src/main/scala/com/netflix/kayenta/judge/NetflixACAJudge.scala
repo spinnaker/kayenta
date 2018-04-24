@@ -141,6 +141,9 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
     val nanStrategyString = MapUtils.getAsStringWithDefault("none", metricConfig.getAnalysisConfigurations, "canary", "nanStrategy")
     val nanStrategy = NaNStrategy.parse(nanStrategyString)
 
+    val criticalityString = MapUtils.getAsStringWithDefault("normal", metricConfig.getAnalysisConfigurations, "canary", "criticality")
+    val criticality = Criticality.parse(criticalityString)
+
     //=============================================
     // Metric Transformation (Remove NaN values, etc.)
     // ============================================
@@ -165,6 +168,7 @@ class NetflixACAJudge extends CanaryJudge with StrictLogging {
       .groups(metricConfig.getGroups)
       .experimentMetadata(Map("stats" -> DescriptiveStatistics.toMap(experimentStats).asJava.asInstanceOf[Object]).asJava)
       .controlMetadata(Map("stats" -> DescriptiveStatistics.toMap(controlStats).asJava.asInstanceOf[Object]).asJava)
+      .criticality(criticality.toString)
 
     try {
       val metricClassification = mannWhitney.classify(transformedControl, transformedExperiment, directionality)
