@@ -41,16 +41,16 @@ object MetricDirection {
   }
 }
 
-sealed trait NanStrategy
-object NanStrategy {
-  case object Remove extends NanStrategy
-  case object Replace extends NanStrategy
+sealed trait NaNStrategy
+object NaNStrategy {
+  case object Remove extends NaNStrategy
+  case object Replace extends NaNStrategy
 
-  def parse(nanStrategy: String): NanStrategy = {
+  def parse(nanStrategy: String): NaNStrategy = {
     nanStrategy match {
-      case "remove" => NanStrategy.Remove
-      case "replace" => NanStrategy.Replace
-      case _ => NanStrategy.Remove
+      case "remove" => NaNStrategy.Remove
+      case "replace" => NaNStrategy.Replace
+      case _ => NaNStrategy.Remove
     }
   }
 }
