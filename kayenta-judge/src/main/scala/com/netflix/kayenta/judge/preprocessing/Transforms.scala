@@ -53,7 +53,7 @@ object Transforms {
     * @param value
     * @return
     */
-  def replaceNaNs(data: Array[Double], value: Double): Array[Double]= {
+  def replaceNaNs(data: Array[Double], value: Double): Array[Double] = {
     data.map(x => if (x.isNaN) value else x)
   }
 
