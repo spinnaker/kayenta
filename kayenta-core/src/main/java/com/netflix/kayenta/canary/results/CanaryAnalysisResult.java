@@ -76,5 +76,6 @@ public class CanaryAnalysisResult {
   //
   @NotNull
   @Getter
-  private String criticality;
+  @Builder.Default
+  private String criticality = "normal";
 }
