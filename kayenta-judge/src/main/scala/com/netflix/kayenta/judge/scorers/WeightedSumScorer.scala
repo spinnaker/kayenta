@@ -17,7 +17,7 @@
 package com.netflix.kayenta.judge.scorers
 
 import com.netflix.kayenta.canary.results.CanaryAnalysisResult
-import com.netflix.kayenta.judge.classifiers.metric.{Criticality, High, Low, Pass}
+import com.netflix.kayenta.judge.classifiers.metric.{High, Low, Pass}
 
 import scala.collection.JavaConverters._
 
@@ -40,9 +40,7 @@ class WeightedSumScorer(groupWeights: Map[String, Double]) extends BaseScorer {
 
   private def calculateGroupScores(metricResults: List[CanaryAnalysisResult]): List[GroupScore] = {
 
-    val groupLabels = metricResults.filter { metric =>
-      !metric.getCriticality.equals("report-only")
-    }.flatMap { metric =>
+    val groupLabels = metricResults.flatMap { metric =>
       metric.getGroups.asScala.map { group => (group, metric.getClassification) }
     }.groupBy(_._1).mapValues(_.map(_._2))
 
@@ -72,9 +70,7 @@ class WeightedSumScorer(groupWeights: Map[String, Double]) extends BaseScorer {
   }
 
   def criticalFailures(results: List[CanaryAnalysisResult]): Boolean = {
-    val criticalFailures = results.filter { result =>
-      result.getCriticality.equals(Criticality.Critical.toString) && !result.getClassification.equals(Pass.toString)
-    }
+    val criticalFailures = results.filter { result => result.getCritical && !result.getClassification.equals(Pass.toString) }
     criticalFailures.nonEmpty
   }
 

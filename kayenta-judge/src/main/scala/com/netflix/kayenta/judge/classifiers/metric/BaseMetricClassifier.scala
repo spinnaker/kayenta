@@ -55,28 +55,6 @@ object NaNStrategy {
   }
 }
 
-sealed trait Criticality
-object Criticality {
-  case object Normal extends Criticality {
-    override def toString: String = "normal"
-  }
-  case object Critical extends Criticality {
-    override def toString: String = "critical"
-  }
-  case object ReportOnly extends Criticality {
-    override def toString: String = "report-only"
-  }
-
-  def parse(criticality: String): Criticality = {
-    criticality match {
-      case "normal" => Criticality.Normal
-      case "critical" => Criticality.Critical
-      case "report-only" => Criticality.ReportOnly
-      case _ => Criticality.Normal
-    }
-  }
-}
-
 case class MetricClassification(classification: MetricClassificationLabel, reason: Option[String], ratio: Double)
 
 abstract class BaseMetricClassifier {

@@ -172,14 +172,13 @@ class ScorerSuite extends FunSuite {
 
     val passMetric = CanaryAnalysisResult.builder()
       .name("test-metric-pass")
-      .criticality("normal")
       .classification(Pass.toString)
       .groups(List[String]("test-group").asJava)
       .build()
 
     val highMetric = CanaryAnalysisResult.builder()
       .name("test-metric-high")
-      .criticality("critical")
+      .critical(true)
       .classification(High.toString)
       .groups(List[String]("test-group").asJava)
       .build()
@@ -194,42 +193,20 @@ class ScorerSuite extends FunSuite {
 
     val passMetric = CanaryAnalysisResult.builder()
       .name("test-metric-low")
-      .criticality("normal")
+      .critical(false)
       .classification(Low.toString)
       .groups(List[String]("test-group").asJava)
       .build()
 
     val highMetric = CanaryAnalysisResult.builder()
       .name("test-metric-pass2")
-      .criticality("critical")
+      .critical(true)
       .classification(Pass.toString)
       .groups(List[String]("test-group").asJava)
       .build()
 
     val scores = weightedSumScorer.score(List(passMetric, highMetric))
     assert(scores.summaryScore == 50.0)
-  }
-
-  test("Weighted Sum Group Scorer: Two metrics, one good (normal), one fail (report-only)") {
-    val groupWeights = Map[String, Double]()
-    val weightedSumScorer = new WeightedSumScorer(groupWeights)
-
-    val passMetric = CanaryAnalysisResult.builder()
-      .name("test-metric-pass")
-      .criticality("normal")
-      .classification(Pass.toString)
-      .groups(List[String]("test-group").asJava)
-      .build()
-
-    val highMetric = CanaryAnalysisResult.builder()
-      .name("test-metric-high")
-      .criticality("report-only")
-      .classification(High.toString)
-      .groups(List[String]("test-group").asJava)
-      .build()
-
-    val scores = weightedSumScorer.score(List(passMetric, highMetric))
-    assert(scores.summaryScore == 100.0)
   }
 
 }
