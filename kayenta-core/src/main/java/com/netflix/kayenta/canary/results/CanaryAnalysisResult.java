@@ -69,8 +69,7 @@ public class CanaryAnalysisResult {
   @Getter
   private Map<String, Object> resultMetadata;
 
-  @NotNull
   @Getter
   @Builder.Default
-  private Boolean critical = false;
+  private boolean critical = false;
 }
