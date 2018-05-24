@@ -12,6 +12,12 @@ The quality of the canary version is assessed by comparing key metrics that desc
 Canaries are usually run against deployments containing changes to code, but they
 can also be used for operational changes, including changes to configuration.
 
+### Running
+* Install Docker along with docker-compose
+* Set 'HOST_IP' environment property pointing to your machine IP
+* Execute `docker-compose build && docker-compose up`
+* The Kayenta API is available through http://[HOST_IP]:8090 now
+
 ### Debugging
 
 To start the JVM in debug mode, set the Java system property `DEBUG=true`:
@@ -21,4 +27,3 @@ To start the JVM in debug mode, set the Java system property `DEBUG=true`:
 
 The JVM will then listen for a debugger to be attached on port 8191.  The JVM will _not_ wait for the debugger
 to be attached before starting Kayenta; the relevant JVM arguments can be seen and modified as needed in `build.gradle`.
-

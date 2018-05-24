@@ -1,0 +1,13 @@
+version: '3'
+services:
+  kayenta:
+    build: .
+    ports:
+     - "8090:8090"
+    environment:
+     - services.redis.baseUrl=redis://${HOST_IP}:6379
+     - redis.connection=redis://${HOST_IP}:6379
+  redis:
+    image: redis:4.0.9
+    ports:
+     - "6379:6379"
