@@ -18,12 +18,14 @@ package com.netflix.kayenta;
 
 import com.netflix.kayenta.atlas.config.AtlasConfiguration;
 import com.netflix.kayenta.aws.config.AwsConfiguration;
+import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.config.KayentaConfiguration;
 import com.netflix.kayenta.config.WebConfiguration;
 import com.netflix.kayenta.configbin.config.ConfigBinConfiguration;
 import com.netflix.kayenta.datadog.config.DatadogConfiguration;
 import com.netflix.kayenta.gcs.config.GcsConfiguration;
 import com.netflix.kayenta.google.config.GoogleConfiguration;
+import com.netflix.kayenta.influxdb.config.InfluxdbConfiguration;
 import com.netflix.kayenta.judge.config.NetflixJudgeConfiguration;
 import com.netflix.kayenta.memory.config.MemoryConfiguration;
 import com.netflix.kayenta.prometheus.config.PrometheusConfiguration;
@@ -56,7 +58,8 @@ import java.util.Map;
   S3Configuration.class,
   StackdriverConfiguration.class,
   WebConfiguration.class,
-  NetflixJudgeConfiguration.class
+  NetflixJudgeConfiguration.class,
+  InfluxdbConfiguration.class
 })
 @ComponentScan({
   "com.netflix.spinnaker.config",
