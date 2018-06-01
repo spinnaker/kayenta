@@ -27,7 +27,8 @@ public class InfluxdbCredentials {
   private static String applicationVersion =
     Optional.ofNullable(InfluxdbCredentials.class.getPackage().getImplementationVersion()).orElse("Unknown");
 
-  //TODO Update with authentication details
+  //TODO(joerajeev): Update with authentication details
+  //See: https://docs.influxdata.com/influxdb/v1.5/query_language/authentication_and_authorization/#set-up-authentication
   
   private String dbName;
 }

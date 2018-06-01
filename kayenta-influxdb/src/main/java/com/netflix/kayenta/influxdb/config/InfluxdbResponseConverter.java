@@ -64,7 +64,7 @@ public class InfluxdbResponseConverter implements Converter {
         if (CollectionUtils.isEmpty(results)) {
           throw new ConversionException("Unexpected response from influxdb");
         }
-        Map firstResult = (Map)results.get(0); //TODO Check if there a need to support multi -queries (See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#multiple-queries)
+        Map firstResult = (Map)results.get(0); //TODO(joerajeev): Check if there a need to support multi -queries (See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#multiple-queries)
         List<Map> series = (List<Map>) firstResult.get("series");
         
         if (CollectionUtils.isEmpty(series)) {
@@ -72,12 +72,12 @@ public class InfluxdbResponseConverter implements Converter {
           return null;
         }
         
-        Map firstSeries = series.get(0); //TODO check if can you get multiple series elements
+        Map firstSeries = series.get(0); //TODO(joerajeev): check if can you get multiple series elements
         List<String> seriesColumns = (List<String>) firstSeries.get("columns");
         List<List> seriesValues = (List<List>) firstSeries.get("values");
         List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
 
-        //TODO: Figure out a way to skip tags from this loop and to extract and pass the tag values in to the influxdb result.
+        //TODO(joerajeev): if returning tags we will need to skip tags from this loop, and to extract and pass the tag values in to the influxdb result.
         for (int i=1; i<seriesColumns.size(); i++) {  //Start from index 1 to skip 'time' column
           
           String id = seriesColumns.get(i); 
@@ -108,7 +108,7 @@ public class InfluxdbResponseConverter implements Converter {
   }
 
   private long extractTimeInMillis(List<List> seriesValues, int index) {
-    String firstUtcTime = (String) seriesValues.get(index).get(0);  //TODO: check if I need to order it first 
+    String firstUtcTime = (String) seriesValues.get(index).get(0);  //TODO(joerajeev): check if I need to order it first 
     long startTimeMillis = Instant.parse(firstUtcTime).toEpochMilli();
     return startTimeMillis;
   }
