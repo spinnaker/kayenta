@@ -31,6 +31,7 @@ include 'kayenta-prometheus'
 include 'kayenta-s3'
 include 'kayenta-stackdriver'
 include 'kayenta-web'
+include 'kayenta-influxdb'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

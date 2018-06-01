@@ -56,6 +56,16 @@ kayenta:
 #        supportedTypes:
 #          - METRICS_STORE
 
+# TODO default to disable after testing
+  influxdb:
+    enabled: true
+    accounts:
+      - name: my-influxdb-account
+        endpoint:
+          baseUrl: http://localhost:8086
+        supportedTypes:
+          - METRICS_STORE
+
   gcs:
     enabled: false
 
