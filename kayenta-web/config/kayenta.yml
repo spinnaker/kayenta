@@ -27,6 +27,7 @@ kayenta:
 #          - OBJECT_STORE
 #          - CONFIGURATION_STORE
 
+# TODO default to disable after testing
   aws:
     enabled: true
     accounts:
@@ -35,7 +36,7 @@ kayenta:
         rootFolder: kayenta
         supportedTypes:
           - OBJECT_STORE
-          - CONFIGURATION_STORE
+          #- CONFIGURATION_STORE
 
   datadog:
     enabled: false
@@ -60,7 +61,7 @@ kayenta:
   influxdb:
     enabled: true
     accounts:
-      - name: joerajeev
+      - name: my-influxdb-account
         endpoint:
           baseUrl: http://localhost:8086
         supportedTypes:

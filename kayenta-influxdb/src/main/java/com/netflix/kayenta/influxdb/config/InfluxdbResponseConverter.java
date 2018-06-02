@@ -52,62 +52,56 @@ public class InfluxdbResponseConverter implements Converter {
   @Override
   public Object fromBody(TypedInput body, Type type) throws ConversionException {
     
-     //TODO validate type?
-    log.info("XXX type: " + type);
-     /* if (type != List.class) {
-        throw new ConversionException("Can only deserialize to List<InfluxdbResult>");
-      }*/
-    
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
-        String json = reader.readLine();
-        log.info("converting line :" + json);
-        Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
-        List<Map> results = (List<Map>) responseMap.get("results");
-        
-        if (CollectionUtils.isEmpty(results)) {
-          throw new ConversionException("Unexpected response from influxdb");
-        }
-        Map firstResult = (Map)results.get(0); //TODO(joerajeev): Check if there a need to support multi -queries (See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#multiple-queries)
-        List<Map> series = (List<Map>) firstResult.get("series");
-        
-        if (CollectionUtils.isEmpty(series)) {
-          log.warn("Received no data from Influxdb.");
-          return null;
-        }
-        
-        Map firstSeries = series.get(0); //TODO(joerajeev): check if can you get multiple series elements
-        List<String> seriesColumns = (List<String>) firstSeries.get("columns");
-        List<List> seriesValues = (List<List>) firstSeries.get("values");
-        List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
+      String json = reader.readLine();
+      log.info("converting line :" + json);
+      Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
+      List<Map> results = (List<Map>) responseMap.get("results");
+      
+      if (CollectionUtils.isEmpty(results)) {
+        throw new ConversionException("Unexpected response from influxdb");
+      }
+      Map firstResult = (Map)results.get(0); //TODO(joerajeev): Check if there a need to support multi -queries (See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#multiple-queries)
+      List<Map> series = (List<Map>) firstResult.get("series");
+      
+      if (CollectionUtils.isEmpty(series)) {
+        log.warn("Received no data from Influxdb.");
+        return null;
+      }
+      
+      Map firstSeries = series.get(0); //TODO(joerajeev): check if can you get multiple series elements
+      List<String> seriesColumns = (List<String>) firstSeries.get("columns");
+      List<List> seriesValues = (List<List>) firstSeries.get("values");
+      List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
 
-        //TODO(joerajeev): if returning tags we will need to skip tags from this loop, and to extract and pass the tag values in to the influxdb result.
-        for (int i=1; i<seriesColumns.size(); i++) {  //Start from index 1 to skip 'time' column
+      //TODO(joerajeev): if returning tags we will need to skip tags from this loop, and to extract and pass the tag values in to the influxdb result.
+      for (int i=1; i<seriesColumns.size(); i++) {  //Start from index 1 to skip 'time' column
+        
+        String id = seriesColumns.get(i); 
+        long startTimeMillis = extractTimeInMillis(seriesValues, 0);
+        long secondTimeMillis = extractTimeInMillis(seriesValues, 1);
+        // If there aren't at least two data points, consider the step size to be zero.
+        long stepMillis =
+            seriesValues.size() > 1
+          ? secondTimeMillis - startTimeMillis
+          : 0;
+        long endTimeMillis = startTimeMillis + seriesValues.size() * stepMillis;
           
-          String id = seriesColumns.get(i); 
-          long startTimeMillis = extractTimeInMillis(seriesValues, 0);
-          long secondTimeMillis = extractTimeInMillis(seriesValues, 1);
-          // If there aren't at least two data points, consider the step size to be zero.
-          long stepMillis =
-              seriesValues.size() > 1
-            ? secondTimeMillis - startTimeMillis
-            : 0;
-          long endTimeMillis = startTimeMillis + seriesValues.size() * stepMillis;
-            
-          List<Double> values = new ArrayList<>(seriesValues.size());
-          for (List<Object> valueRow: seriesValues) {
-            if (valueRow.get(i) != null) {
-              values.add(Double.valueOf((Integer)valueRow.get(i)));
-            } 
-          }
-          influxdbResultsList.add(new InfluxdbResult(id, startTimeMillis, stepMillis, endTimeMillis, null, values));  //TODO: add support for tags
+        List<Double> values = new ArrayList<>(seriesValues.size());
+        for (List<Object> valueRow: seriesValues) {
+          if (valueRow.get(i) != null) {
+            values.add(Double.valueOf((Integer)valueRow.get(i)));
+          } 
         }
-
-        return influxdbResultsList;
-      } catch (IOException e) {
-        e.printStackTrace();
+        influxdbResultsList.add(new InfluxdbResult(id, startTimeMillis, stepMillis, endTimeMillis, null, values));  //TODO: add support for tags
       }
 
-      return null;
+      return influxdbResultsList;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return null;
   }
 
   private long extractTimeInMillis(List<List> seriesValues, int index) {
