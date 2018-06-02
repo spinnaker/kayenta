@@ -28,14 +28,14 @@ kayenta:
 #          - CONFIGURATION_STORE
 
   aws:
-    enabled: false
-#    accounts:
-#      - name:
-#        bucket:
-#        rootFolder: kayenta
-#        supportedTypes:
-#          - OBJECT_STORE
-#          - CONFIGURATION_STORE
+    enabled: true
+    accounts:
+      - name: joerajeev
+        bucket: joerajeev-metrics-bucket
+        rootFolder: kayenta
+        supportedTypes:
+          - OBJECT_STORE
+          - CONFIGURATION_STORE
 
   datadog:
     enabled: false
@@ -60,7 +60,7 @@ kayenta:
   influxdb:
     enabled: true
     accounts:
-      - name: my-influxdb-account
+      - name: joerajeev
         endpoint:
           baseUrl: http://localhost:8086
         supportedTypes:
@@ -70,7 +70,7 @@ kayenta:
     enabled: false
 
   s3:
-    enabled: false
+    enabled: true
 
   stackdriver:
     enabled: false

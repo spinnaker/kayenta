@@ -72,11 +72,6 @@ public class InfluxdbMetricsService implements MetricsService {
   @Override
   public List<MetricSet> queryMetrics(String accountName, CanaryConfig canaryConfig, CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope) throws IOException {
 	  
-    if (!(canaryScope instanceof InfluxdbCanaryScope)) {
-      throw new IllegalArgumentException("Canary scope not instance of InfluxdbCanaryScope: " + canaryScope +
-                                         ". One common cause is having multiple METRICS_STORE accounts configured but " +
-                                         "neglecting to explicitly specify which account to use for a given request.");
-    }
     InfluxdbNamedAccountCredentials accountCredentials = (InfluxdbNamedAccountCredentials)accountCredentialsRepository
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
@@ -86,8 +81,9 @@ public class InfluxdbMetricsService implements MetricsService {
     InfluxdbCanaryMetricSetQueryConfig queryConfig = (InfluxdbCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
 
     //TODO(joerajeev): do I need to support resource type
-    List<InfluxdbResult> influxdbResults = remoteService.getTimeSeries(
-      credentials.getDbName(),
+    List<InfluxdbResult> influxdbResults = remoteService.query(
+      //credentials.getDbName(),
+      canaryMetricConfig.getName(),
       queryBuilder.build(queryConfig.getMetricName(), queryConfig.getFields(), canaryScope)
     );
     

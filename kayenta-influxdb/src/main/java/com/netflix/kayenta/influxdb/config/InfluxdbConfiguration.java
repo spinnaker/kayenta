@@ -58,7 +58,7 @@ public class InfluxdbConfiguration {
   }
 
   @Bean
-  MetricsService influxdbMetricsService(InfluxdbConfigurationProperties influxdbConfigurationProperties, RetrofitClientFactory retrofitClientFactory, ObjectMapper objectMapper, OkHttpClient okHttpClient, AccountCredentialsRepository accountCredentialsRepository) throws IOException {
+  MetricsService influxdbMetricsService(InfluxdbResponseConverter influxdbResponseConverter, InfluxdbConfigurationProperties influxdbConfigurationProperties, RetrofitClientFactory retrofitClientFactory, ObjectMapper objectMapper, OkHttpClient okHttpClient, AccountCredentialsRepository accountCredentialsRepository) throws IOException {
     InfluxdbMetricsService.InfluxdbMetricsServiceBuilder metricsServiceBuilder = InfluxdbMetricsService.builder();
 
     for (InfluxdbManagedAccount account : influxdbConfigurationProperties.getAccounts()) {
@@ -80,7 +80,7 @@ public class InfluxdbConfiguration {
         if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
           accountCredentialsBuilder.influxdbRemoteService(retrofitClientFactory.createClient(
             InfluxdbRemoteService.class,
-            new JacksonConverter(objectMapper),
+            influxdbResponseConverter,
             account.getEndpoint(),
             okHttpClient
           ));

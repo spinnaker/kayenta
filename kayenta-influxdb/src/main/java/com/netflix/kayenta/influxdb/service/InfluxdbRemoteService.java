@@ -27,6 +27,6 @@ public interface InfluxdbRemoteService {
 
   //See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#querying-data-with-the-http-api
   @GET("/query")
-  List<InfluxdbResult> getTimeSeries(@Query("db") String databaseName,
+  List<InfluxdbResult> query(@Query("db") String databaseName,
                           @Query("q") String query);
 }

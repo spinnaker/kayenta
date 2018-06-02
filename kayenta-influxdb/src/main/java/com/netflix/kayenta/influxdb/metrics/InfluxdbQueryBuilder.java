@@ -31,16 +31,16 @@ public class InfluxdbQueryBuilder {
     sb.append(" FROM ");
     sb.append(measurement);
     sb.append(" WHERE ");
-    sb.append(" time >= "+ canaryScope.getStart().toString());
+    sb.append(" time >= '"+ canaryScope.getStart().toString() + "'");
     sb.append(" AND ");
-    sb.append(" time < "+ canaryScope.getEnd().toString());
+    sb.append(" time < '"+ canaryScope.getEnd().toString() + "'");
     
     if (canaryScope.getScope() != null) {
       sb.append( " AND ");
       sb.append(canaryScope.getScope());
     }
     
-    log.debug("Built query :{}", sb.toString());
+    log.info("Built query :{}", sb.toString());
     
     return sb.toString();
   }  

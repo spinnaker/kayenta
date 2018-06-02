@@ -52,12 +52,15 @@ public class InfluxdbResponseConverter implements Converter {
   @Override
   public Object fromBody(TypedInput body, Type type) throws ConversionException {
     
-      if (type != List.class) {
+     //TODO validate type?
+    log.info("XXX type: " + type);
+     /* if (type != List.class) {
         throw new ConversionException("Can only deserialize to List<InfluxdbResult>");
-      }
+      }*/
     
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
         String json = reader.readLine();
+        log.info("converting line :" + json);
         Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
         List<Map> results = (List<Map>) responseMap.get("results");
         

@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefaultProperty;
@@ -63,7 +64,9 @@ public class InfluxdbFetchController {
   public Map queryMetrics(@RequestParam(required = false) final String metricsAccountName,
                           @RequestParam(required = false) final String storageAccountName,
                           @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
-                          @ApiParam(defaultValue = "avg:system.cpu.user") @RequestParam String metricName,
+                          @ApiParam(defaultValue = "temperature") @RequestParam String metricName,
+                          @ApiParam(value = "Fields that are being queried. e.g. internal, external")
+                            @RequestParam(required = false) List<String> fields,
                           @ApiParam(value = "The scope of the Influxdb query. e.g. server='myapp-prod-v002'")
                             @RequestParam(required = false) String scope,
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
@@ -95,6 +98,7 @@ public class InfluxdbFetchController {
       InfluxdbCanaryMetricSetQueryConfig
         .builder()
         .metricName(metricName)
+        .fields(fields)
         .build();
 
     CanaryMetricConfig canaryMetricConfig =
