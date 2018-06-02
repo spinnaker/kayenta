@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
@@ -35,6 +36,7 @@ import com.netflix.kayenta.influxdb.security.InfluxdbCredentials;
 import com.netflix.kayenta.influxdb.security.InfluxdbNamedAccountCredentials;
 import com.netflix.kayenta.influxdb.service.InfluxdbRemoteService;
 import com.netflix.kayenta.metrics.MetricSet;
+import com.netflix.kayenta.metrics.MetricSet.MetricSetBuilder;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.spectator.api.Registry;
@@ -89,21 +91,25 @@ public class InfluxdbMetricsService implements MetricsService {
     
     //TODO(joerajeev): Log retrieval time to registry?
 
-    List<MetricSet> ret = new ArrayList<MetricSet>();
+    List<MetricSet> metricSets = new ArrayList<MetricSet>();
 
     for (InfluxdbResult influxdbResult : influxdbResults) {
-      ret.add(
-        MetricSet.builder()
+      MetricSetBuilder metricSetBuilder =  MetricSet.builder()
           .name(canaryMetricConfig.getName())
           .startTimeMillis(influxdbResult.getStartTimeMillis())
           .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
           .stepMillis(influxdbResult.getStepMillis())
-          .values(influxdbResult.getValues())
-          .build()
-      );
+          .values(influxdbResult.getValues());
+      
+      Map<String, String> tags = influxdbResult.getTags();
+      if (tags != null) {
+        metricSetBuilder.tags(tags);
+      }
+      
+      metricSets.add(metricSetBuilder.build());
     }
 
-    return ret;
+    return metricSets;
   }
 
 }

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 public class InfluxdbQueryBuilder {
   
   //TODO(joerajeev): update to accept tags and groupby fields (and steps?)
+  //TODO(joerajeev): protect against sql injection
   public String build(String measurement, List<String> fields, CanaryScope canaryScope) {
     //Validations
     if (CollectionUtils.isEmpty(fields)) {
@@ -35,9 +36,14 @@ public class InfluxdbQueryBuilder {
     sb.append(" AND ");
     sb.append(" time < '"+ canaryScope.getEnd().toString() + "'");
     
-    if (canaryScope.getScope() != null) {
+    String scope = canaryScope.getScope();
+    if (scope != null && scope.contains(":")) {
       sb.append( " AND ");
-      sb.append(canaryScope.getScope());
+      String[] scopeParts = scope.split(":");
+      if (scopeParts.length != 2) {
+        throw new IllegalArgumentException("Scope expected in the format of 'name:value'. e.g. autoscaling_group:myapp-prod-v002");
+      }
+      sb.append(scopeParts[0] + "='" + scopeParts[1] +"'");
     }
     
     log.info("Built query :{}", sb.toString());

@@ -67,7 +67,7 @@ public class InfluxdbFetchController {
                           @ApiParam(defaultValue = "temperature") @RequestParam String metricName,
                           @ApiParam(value = "Fields that are being queried. e.g. internal, external")
                             @RequestParam(required = false) List<String> fields,
-                          @ApiParam(value = "The scope of the Influxdb query. e.g. server='myapp-prod-v002'")
+                          @ApiParam(value = "The scope of the Influxdb query. e.g. autoscaling_group:myapp-prod-v002")
                             @RequestParam(required = false) String scope,
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
                             @RequestParam String start,
