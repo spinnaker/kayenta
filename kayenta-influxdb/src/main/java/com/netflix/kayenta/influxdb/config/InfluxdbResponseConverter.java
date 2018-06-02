@@ -69,7 +69,7 @@ public class InfluxdbResponseConverter implements Converter {
         return null;
       }
       
-      Map firstSeries = series.get(0); //TODO(joerajeev): check if can you get multiple series elements
+      Map firstSeries = series.get(0); //TODO(joerajeev): check if we can get multiple series elements
       List<String> seriesColumns = (List<String>) firstSeries.get("columns");
       List<List> seriesValues = (List<List>) firstSeries.get("values");
       List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
@@ -85,7 +85,6 @@ public class InfluxdbResponseConverter implements Converter {
             seriesValues.size() > 1
           ? secondTimeMillis - startTimeMillis
           : 0;
-        long endTimeMillis = startTimeMillis + seriesValues.size() * stepMillis;
           
         List<Double> values = new ArrayList<>(seriesValues.size());
         for (List<Object> valueRow: seriesValues) {
@@ -93,7 +92,7 @@ public class InfluxdbResponseConverter implements Converter {
             values.add(Double.valueOf((Integer)valueRow.get(i)));
           } 
         }
-        influxdbResultsList.add(new InfluxdbResult(id, startTimeMillis, stepMillis, endTimeMillis, null, values));  //TODO: add support for tags
+        influxdbResultsList.add(new InfluxdbResult(id, startTimeMillis, stepMillis, null, values));  //TODO: add support for tags
       }
 
       return influxdbResultsList;

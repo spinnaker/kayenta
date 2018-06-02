@@ -43,10 +43,6 @@ public class InfluxdbResult {
 
   @NotNull
   @Getter
-  private long endTimeMillis;
-
-  @NotNull
-  @Getter
   private Map<String, String> tags;
 
   @NotNull
