@@ -1,5 +1,6 @@
 package com.netflix.kayenta.influxdb.metrics;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,11 @@ public class InfluxdbQueryBuilder {
   public String build(String measurement, List<String> fields, CanaryScope canaryScope) {
     //Validations
     if (CollectionUtils.isEmpty(fields)) {
-      throw new IllegalArgumentException("At least one field required to query metrics");
+      //throw new IllegalArgumentException("At least one field required to query metrics");
+      if(fields == null) {
+        fields = new ArrayList<>();
+      }
+      fields.add("*::field");
     }
     if (StringUtils.isEmpty(measurement)) {
       throw new IllegalArgumentException("Measurement is required to query metrics");
@@ -37,7 +42,10 @@ public class InfluxdbQueryBuilder {
     sb.append(" time < '"+ canaryScope.getEnd().toString() + "'");
     
     String scope = canaryScope.getScope();
-    if (scope != null && scope.contains(":")) {
+    if (scope != null) {
+      if (!scope.contains(":")) {
+        throw new IllegalArgumentException("Scope expected in the format of 'name:value'. e.g. autoscaling_group:myapp-prod-v002");
+      }
       sb.append( " AND ");
       String[] scopeParts = scope.split(":");
       if (scopeParts.length != 2) {

@@ -17,12 +17,12 @@ public class InfluxdbQueryBuilderTest {
   private InfluxdbQueryBuilder queryBuilder = new InfluxdbQueryBuilder();
   
   @Test
-  public void testBuild_noTags_noScope() {
+  public void testBuild_noScope() {
     String measurement = "temperature";
     
     InfluxdbCanaryScope canaryScope = createScope();
     String query = queryBuilder.build(measurement, fieldsList(), canaryScope);
-    assertThat(query, is("SELECT external, internal FROM temperature WHERE  time >= 2010-01-01T12:00:00Z AND  time < 2010-01-01T12:01:40Z"));
+    assertThat(query, is("SELECT external, internal FROM temperature WHERE  time >= '2010-01-01T12:00:00Z' AND  time < '2010-01-01T12:01:40Z'"));
   }
 
   private InfluxdbCanaryScope createScope() {
@@ -39,14 +39,33 @@ public class InfluxdbQueryBuilderTest {
     return fields;
   }
   
-  @Test
-  public void testBuild_noTags_withScope() {
+  @Test(expected = IllegalArgumentException.class)
+  public void testBuild_withInvalidScope() {
     String measurement = "temperature";
     
     InfluxdbCanaryScope canaryScope = createScope();
     canaryScope.setScope("server='myapp-prod-v002'");
+    queryBuilder.build(measurement, fieldsList(), canaryScope);
+  }
+  
+  @Test
+  public void testBuild_withValidScope() {
+    String measurement = "temperature";
+    
+    InfluxdbCanaryScope canaryScope = createScope();
+    canaryScope.setScope("server:myapp-prod-v002");
     String query = queryBuilder.build(measurement, fieldsList(), canaryScope);
-    assertThat(query, is("SELECT external, internal FROM temperature WHERE  time >= 2010-01-01T12:00:00Z AND  time < 2010-01-01T12:01:40Z AND server='myapp-prod-v002'"));
+    assertThat(query, is("SELECT external, internal FROM temperature WHERE  time >= '2010-01-01T12:00:00Z' AND  time < '2010-01-01T12:01:40Z' AND server='myapp-prod-v002'"));
+  }
+  
+  @Test
+  public void testBuild_withNoFieldsSpecified() {
+    String measurement = "temperature";
+    
+    InfluxdbCanaryScope canaryScope = createScope();
+    canaryScope.setScope("server:myapp-prod-v002");
+    String query = queryBuilder.build(measurement, null, canaryScope);
+    assertThat(query, is("SELECT *::field FROM temperature WHERE  time >= '2010-01-01T12:00:00Z' AND  time < '2010-01-01T12:01:40Z' AND server='myapp-prod-v002'"));
   }
 
 }
