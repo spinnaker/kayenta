@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import com.netflix.kayenta.canary.CanaryScope;
+import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,10 +19,12 @@ public class InfluxdbQueryBuilder {
   
   //TODO(joerajeev): update to accept tags and groupby fields (and steps?)
   //TODO(joerajeev): protect against sql injection
-  public String build(String measurement, List<String> fields, CanaryScope canaryScope) {
+  public String build(InfluxdbCanaryMetricSetQueryConfig queryConfig, CanaryScope canaryScope) {
+    
+    List<String> fields = queryConfig.getFields();
+    String measurement = queryConfig.getMetricName();
     //Validations
     if (CollectionUtils.isEmpty(fields)) {
-      //throw new IllegalArgumentException("At least one field required to query metrics");
       if(fields == null) {
         fields = new ArrayList<>();
       }
@@ -32,15 +35,24 @@ public class InfluxdbQueryBuilder {
     }
     
     StringBuilder sb = new StringBuilder();
+    buildQueryForMetric(measurement, fields, sb);
+    addTimeRangeFilter(canaryScope, sb);
+    addScopeFilter(canaryScope, sb);
+    
+    log.debug("Built query :{}", sb.toString());
+    
+    return sb.toString();
+  }
+
+  private void buildQueryForMetric(String measurement, List<String> fields, StringBuilder sb) {
     sb.append("SELECT ");
     sb.append(fields.stream().collect(Collectors.joining(", ")));
     sb.append(" FROM ");
     sb.append(measurement);
     sb.append(" WHERE ");
-    sb.append(" time >= '"+ canaryScope.getStart().toString() + "'");
-    sb.append(" AND ");
-    sb.append(" time < '"+ canaryScope.getEnd().toString() + "'");
-    
+  }
+
+  private void addScopeFilter(CanaryScope canaryScope, StringBuilder sb) {
     String scope = canaryScope.getScope();
     if (scope != null) {
       if (!scope.contains(":")) {
@@ -53,10 +65,12 @@ public class InfluxdbQueryBuilder {
       }
       sb.append(scopeParts[0] + "='" + scopeParts[1] +"'");
     }
-    
-    log.info("Built query :{}", sb.toString());
-    
-    return sb.toString();
+  }
+
+  private void addTimeRangeFilter(CanaryScope canaryScope, StringBuilder sb) {
+    sb.append(" time >= '"+ canaryScope.getStart().toString() + "'");
+    sb.append(" AND ");
+    sb.append(" time < '"+ canaryScope.getEnd().toString() + "'");
   }  
 
 }

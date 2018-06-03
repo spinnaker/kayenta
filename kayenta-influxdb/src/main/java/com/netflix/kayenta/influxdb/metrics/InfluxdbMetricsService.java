@@ -86,7 +86,7 @@ public class InfluxdbMetricsService implements MetricsService {
     List<InfluxdbResult> influxdbResults = remoteService.query(
       //credentials.getDbName(),
       canaryMetricConfig.getName(),
-      queryBuilder.build(queryConfig.getMetricName(), queryConfig.getFields(), canaryScope)
+      queryBuilder.build(queryConfig, canaryScope)
     );
     
     //TODO(joerajeev): Log retrieval time to registry?
