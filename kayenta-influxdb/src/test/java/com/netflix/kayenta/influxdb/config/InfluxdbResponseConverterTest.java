@@ -1,6 +1,7 @@
 package com.netflix.kayenta.influxdb.config;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +35,7 @@ public class InfluxdbResponseConverterTest {
     externalDataValues.add(25d);
     externalDataValues.add(26d);
     //InfluxdbResult influxdbResult = new InfluxdbResult("temperature-external", 1435781430781L, 1, 1435781430881L, null, values);
-    InfluxdbResult externalTempResult = new InfluxdbResult("external", 1527396644105L, 60000L, 1527396824105L, null, externalDataValues);
+    InfluxdbResult externalTempResult = new InfluxdbResult("external", 1527396644105L, 60000L, null, externalDataValues);
     results.add(externalTempResult);
     
     List<Double> internalDataValues = new ArrayList<>();
@@ -42,17 +43,15 @@ public class InfluxdbResponseConverterTest {
     internalDataValues.add(37d);
     internalDataValues.add(38d);
     //InfluxdbResult influxdbResult = new InfluxdbResult("temperature-external", 1435781430781L, 1, 1435781430881L, null, values);
-    InfluxdbResult internalTempResult = new InfluxdbResult("internal", 1527396644105L, 60000L, 1527396824105L, null, internalDataValues);
+    InfluxdbResult internalTempResult = new InfluxdbResult("internal", 1527396644105L, 60000L, null, internalDataValues);
     results.add(internalTempResult);
   }
 
   private final InfluxdbResponseConverter influxdbResponseConverter = new InfluxdbResponseConverter(new ObjectMapper());
 
-/*  @Test public void serialize() throws Exception {
-    TypedOutput typedOutput = converter.toBody(OBJECT);
-    assertThat(typedOutput.mimeType(), is(MIME_TYPE));
-    assertThat(asString(typedOutput), is(JSON));
-  }*/
+  @Test public void serialize() throws Exception {
+    assertThat(influxdbResponseConverter.toBody(results), is(nullValue()));
+  }
 
   @Test 
   public void deserialize() throws Exception {
@@ -65,13 +64,6 @@ public class InfluxdbResponseConverterTest {
   public void deserializeWrongValue() throws Exception {
     TypedInput input = new TypedByteArray(MIME_TYPE, "{\"foo\":\"bar\"}".getBytes());
     influxdbResponseConverter.fromBody(input, List.class);
-  }
-
-  @Test(expected = ConversionException.class)
-  public void deserializeWrongClass() throws Exception {
-    TypedInput input = new TypedByteArray(MIME_TYPE, JSON.getBytes());
-    Object fromBody = influxdbResponseConverter.fromBody(input, String.class);
-    System.out.println(fromBody);
   }
 
   private String asString(TypedOutput typedOutput) throws Exception {

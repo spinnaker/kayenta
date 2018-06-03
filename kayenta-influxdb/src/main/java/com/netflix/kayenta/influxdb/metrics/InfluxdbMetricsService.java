@@ -94,7 +94,7 @@ public class InfluxdbMetricsService implements MetricsService {
     List<MetricSet> metricSets = new ArrayList<MetricSet>();
 
     for (InfluxdbResult influxdbResult : influxdbResults) {
-      MetricSetBuilder metricSetBuilder =  MetricSet.builder()
+      MetricSetBuilder metricSetBuilder = MetricSet.builder()
           .name(canaryMetricConfig.getName())
           .startTimeMillis(influxdbResult.getStartTimeMillis())
           .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
