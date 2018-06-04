@@ -16,9 +16,15 @@
 
 package com.netflix.kayenta.influxdb.canary;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopeFactory;
-import org.springframework.stereotype.Component;
 
 @Component
 public class InfluxdbCanaryScopeFactory implements CanaryScopeFactory {
@@ -28,7 +34,30 @@ public class InfluxdbCanaryScopeFactory implements CanaryScopeFactory {
   }
 
   @Override
-  public CanaryScope buildCanaryScope(CanaryScope scope) {
-    return scope;
+  public CanaryScope buildCanaryScope(CanaryScope canaryScope) {
+    InfluxdbCanaryScope influxdbCanaryScope = new InfluxdbCanaryScope();
+    influxdbCanaryScope.setScope(canaryScope.getScope());
+    influxdbCanaryScope.setLocation(canaryScope.getLocation());
+    influxdbCanaryScope.setStart(canaryScope.getStart());
+    influxdbCanaryScope.setEnd(canaryScope.getEnd());
+    influxdbCanaryScope.setStep(canaryScope.getStep());
+    influxdbCanaryScope.setExtendedScopeParams(canaryScope.getExtendedScopeParams());
+
+    Map<String, String> extendedScopeParams = influxdbCanaryScope.getExtendedScopeParams();
+
+    if (extendedScopeParams != null) {
+      if (extendedScopeParams.containsKey("fields")) {
+        String fieldsStr = extendedScopeParams.get("fields");
+        List<String> fields = new ArrayList<>();
+        if (fieldsStr.contains(",")) {
+          fields = Arrays.asList(fieldsStr.split(","));
+        } else {
+          fields.add(fieldsStr);
+        }
+        influxdbCanaryScope.setFields(fields);
+      }
+    }
+
+    return influxdbCanaryScope;
   }
 }

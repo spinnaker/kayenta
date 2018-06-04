@@ -40,11 +40,8 @@ public class InfluxdbCanaryMetricSetQueryConfig implements CanaryMetricSetQueryC
   @Getter
   private List<String> fields;
   
-  @Getter
-  private List<String> tags;
-  
-  @Getter
-  private List<String> groupByFields;
+  //@Getter
+  //private List<String> groupByFields;
 
   @Override
   public String getServiceType() {
