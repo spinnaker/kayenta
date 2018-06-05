@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class InfluxdbQueryBuilder {
   
-  //TODO(joerajeev): update to accept tags and groupby fields (and steps?)
-  //TODO(joerajeev): protect against sql injection
+  //TODO(joerajeev): update to accept tags and groupby fields
+  //TODO(joerajeev): protect against injection
   public String build(InfluxdbCanaryMetricSetQueryConfig queryConfig, CanaryScope canaryScope) {
     
     List<String> fields = queryConfig.getFields();

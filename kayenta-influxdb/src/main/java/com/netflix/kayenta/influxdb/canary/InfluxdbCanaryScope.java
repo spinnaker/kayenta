@@ -16,8 +16,6 @@
 
 package com.netflix.kayenta.influxdb.canary;
 
-import java.util.List;
-
 import com.netflix.kayenta.canary.CanaryScope;
 
 import lombok.Data;
@@ -29,5 +27,4 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class InfluxdbCanaryScope extends CanaryScope {
   
-  private List<String> fields;
 }
