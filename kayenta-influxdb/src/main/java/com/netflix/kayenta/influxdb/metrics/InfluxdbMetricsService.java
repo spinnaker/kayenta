@@ -81,7 +81,7 @@ public class InfluxdbMetricsService implements MetricsService {
     InfluxdbRemoteService remoteService = accountCredentials.getInfluxdbRemoteService();
     InfluxdbCanaryMetricSetQueryConfig queryConfig = (InfluxdbCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
 
-    //TODO(joerajeev): do I need to support resource type
+    //TODO(joerajeev): do we need to support resource type?
     List<InfluxdbResult> influxdbResults = remoteService.query(
       canaryMetricConfig.getName(),
       queryBuilder.build(queryConfig, canaryScope)
@@ -98,7 +98,8 @@ public class InfluxdbMetricsService implements MetricsService {
             .startTimeMillis(influxdbResult.getStartTimeMillis())
             .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
             .stepMillis(influxdbResult.getStepMillis())
-            .values(influxdbResult.getValues());
+            .values(influxdbResult.getValues())
+            .tag("field", influxdbResult.getId());
         
         Map<String, String> tags = influxdbResult.getTags();
         if (tags != null) {

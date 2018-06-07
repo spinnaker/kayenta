@@ -54,7 +54,7 @@ public class InfluxdbResponseConverter implements Converter {
     
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
       String json = reader.readLine();
-      log.info("Converting response :" + json);
+      log.debug("Converting response from influxdb: {}", json);
       Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
       List<Map> results = (List<Map>) responseMap.get("results");
       
@@ -74,16 +74,17 @@ public class InfluxdbResponseConverter implements Converter {
       List<List> seriesValues = (List<List>) firstSeries.get("values");
       List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
 
-      //TODO(joerajeev): if returning tags we will need to skip tags from this loop, and to extract and pass the tag values in to the influxdb result.
+      //TODO(joerajeev): if returning tags (other than the field names) we will need to skip tags from this loop,
+      //and to extract and set the tag values to the influxdb result.
       for (int i=1; i<seriesColumns.size(); i++) {  //Start from index 1 to skip 'time' column
         
         String id = seriesColumns.get(i); 
-        long startTimeMillis = extractTimeInMillis(seriesValues, 0);
-        long secondTimeMillis = extractTimeInMillis(seriesValues, 1);
+        long firstTimeMillis = extractTimeInMillis(seriesValues, 0);
+        long nextTimeMillis = extractTimeInMillis(seriesValues, 1);
         // If there aren't at least two data points, consider the step size to be zero.
         long stepMillis =
             seriesValues.size() > 1
-          ? secondTimeMillis - startTimeMillis
+          ? nextTimeMillis - firstTimeMillis
           : 0;
           
         List<Double> values = new ArrayList<>(seriesValues.size());
@@ -92,9 +93,10 @@ public class InfluxdbResponseConverter implements Converter {
             values.add(Double.valueOf((Integer)valueRow.get(i)));
           } 
         }
-        influxdbResultsList.add(new InfluxdbResult(id, startTimeMillis, stepMillis, null, values));  //TODO: add support for tags
+        influxdbResultsList.add(new InfluxdbResult(id, firstTimeMillis, stepMillis, null, values));  //TODO: add support for tags
       }
 
+      log.debug("Converted response: {} ", influxdbResultsList);
       return influxdbResultsList;
     } catch (IOException e) {
       e.printStackTrace();

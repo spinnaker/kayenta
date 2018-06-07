@@ -22,7 +22,7 @@ public class InfluxdbQueryBuilder {
   public String build(InfluxdbCanaryMetricSetQueryConfig queryConfig, CanaryScope canaryScope) {
     
     List<String> fields = queryConfig.getFields();
-    String measurement = queryConfig.getMetricName();
+    String metricName = queryConfig.getMetricName();
     //Validations
     if (CollectionUtils.isEmpty(fields)) {
       if(fields == null) {
@@ -30,12 +30,12 @@ public class InfluxdbQueryBuilder {
       }
       fields.add("*::field");
     }
-    if (StringUtils.isEmpty(measurement)) {
+    if (StringUtils.isEmpty(metricName)) {
       throw new IllegalArgumentException("Measurement is required to query metrics");
     }
     
     StringBuilder sb = new StringBuilder();
-    buildQueryForMetric(measurement, fields, sb);
+    buildBaseQuery(metricName, fields, sb);
     addTimeRangeFilter(canaryScope, sb);
     addScopeFilter(canaryScope, sb);
     
@@ -44,7 +44,7 @@ public class InfluxdbQueryBuilder {
     return sb.toString();
   }
 
-  private void buildQueryForMetric(String measurement, List<String> fields, StringBuilder sb) {
+  private void buildBaseQuery(String measurement, List<String> fields, StringBuilder sb) {
     sb.append("SELECT ");
     sb.append(fields.stream().collect(Collectors.joining(", ")));
     sb.append(" FROM ");
