@@ -54,7 +54,7 @@ public class InfluxdbResponseConverter implements Converter {
     
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
       String json = reader.readLine();
-      log.info("converting line :" + json);
+      log.info("Converting response :" + json);
       Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
       List<Map> results = (List<Map>) responseMap.get("results");
       

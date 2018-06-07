@@ -78,13 +78,11 @@ public class InfluxdbMetricsService implements MetricsService {
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
 
-    InfluxdbCredentials credentials = accountCredentials.getCredentials();
     InfluxdbRemoteService remoteService = accountCredentials.getInfluxdbRemoteService();
     InfluxdbCanaryMetricSetQueryConfig queryConfig = (InfluxdbCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
 
     //TODO(joerajeev): do I need to support resource type
     List<InfluxdbResult> influxdbResults = remoteService.query(
-      //credentials.getDbName(),
       canaryMetricConfig.getName(),
       queryBuilder.build(queryConfig, canaryScope)
     );
@@ -93,20 +91,22 @@ public class InfluxdbMetricsService implements MetricsService {
 
     List<MetricSet> metricSets = new ArrayList<MetricSet>();
 
-    for (InfluxdbResult influxdbResult : influxdbResults) {
-      MetricSetBuilder metricSetBuilder = MetricSet.builder()
-          .name(canaryMetricConfig.getName())
-          .startTimeMillis(influxdbResult.getStartTimeMillis())
-          .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
-          .stepMillis(influxdbResult.getStepMillis())
-          .values(influxdbResult.getValues());
-      
-      Map<String, String> tags = influxdbResult.getTags();
-      if (tags != null) {
-        metricSetBuilder.tags(tags);
+    if (influxdbResults != null) {
+      for (InfluxdbResult influxdbResult : influxdbResults) {
+        MetricSetBuilder metricSetBuilder = MetricSet.builder()
+            .name(canaryMetricConfig.getName())
+            .startTimeMillis(influxdbResult.getStartTimeMillis())
+            .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
+            .stepMillis(influxdbResult.getStepMillis())
+            .values(influxdbResult.getValues());
+        
+        Map<String, String> tags = influxdbResult.getTags();
+        if (tags != null) {
+          metricSetBuilder.tags(tags);
+        }
+        
+        metricSets.add(metricSetBuilder.build());
       }
-      
-      metricSets.add(metricSetBuilder.build());
     }
 
     return metricSets;
