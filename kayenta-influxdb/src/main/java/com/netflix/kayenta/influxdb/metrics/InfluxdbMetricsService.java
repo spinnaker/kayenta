@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Armory, Inc.
+ * Copyright 2018 Joseph Motha
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
@@ -30,21 +31,22 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.influxdb.canary.InfluxdbCanaryScope;
 import com.netflix.kayenta.influxdb.model.InfluxdbResult;
-import com.netflix.kayenta.influxdb.security.InfluxdbCredentials;
 import com.netflix.kayenta.influxdb.security.InfluxdbNamedAccountCredentials;
 import com.netflix.kayenta.influxdb.service.InfluxdbRemoteService;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricSet.MetricSetBuilder;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
+import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Builder
 public class InfluxdbMetricsService implements MetricsService {
   @NotNull
@@ -81,20 +83,35 @@ public class InfluxdbMetricsService implements MetricsService {
     InfluxdbRemoteService remoteService = accountCredentials.getInfluxdbRemoteService();
     InfluxdbCanaryMetricSetQueryConfig queryConfig = (InfluxdbCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
 
-    //TODO(joerajeev): do we need to support resource type?
-    List<InfluxdbResult> influxdbResults = remoteService.query(
-      canaryMetricConfig.getName(),
-      queryBuilder.build(queryConfig, canaryScope)
-    );
+    String query = queryBuilder.build(queryConfig, canaryScope);
+    log.debug("query={}", query);
     
-    //TODO(joerajeev): Log retrieval time to registry?
+    String metricSetName = canaryMetricConfig.getName();
+    List<InfluxdbResult> influxdbResults = queryInfluxdb(remoteService, metricSetName, query);
+    
+    return buildMetricSets(metricSetName, influxdbResults);
+  }
 
+  private List<InfluxdbResult> queryInfluxdb(InfluxdbRemoteService remoteService, String metricSetName, String query) {
+    long startTime = registry.clock().monotonicTime();
+    List<InfluxdbResult> influxdbResults; 
+    
+    try {
+      influxdbResults = remoteService.query(metricSetName, query);
+    } finally {
+      long endTime = registry.clock().monotonicTime();
+      Id influxdbFetchTimerId = registry.createId("influxdb.fetchTime");
+      registry.timer(influxdbFetchTimerId).record(endTime - startTime, TimeUnit.NANOSECONDS);
+    }
+    return influxdbResults;
+  }
+  
+  private List<MetricSet> buildMetricSets(String metricSetName, List<InfluxdbResult> influxdbResults) {
     List<MetricSet> metricSets = new ArrayList<MetricSet>();
-
     if (influxdbResults != null) {
       for (InfluxdbResult influxdbResult : influxdbResults) {
         MetricSetBuilder metricSetBuilder = MetricSet.builder()
-            .name(canaryMetricConfig.getName())
+            .name(metricSetName)
             .startTimeMillis(influxdbResult.getStartTimeMillis())
             .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
             .stepMillis(influxdbResult.getStepMillis())
@@ -109,7 +126,6 @@ public class InfluxdbMetricsService implements MetricsService {
         metricSets.add(metricSetBuilder.build());
       }
     }
-
     return metricSets;
   }
 

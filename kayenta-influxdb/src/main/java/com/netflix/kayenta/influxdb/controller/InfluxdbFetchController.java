@@ -1,5 +1,6 @@
 /*
- * Copyright 2018 Armory, Inc.
+ * Copyright 2018 Joseph Motha
+ * Copyright 2017 Google, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -16,6 +17,21 @@
 
 package com.netflix.kayenta.influxdb.controller;
 
+import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefaultProperty;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
@@ -25,27 +41,12 @@ import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
+
 import io.swagger.annotations.ApiParam;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefaultProperty;
 
 
 @RestController
 @RequestMapping("/fetch/influxdb")
-@Slf4j
 public class InfluxdbFetchController {
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final SynchronousQueryProcessor synchronousQueryProcessor;
@@ -61,7 +62,7 @@ public class InfluxdbFetchController {
   }
 
   @RequestMapping(value = "/query", method = RequestMethod.POST)
-  public Map queryMetrics(@RequestParam(required = false) final String metricsAccountName,
+  public Map<String, String> queryMetrics(@RequestParam(required = false) final String metricsAccountName,
                           @RequestParam(required = false) final String storageAccountName,
                           @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
                           @ApiParam(defaultValue = "temperature") @RequestParam String metricName,
@@ -70,9 +71,9 @@ public class InfluxdbFetchController {
                           @ApiParam(value = "The scope of the Influxdb query. e.g. autoscaling_group:myapp-prod-v002")
                             @RequestParam(required = false) String scope,
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-                            @RequestParam String start,
+                            @RequestParam(required = false) String start,
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-                            @RequestParam String end,
+                            @RequestParam(required = false) String end,
                           @ApiParam(defaultValue = "60", value = "seconds") @RequestParam Long step) throws IOException {
     // Apply defaults.
     scope = determineDefaultProperty(scope, "scope", influxdbConfigurationTestControllerDefaultProperties);
@@ -86,7 +87,7 @@ public class InfluxdbFetchController {
     if (StringUtils.isEmpty(end)) {
       throw new IllegalArgumentException("End time is required.");
     }
-
+    
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
       AccountCredentials.Type.METRICS_STORE,
       accountCredentialsRepository);

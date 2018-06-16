@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Armory, Inc.
+ * Copyright 2018 Joseph Motha
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package com.netflix.kayenta.influxdb.config;
 
-import com.netflix.kayenta.retrofit.config.RemoteService;
-import com.netflix.kayenta.security.AccountCredentials;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
+
+import com.netflix.kayenta.retrofit.config.RemoteService;
+import com.netflix.kayenta.security.AccountCredentials;
+
+import lombok.Data;
 
 @Data
 public class InfluxdbManagedAccount {

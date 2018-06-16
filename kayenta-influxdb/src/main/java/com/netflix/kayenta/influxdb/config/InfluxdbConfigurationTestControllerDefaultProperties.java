@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Armory, Inc.
+ * Copyright 2018 Joseph Motha
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * This configuration class allows you to specify default values for the PrometheusFetchController.
+ * This configuration class allows you to specify default values for the InfluxdbFetchController.
  */
 public class InfluxdbConfigurationTestControllerDefaultProperties {
 
