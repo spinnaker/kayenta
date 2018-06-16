@@ -102,9 +102,9 @@ public class InfluxdbQueryBuilder {
   }
 
   private void addTimeRangeFilter(CanaryScope canaryScope, StringBuilder query) {
-    query.append(" WHERE ");
+    query.append(" WHERE");
     query.append(" time >= '" + canaryScope.getStart().toString() + "'");
-    query.append(" AND ");
+    query.append(" AND");
     query.append(" time < '" + canaryScope.getEnd().toString() + "'");
   }
 

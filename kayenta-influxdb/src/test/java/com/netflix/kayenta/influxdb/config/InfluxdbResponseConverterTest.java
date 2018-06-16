@@ -27,14 +27,10 @@ public class InfluxdbResponseConverterTest {
   
   @Before
   public void setup() {
-  /*  Map<String, String> tags = new HashMap<>();
-    tags.put("host", "serverA");
-    tags.put("reigion", "melbourne");*/
     List<Double> externalDataValues = new ArrayList<>();
     externalDataValues.add(25d);
     externalDataValues.add(25d);
     externalDataValues.add(26d);
-    //InfluxdbResult influxdbResult = new InfluxdbResult("temperature-external", 1435781430781L, 1, 1435781430881L, null, values);
     InfluxdbResult externalTempResult = new InfluxdbResult("external", 1527396644105L, 60000L, null, externalDataValues);
     results.add(externalTempResult);
     
@@ -42,7 +38,6 @@ public class InfluxdbResponseConverterTest {
     internalDataValues.add(37d);
     internalDataValues.add(37d);
     internalDataValues.add(38d);
-    //InfluxdbResult influxdbResult = new InfluxdbResult("temperature-external", 1435781430781L, 1, 1435781430881L, null, values);
     InfluxdbResult internalTempResult = new InfluxdbResult("internal", 1527396644105L, 60000L, null, internalDataValues);
     results.add(internalTempResult);
   }

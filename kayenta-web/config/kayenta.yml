@@ -29,14 +29,14 @@ kayenta:
 
 # TODO default to disable after testing
   aws:
-    enabled: true
-    accounts:
-      - name: joerajeev
-        bucket: joerajeev-metrics-bucket
-        rootFolder: kayenta
-        supportedTypes:
-          - OBJECT_STORE
-          #- CONFIGURATION_STORE
+    enabled: false
+#    accounts:
+#      - name:
+#        bucket:
+#        rootFolder:
+#        supportedTypes:
+#          - OBJECT_STORE
+#          - CONFIGURATION_STORE
 
   datadog:
     enabled: false
@@ -59,13 +59,13 @@ kayenta:
 
 # TODO default to disable after testing
   influxdb:
-    enabled: true
-    accounts:
-      - name: my-influxdb-account
-        endpoint:
-          baseUrl: http://localhost:8086
-        supportedTypes:
-          - METRICS_STORE
+    enabled: false
+#    accounts:
+#      - name:
+#        endpoint:
+#          baseUrl: http://localhost:8086
+#        supportedTypes:
+#          - METRICS_STORE
 
   gcs:
     enabled: false
