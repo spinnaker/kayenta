@@ -27,13 +27,12 @@ kayenta:
 #          - OBJECT_STORE
 #          - CONFIGURATION_STORE
 
-# TODO default to disable after testing
   aws:
     enabled: false
 #    accounts:
 #      - name:
 #        bucket:
-#        rootFolder:
+#        rootFolder: kayenta
 #        supportedTypes:
 #          - OBJECT_STORE
 #          - CONFIGURATION_STORE
@@ -57,7 +56,6 @@ kayenta:
 #        supportedTypes:
 #          - METRICS_STORE
 
-# TODO default to disable after testing
   influxdb:
     enabled: false
 #    accounts:
@@ -71,7 +69,7 @@ kayenta:
     enabled: false
 
   s3:
-    enabled: true
+    enabled: false
 
   stackdriver:
     enabled: false
