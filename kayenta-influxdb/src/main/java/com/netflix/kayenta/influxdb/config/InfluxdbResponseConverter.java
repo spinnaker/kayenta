@@ -29,6 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.influxdb.model.InfluxdbResult;
 
@@ -42,6 +44,7 @@ import retrofit.mime.TypedOutput;
 @Slf4j
 public class InfluxdbResponseConverter implements Converter {
 
+  private static final int DEFAULT_STEP_SIZE = 0;
   private final ObjectMapper kayentaObjectMapper;
 
   @Autowired
@@ -55,37 +58,27 @@ public class InfluxdbResponseConverter implements Converter {
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
       String json = reader.readLine();
       log.debug("Converting response from influxdb: {}", json);
-      Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
-      List<Map> results = (List<Map>) responseMap.get("results");
       
-      if (CollectionUtils.isEmpty(results)) {
-        throw new ConversionException("Unexpected response from influxdb");
-      }
-      Map firstResult = (Map)results.get(0); //TODO(joerajeev): Check if there a need to support multi -queries (See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#multiple-queries)
-      List<Map> series = (List<Map>) firstResult.get("series");
+      Map result = getResultObject(json); 
+      List<Map> seriesList = (List<Map>) result.get("series");
       
-      if (CollectionUtils.isEmpty(series)) {
+      if (CollectionUtils.isEmpty(seriesList)) {
         log.warn("Received no data from Influxdb.");
         return null;
       }
       
-      Map firstSeries = series.get(0); //TODO(joerajeev): check if we can get multiple series elements
-      List<String> seriesColumns = (List<String>) firstSeries.get("columns");
-      List<List> seriesValues = (List<List>) firstSeries.get("values");
+      Map series = seriesList.get(0);
+      List<String> seriesColumns = (List<String>) series.get("columns");
+      List<List> seriesValues = (List<List>) series.get("values");
       List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
 
       //TODO(joerajeev): if returning tags (other than the field names) we will need to skip tags from this loop,
       //and to extract and set the tag values to the influxdb result.
-      for (int i=1; i<seriesColumns.size(); i++) {  //Start from index 1 to skip 'time' column
+      for (int i=1; i<seriesColumns.size(); i++) {  //Starting from index 1 to skip 'time' column
         
         String id = seriesColumns.get(i); 
         long firstTimeMillis = extractTimeInMillis(seriesValues, 0);
-        long nextTimeMillis = extractTimeInMillis(seriesValues, 1);
-        // If there aren't at least two data points, consider the step size to be zero.
-        long stepMillis =
-            seriesValues.size() > 1
-          ? nextTimeMillis - firstTimeMillis
-          : 0;
+        long stepMillis = calculateStep(seriesValues, firstTimeMillis);
           
         List<Double> values = new ArrayList<>(seriesValues.size());
         for (List<Object> valueRow: seriesValues) {
@@ -93,7 +86,7 @@ public class InfluxdbResponseConverter implements Converter {
             values.add(Double.valueOf((Integer)valueRow.get(i)));
           } 
         }
-        influxdbResultsList.add(new InfluxdbResult(id, firstTimeMillis, stepMillis, null, values));  //TODO: add support for tags
+        influxdbResultsList.add(new InfluxdbResult(id, firstTimeMillis, stepMillis, null, values));
       }
 
       log.debug("Converted response: {} ", influxdbResultsList);
@@ -105,8 +98,25 @@ public class InfluxdbResponseConverter implements Converter {
     return null;
   }
 
+  private Map getResultObject(String json)
+      throws IOException, JsonParseException, JsonMappingException, ConversionException {
+    Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
+    List<Map> results = (List<Map>) responseMap.get("results");
+    if (CollectionUtils.isEmpty(results)) {
+      throw new ConversionException("Unexpected response from influxdb");
+    }
+    Map result = (Map)results.get(0);
+    return result;
+  }
+
+  private long calculateStep(List<List> seriesValues, long firstTimeMillis) {
+    long nextTimeMillis = extractTimeInMillis(seriesValues, 1);
+    long stepMillis = seriesValues.size() > 1 ? nextTimeMillis - firstTimeMillis : DEFAULT_STEP_SIZE;
+    return stepMillis;
+  }
+
   private long extractTimeInMillis(List<List> seriesValues, int index) {
-    String firstUtcTime = (String) seriesValues.get(index).get(0);  //TODO(joerajeev): check if I need to order it first 
+    String firstUtcTime = (String) seriesValues.get(index).get(0);
     long startTimeMillis = Instant.parse(firstUtcTime).toEpochMilli();
     return startTimeMillis;
   }

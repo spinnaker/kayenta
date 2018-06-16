@@ -33,60 +33,79 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class InfluxdbQueryBuilder {
   
+  private static final String ALL_FIELDS = "*::field";
+  private static final String SCOPE_INVALID_FORMAT_MSG = "Scope expected in the format of 'name:value'. e.g. autoscaling_group:myapp-prod-v002";
+
   //TODO(joerajeev): update to accept tags and groupby fields
-  //TODO(joerajeev): protect against injection
+  //TODO(joerajeev): protect against injection. Influxdb is supposed to support binding params, https://docs.influxdata.com/influxdb/v1.5/tools/api/
   public String build(InfluxdbCanaryMetricSetQueryConfig queryConfig, CanaryScope canaryScope) {
+   
+    validateManadtoryParams(queryConfig, canaryScope);
     
+    StringBuilder query = new StringBuilder();
+    addBaseQuery(queryConfig.getMetricName(), handleFields(queryConfig), query);
+    addTimeRangeFilter(canaryScope, query);
+    addScopeFilter(canaryScope, query);
+    
+    log.debug("Built query :{}", query.toString());
+    return query.toString();
+  }
+
+  private void validateManadtoryParams(InfluxdbCanaryMetricSetQueryConfig queryConfig, CanaryScope canaryScope) {
+    if (StringUtils.isEmpty(queryConfig.getMetricName())) {
+      throw new IllegalArgumentException("Measurement is required to query metrics");
+    }
+    if (null == canaryScope) {
+      throw new IllegalArgumentException("CanaryScope is missing");
+    }
+    if (null == canaryScope.getStart() || null == canaryScope.getEnd()) {
+      throw new IllegalArgumentException("Start and End times are required");
+    }
+  }
+
+  private List<String> handleFields(InfluxdbCanaryMetricSetQueryConfig queryConfig) {
     List<String> fields = queryConfig.getFields();
-    String metricName = queryConfig.getMetricName();
-    //Validations
     if (CollectionUtils.isEmpty(fields)) {
       if(fields == null) {
         fields = new ArrayList<>();
       }
-      fields.add("*::field");
+      fields.add(ALL_FIELDS);
     }
-    if (StringUtils.isEmpty(metricName)) {
-      throw new IllegalArgumentException("Measurement is required to query metrics");
-    }
-    
-    StringBuilder sb = new StringBuilder();
-    buildBaseQuery(metricName, fields, sb);
-    addTimeRangeFilter(canaryScope, sb);
-    addScopeFilter(canaryScope, sb);
-    
-    log.debug("Built query :{}", sb.toString());
-    
-    return sb.toString();
+    return fields;
   }
 
-  private void buildBaseQuery(String measurement, List<String> fields, StringBuilder sb) {
-    sb.append("SELECT ");
-    sb.append(fields.stream().collect(Collectors.joining(", ")));
-    sb.append(" FROM ");
-    sb.append(measurement);
-    sb.append(" WHERE ");
+  private void addBaseQuery(String measurement, List<String> fields, StringBuilder query) {
+    query.append("SELECT ");
+    query.append(fields.stream().collect(Collectors.joining(", ")));
+    query.append(" FROM ");
+    query.append(measurement);
   }
 
   private void addScopeFilter(CanaryScope canaryScope, StringBuilder sb) {
     String scope = canaryScope.getScope();
     if (scope != null) {
-      if (!scope.contains(":")) {
-        throw new IllegalArgumentException("Scope expected in the format of 'name:value'. e.g. autoscaling_group:myapp-prod-v002");
-      }
-      sb.append( " AND ");
-      String[] scopeParts = scope.split(":");
-      if (scopeParts.length != 2) {
-        throw new IllegalArgumentException("Scope expected in the format of 'name:value'. e.g. autoscaling_group:myapp-prod-v002");
-      }
+      String[] scopeParts = validateAndExtractScope(scope);
+      sb.append(" AND ");
       sb.append(scopeParts[0] + "='" + scopeParts[1] +"'");
     }
   }
 
-  private void addTimeRangeFilter(CanaryScope canaryScope, StringBuilder sb) {
-    sb.append(" time >= '"+ canaryScope.getStart().toString() + "'");
-    sb.append(" AND ");
-    sb.append(" time < '"+ canaryScope.getEnd().toString() + "'");
-  }  
+  private String[] validateAndExtractScope(String scope) {
+    if (!scope.contains(":")) {
+      throw new IllegalArgumentException(SCOPE_INVALID_FORMAT_MSG);
+    }
+    String[] scopeParts = scope.split(":");
+    if (scopeParts.length != 2) {
+      throw new IllegalArgumentException(SCOPE_INVALID_FORMAT_MSG);
+    }
+    return scopeParts;
+  }
+
+  private void addTimeRangeFilter(CanaryScope canaryScope, StringBuilder query) {
+    query.append(" WHERE ");
+    query.append(" time >= '" + canaryScope.getStart().toString() + "'");
+    query.append(" AND ");
+    query.append(" time < '" + canaryScope.getEnd().toString() + "'");
+  }
 
 }
