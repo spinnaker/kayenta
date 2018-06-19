@@ -16,23 +16,25 @@
 
 package com.netflix.kayenta.influxdb.config;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
 
-/**
- * This configuration class allows you to specify default values for the InfluxdbFetchController.
- */
-public class InfluxdbConfigurationTestControllerDefaultProperties {
+import javax.validation.constraints.NotNull;
 
-    @Getter
-    @Setter
-    private String scope;
+import com.netflix.kayenta.retrofit.config.RemoteService;
+import com.netflix.kayenta.security.AccountCredentials;
 
-    @Getter
-    @Setter
-    private String start;
+import lombok.Data;
 
-    @Getter
-    @Setter
-    private String end;
+@Data
+public class InfluxDbManagedAccount {
+  @NotNull
+  private String name;
+  private String apiKey;
+  private String applicationKey;
+
+  @NotNull
+  private RemoteService endpoint;
+
+  private List<AccountCredentials.Type> supportedTypes;
 }
+

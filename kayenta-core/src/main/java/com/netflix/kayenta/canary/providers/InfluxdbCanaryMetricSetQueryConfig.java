@@ -34,6 +34,8 @@ import lombok.ToString;
 @AllArgsConstructor
 public class InfluxdbCanaryMetricSetQueryConfig implements CanaryMetricSetQueryConfig {
   
+  public static final String SERVICE_TYPE = "influxdb";
+
   @NotNull
   @Getter
   private String metricName;
@@ -41,11 +43,8 @@ public class InfluxdbCanaryMetricSetQueryConfig implements CanaryMetricSetQueryC
   @Getter
   private List<String> fields;
   
-  //@Getter
-  //private List<String> groupByFields;
-
   @Override
   public String getServiceType() {
-    return "influxdb";
+    return SERVICE_TYPE;
   }
 }

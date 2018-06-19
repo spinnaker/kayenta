@@ -17,7 +17,8 @@
 package com.netflix.kayenta.influxdb.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.netflix.kayenta.influxdb.service.InfluxdbRemoteService;
+import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.influxdb.service.InfluxDbRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
 import lombok.Builder;
@@ -29,7 +30,7 @@ import java.util.List;
 
 @Builder
 @Data
-public class InfluxdbNamedAccountCredentials implements AccountCredentials<InfluxdbCredentials> {
+public class InfluxDbNamedAccountCredentials implements AccountCredentials<InfluxdbCredentials> {
   @NotNull
   private String name;
 
@@ -45,9 +46,9 @@ public class InfluxdbNamedAccountCredentials implements AccountCredentials<Influ
 
   @Override
   public String getType() {
-    return "influxdb";
+    return InfluxdbCanaryMetricSetQueryConfig.SERVICE_TYPE;
   }
 
   @JsonIgnore
-  InfluxdbRemoteService influxdbRemoteService;
+  InfluxDbRemoteService influxDbRemoteService;
 }

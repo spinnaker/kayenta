@@ -36,7 +36,7 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.influxdb.config.InfluxdbConfigurationTestControllerDefaultProperties;
+import com.netflix.kayenta.influxdb.config.InfluxDbConfigurationTestControllerDefaultProperties;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -47,18 +47,18 @@ import io.swagger.annotations.ApiParam;
 
 @RestController
 @RequestMapping("/fetch/influxdb")
-public class InfluxdbFetchController {
+public class InfluxDbFetchController {
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final SynchronousQueryProcessor synchronousQueryProcessor;
-  private final InfluxdbConfigurationTestControllerDefaultProperties influxdbConfigurationTestControllerDefaultProperties;
+  private final InfluxDbConfigurationTestControllerDefaultProperties influxDbConfigurationTestControllerDefaultProperties;
 
   @Autowired
-  public InfluxdbFetchController(AccountCredentialsRepository accountCredentialsRepository,
+  public InfluxDbFetchController(AccountCredentialsRepository accountCredentialsRepository,
                                 SynchronousQueryProcessor synchronousQueryProcessor,
-                                InfluxdbConfigurationTestControllerDefaultProperties influxdbConfigurationTestControllerDefaultProperties) {
+                                InfluxDbConfigurationTestControllerDefaultProperties influxDbConfigurationTestControllerDefaultProperties) {
     this.accountCredentialsRepository = accountCredentialsRepository;
     this.synchronousQueryProcessor = synchronousQueryProcessor;
-    this.influxdbConfigurationTestControllerDefaultProperties = influxdbConfigurationTestControllerDefaultProperties;
+    this.influxDbConfigurationTestControllerDefaultProperties = influxDbConfigurationTestControllerDefaultProperties;
   }
 
   @RequestMapping(value = "/query", method = RequestMethod.POST)
@@ -76,9 +76,9 @@ public class InfluxdbFetchController {
                             @RequestParam(required = false) String end,
                           @ApiParam(defaultValue = "60", value = "seconds") @RequestParam Long step) throws IOException {
     // Apply defaults.
-    scope = determineDefaultProperty(scope, "scope", influxdbConfigurationTestControllerDefaultProperties);
-    start = determineDefaultProperty(start, "start", influxdbConfigurationTestControllerDefaultProperties);
-    end = determineDefaultProperty(end, "end", influxdbConfigurationTestControllerDefaultProperties);
+    scope = determineDefaultProperty(scope, "scope", influxDbConfigurationTestControllerDefaultProperties);
+    start = determineDefaultProperty(start, "start", influxDbConfigurationTestControllerDefaultProperties);
+    end = determineDefaultProperty(end, "end", influxDbConfigurationTestControllerDefaultProperties);
 
     if (StringUtils.isEmpty(start)) {
       throw new IllegalArgumentException("Start time is required.");
@@ -95,7 +95,7 @@ public class InfluxdbFetchController {
       AccountCredentials.Type.OBJECT_STORE,
       accountCredentialsRepository);
 
-    InfluxdbCanaryMetricSetQueryConfig influxdbCanaryMetricSetQueryConfig =
+    InfluxdbCanaryMetricSetQueryConfig influxDbCanaryMetricSetQueryConfig =
       InfluxdbCanaryMetricSetQueryConfig
         .builder()
         .metricName(metricName)
@@ -106,7 +106,7 @@ public class InfluxdbFetchController {
       CanaryMetricConfig
         .builder()
         .name(metricSetName)
-        .query(influxdbCanaryMetricSetQueryConfig)
+        .query(influxDbCanaryMetricSetQueryConfig)
         .build();
 
     CanaryScope canaryScope = new CanaryScope(scope, null /* location */, Instant.parse(start), Instant.parse(end), step, Collections.emptyMap());

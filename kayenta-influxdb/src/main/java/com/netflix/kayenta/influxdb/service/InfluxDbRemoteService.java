@@ -18,15 +18,15 @@ package com.netflix.kayenta.influxdb.service;
 
 import java.util.List;
 
-import com.netflix.kayenta.influxdb.model.InfluxdbResult;
+import com.netflix.kayenta.influxdb.model.InfluxDbResult;
 
 import retrofit.http.GET;
 import retrofit.http.Query;
 
-public interface InfluxdbRemoteService {
+public interface InfluxDbRemoteService {
 
   //See https://docs.influxdata.com/influxdb/v1.5/guides/querying_data/#querying-data-with-the-http-api
   @GET("/query")
-  List<InfluxdbResult> query(@Query("db") String databaseName,
+  List<InfluxDbResult> query(@Query("db") String databaseName,
                           @Query("q") String query);
 }

@@ -14,44 +14,16 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.influxdb.model;
+package com.netflix.kayenta.influxdb.canary;
 
-import java.util.List;
-import java.util.Map;
+import com.netflix.kayenta.canary.CanaryScope;
 
-import javax.validation.constraints.NotNull;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-@Builder
-@ToString
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-public class InfluxdbResult {
-
-  @NotNull
-  @Getter
-  private String id;
-
-  @NotNull
-  @Getter
-  private long startTimeMillis;
-
-  @NotNull
-  @Getter
-  private long stepMillis;
-
-  @NotNull
-  @Getter
-  private Map<String, String> tags;
-
-  @NotNull
-  @Getter
-  private List<Double> values;
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class InfluxDbCanaryScope extends CanaryScope {
 }

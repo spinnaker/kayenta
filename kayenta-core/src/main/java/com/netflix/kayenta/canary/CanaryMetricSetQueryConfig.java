@@ -29,9 +29,9 @@ import lombok.NonNull;
 @JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = AtlasCanaryMetricSetQueryConfig.class, name = "atlas"),
                @JsonSubTypes.Type(value = DatadogCanaryMetricSetQueryConfig.class, name = "datadog"),
+               @JsonSubTypes.Type(value = InfluxdbCanaryMetricSetQueryConfig.class, name = "influxdb"),
                @JsonSubTypes.Type(value = PrometheusCanaryMetricSetQueryConfig.class, name = "prometheus"),
-               @JsonSubTypes.Type(value = StackdriverCanaryMetricSetQueryConfig.class, name = "stackdriver"),
-               @JsonSubTypes.Type(value = InfluxdbCanaryMetricSetQueryConfig.class, name = "influxdb")})
+               @JsonSubTypes.Type(value = StackdriverCanaryMetricSetQueryConfig.class, name = "stackdriver")})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface CanaryMetricSetQueryConfig {
 

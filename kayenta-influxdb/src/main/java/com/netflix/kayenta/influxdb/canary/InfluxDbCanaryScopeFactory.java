@@ -20,12 +20,13 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopeFactory;
+import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
 
 @Component
-public class InfluxdbCanaryScopeFactory implements CanaryScopeFactory {
+public class InfluxDbCanaryScopeFactory implements CanaryScopeFactory {
   @Override
   public boolean handles(String serviceType) {
-    return serviceType.equals("influxdb");
+    return InfluxdbCanaryMetricSetQueryConfig.SERVICE_TYPE.equals(serviceType);
   }
 
   @Override

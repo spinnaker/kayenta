@@ -32,7 +32,7 @@ import org.springframework.util.CollectionUtils;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.kayenta.influxdb.model.InfluxdbResult;
+import com.netflix.kayenta.influxdb.model.InfluxDbResult;
 
 import lombok.extern.slf4j.Slf4j;
 import retrofit.converter.ConversionException;
@@ -42,13 +42,13 @@ import retrofit.mime.TypedOutput;
 
 @Component
 @Slf4j
-public class InfluxdbResponseConverter implements Converter {
+public class InfluxDbResponseConverter implements Converter {
 
   private static final int DEFAULT_STEP_SIZE = 0;
   private final ObjectMapper kayentaObjectMapper;
 
   @Autowired
-  public InfluxdbResponseConverter(ObjectMapper kayentaObjectMapper) {
+  public InfluxDbResponseConverter(ObjectMapper kayentaObjectMapper) {
     this.kayentaObjectMapper = kayentaObjectMapper;
   }
 
@@ -57,7 +57,7 @@ public class InfluxdbResponseConverter implements Converter {
     
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
       String json = reader.readLine();
-      log.debug("Converting response from influxdb: {}", json);
+      log.debug("Converting response from influxDb: {}", json);
       
       Map result = getResultObject(json); 
       List<Map> seriesList = (List<Map>) result.get("series");
@@ -70,27 +70,26 @@ public class InfluxdbResponseConverter implements Converter {
       Map series = seriesList.get(0);
       List<String> seriesColumns = (List<String>) series.get("columns");
       List<List> seriesValues = (List<List>) series.get("values");
-      List<InfluxdbResult> influxdbResultsList = new ArrayList<InfluxdbResult>(seriesValues.size());
+      List<InfluxDbResult> influxDbResultsList = new ArrayList<InfluxDbResult>(seriesValues.size());
 
       //TODO(joerajeev): if returning tags (other than the field names) we will need to skip tags from this loop,
-      //and to extract and set the tag values to the influxdb result.
+      //and to extract and set the tag values to the influxDb result.
       for (int i=1; i<seriesColumns.size(); i++) {  //Starting from index 1 to skip 'time' column
         
         String id = seriesColumns.get(i); 
         long firstTimeMillis = extractTimeInMillis(seriesValues, 0);
         long stepMillis = calculateStep(seriesValues, firstTimeMillis);
-          
         List<Double> values = new ArrayList<>(seriesValues.size());
-        for (List<Object> valueRow: seriesValues) {
+        for (List<Object> valueRow : seriesValues) {
           if (valueRow.get(i) != null) {
-            values.add(Double.valueOf((Integer)valueRow.get(i)));
-          } 
+            values.add(Double.valueOf((Integer) valueRow.get(i)));
+          }
         }
-        influxdbResultsList.add(new InfluxdbResult(id, firstTimeMillis, stepMillis, null, values));
+        influxDbResultsList.add(new InfluxDbResult(id, firstTimeMillis, stepMillis, null, values));
       }
 
-      log.debug("Converted response: {} ", influxdbResultsList);
-      return influxdbResultsList;
+      log.debug("Converted response: {} ", influxDbResultsList);
+      return influxDbResultsList;
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -103,7 +102,7 @@ public class InfluxdbResponseConverter implements Converter {
     Map responseMap = kayentaObjectMapper.readValue(json, Map.class);
     List<Map> results = (List<Map>) responseMap.get("results");
     if (CollectionUtils.isEmpty(results)) {
-      throw new ConversionException("Unexpected response from influxdb");
+      throw new ConversionException("Unexpected response from influxDb");
     }
     Map result = (Map)results.get(0);
     return result;

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class InfluxdbQueryBuilder {
+public class InfluxDbQueryBuilder {
   
   private static final String ALL_FIELDS = "*::field";
   private static final String SCOPE_INVALID_FORMAT_MSG = "Scope expected in the format of 'name:value'. e.g. autoscaling_group:myapp-prod-v002";
@@ -47,7 +47,7 @@ public class InfluxdbQueryBuilder {
     addTimeRangeFilter(canaryScope, query);
     addScopeFilter(canaryScope, query);
     
-    log.debug("Built query :{}", query.toString());
+    log.debug("Built query: {}", query.toString());
     return query.toString();
   }
 

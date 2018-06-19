@@ -28,10 +28,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.kayenta.influxdb.metrics.InfluxdbMetricsService;
+import com.netflix.kayenta.influxdb.metrics.InfluxDbMetricsService;
 import com.netflix.kayenta.influxdb.security.InfluxdbCredentials;
-import com.netflix.kayenta.influxdb.security.InfluxdbNamedAccountCredentials;
-import com.netflix.kayenta.influxdb.service.InfluxdbRemoteService;
+import com.netflix.kayenta.influxdb.security.InfluxDbNamedAccountCredentials;
+import com.netflix.kayenta.influxdb.service.InfluxDbRemoteService;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
@@ -45,24 +45,24 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty("kayenta.influxdb.enabled")
 @ComponentScan({"com.netflix.kayenta.influxdb"})
 @Slf4j
-public class InfluxdbConfiguration {
+public class InfluxDbConfiguration {
   @Bean
   @ConfigurationProperties("kayenta.influxdb")
-  InfluxdbConfigurationProperties influxdbConfigurationProperties() {
-    return new InfluxdbConfigurationProperties();
+  InfluxDbConfigurationProperties influxDbConfigurationProperties() {
+    return new InfluxDbConfigurationProperties();
   }
 
   @Bean
   @ConfigurationProperties("kayenta.influxdb.testControllerDefaults")
-  InfluxdbConfigurationTestControllerDefaultProperties influxdbConfigurationTestControllerDefaultProperties() {
-    return new InfluxdbConfigurationTestControllerDefaultProperties();
+  InfluxDbConfigurationTestControllerDefaultProperties influxDbConfigurationTestControllerDefaultProperties() {
+    return new InfluxDbConfigurationTestControllerDefaultProperties();
   }
 
   @Bean
-  MetricsService influxdbMetricsService(InfluxdbResponseConverter influxdbResponseConverter, InfluxdbConfigurationProperties influxdbConfigurationProperties, RetrofitClientFactory retrofitClientFactory, ObjectMapper objectMapper, OkHttpClient okHttpClient, AccountCredentialsRepository accountCredentialsRepository) throws IOException {
-    InfluxdbMetricsService.InfluxdbMetricsServiceBuilder metricsServiceBuilder = InfluxdbMetricsService.builder();
+  MetricsService influxDbMetricsService(InfluxDbResponseConverter influxDbResponseConverter, InfluxDbConfigurationProperties influxDbConfigurationProperties, RetrofitClientFactory retrofitClientFactory, ObjectMapper objectMapper, OkHttpClient okHttpClient, AccountCredentialsRepository accountCredentialsRepository) throws IOException {
+    InfluxDbMetricsService.InfluxDbMetricsServiceBuilder metricsServiceBuilder = InfluxDbMetricsService.builder();
 
-    for (InfluxdbManagedAccount account : influxdbConfigurationProperties.getAccounts()) {
+    for (InfluxDbManagedAccount account : influxDbConfigurationProperties.getAccounts()) {
       String name = account.getName();
       List<AccountCredentials.Type> supportedTypes = account.getSupportedTypes();
 
@@ -70,8 +70,8 @@ public class InfluxdbConfiguration {
         .builder()
         .build();
 
-      InfluxdbNamedAccountCredentials.InfluxdbNamedAccountCredentialsBuilder accountCredentialsBuilder =
-        InfluxdbNamedAccountCredentials
+      InfluxDbNamedAccountCredentials.InfluxDbNamedAccountCredentialsBuilder accountCredentialsBuilder =
+        InfluxDbNamedAccountCredentials
           .builder()
           .name(name)
           .endpoint(account.getEndpoint())
@@ -79,9 +79,9 @@ public class InfluxdbConfiguration {
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
-          accountCredentialsBuilder.influxdbRemoteService(retrofitClientFactory.createClient(
-            InfluxdbRemoteService.class,
-            influxdbResponseConverter,
+          accountCredentialsBuilder.influxDbRemoteService(retrofitClientFactory.createClient(
+            InfluxDbRemoteService.class,
+            influxDbResponseConverter,
             account.getEndpoint(),
             okHttpClient
           ));
@@ -93,7 +93,7 @@ public class InfluxdbConfiguration {
       metricsServiceBuilder.accountName(name);
     }
 
-    log.info("Populated influxdbMetricsService with {} influxdb accounts.", influxdbConfigurationProperties.getAccounts().size());
+    log.info("Populated influxDbMetricsService with {} influxdb accounts.", influxDbConfigurationProperties.getAccounts().size());
     return metricsServiceBuilder.build();
   }
 }

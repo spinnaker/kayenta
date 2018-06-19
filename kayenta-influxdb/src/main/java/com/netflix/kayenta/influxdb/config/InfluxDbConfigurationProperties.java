@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.influxdb.canary;
+package com.netflix.kayenta.influxdb.config;
 
-import com.netflix.kayenta.canary.CanaryScope;
+import lombok.Getter;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import java.util.ArrayList;
+import java.util.List;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class InfluxdbCanaryScope extends CanaryScope {
-  
+public class InfluxDbConfigurationProperties {
+  @Getter
+  private List<InfluxDbManagedAccount> accounts = new ArrayList<>();
 }

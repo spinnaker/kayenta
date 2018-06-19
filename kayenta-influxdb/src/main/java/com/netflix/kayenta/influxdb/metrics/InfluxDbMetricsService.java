@@ -31,9 +31,9 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.InfluxdbCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.influxdb.model.InfluxdbResult;
-import com.netflix.kayenta.influxdb.security.InfluxdbNamedAccountCredentials;
-import com.netflix.kayenta.influxdb.service.InfluxdbRemoteService;
+import com.netflix.kayenta.influxdb.model.InfluxDbResult;
+import com.netflix.kayenta.influxdb.security.InfluxDbNamedAccountCredentials;
+import com.netflix.kayenta.influxdb.service.InfluxDbRemoteService;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricSet.MetricSetBuilder;
 import com.netflix.kayenta.metrics.MetricsService;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Builder
-public class InfluxdbMetricsService implements MetricsService {
+public class InfluxDbMetricsService implements MetricsService {
   @NotNull
   @Singular
   @Getter
@@ -61,11 +61,11 @@ public class InfluxdbMetricsService implements MetricsService {
   private final Registry registry;
   
   @Autowired
-  private final InfluxdbQueryBuilder queryBuilder;
+  private final InfluxDbQueryBuilder queryBuilder;
 
   @Override
   public String getType() {
-    return "influxdb";
+    return InfluxdbCanaryMetricSetQueryConfig.SERVICE_TYPE;
   }
 
   @Override
@@ -76,49 +76,49 @@ public class InfluxdbMetricsService implements MetricsService {
   @Override
   public List<MetricSet> queryMetrics(String accountName, CanaryConfig canaryConfig, CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope) throws IOException {
 	  
-    InfluxdbNamedAccountCredentials accountCredentials = (InfluxdbNamedAccountCredentials)accountCredentialsRepository
+    InfluxDbNamedAccountCredentials accountCredentials = (InfluxDbNamedAccountCredentials)accountCredentialsRepository
       .getOne(accountName)
       .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
 
-    InfluxdbRemoteService remoteService = accountCredentials.getInfluxdbRemoteService();
+    InfluxDbRemoteService remoteService = accountCredentials.getInfluxDbRemoteService();
     InfluxdbCanaryMetricSetQueryConfig queryConfig = (InfluxdbCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
 
     String query = queryBuilder.build(queryConfig, canaryScope);
     log.debug("query={}", query);
     
     String metricSetName = canaryMetricConfig.getName();
-    List<InfluxdbResult> influxdbResults = queryInfluxdb(remoteService, metricSetName, query);
+    List<InfluxDbResult> influxDbResults = queryInfluxdb(remoteService, metricSetName, query);
     
-    return buildMetricSets(metricSetName, influxdbResults);
+    return buildMetricSets(metricSetName, influxDbResults);
   }
 
-  private List<InfluxdbResult> queryInfluxdb(InfluxdbRemoteService remoteService, String metricSetName, String query) {
+  private List<InfluxDbResult> queryInfluxdb(InfluxDbRemoteService remoteService, String metricSetName, String query) {
     long startTime = registry.clock().monotonicTime();
-    List<InfluxdbResult> influxdbResults; 
-    
+    List<InfluxDbResult> influxDbResults;
+
     try {
-      influxdbResults = remoteService.query(metricSetName, query);
+      influxDbResults = remoteService.query(metricSetName, query);
     } finally {
       long endTime = registry.clock().monotonicTime();
-      Id influxdbFetchTimerId = registry.createId("influxdb.fetchTime");
-      registry.timer(influxdbFetchTimerId).record(endTime - startTime, TimeUnit.NANOSECONDS);
+      Id influxDbFetchTimerId = registry.createId("influxdb.fetchTime");
+      registry.timer(influxDbFetchTimerId).record(endTime - startTime, TimeUnit.NANOSECONDS);
     }
-    return influxdbResults;
+    return influxDbResults;
   }
   
-  private List<MetricSet> buildMetricSets(String metricSetName, List<InfluxdbResult> influxdbResults) {
+  private List<MetricSet> buildMetricSets(String metricSetName, List<InfluxDbResult> influxDbResults) {
     List<MetricSet> metricSets = new ArrayList<MetricSet>();
-    if (influxdbResults != null) {
-      for (InfluxdbResult influxdbResult : influxdbResults) {
+    if (influxDbResults != null) {
+      for (InfluxDbResult influxDbResult : influxDbResults) {
         MetricSetBuilder metricSetBuilder = MetricSet.builder()
             .name(metricSetName)
-            .startTimeMillis(influxdbResult.getStartTimeMillis())
-            .startTimeIso(Instant.ofEpochMilli(influxdbResult.getStartTimeMillis()).toString())
-            .stepMillis(influxdbResult.getStepMillis())
-            .values(influxdbResult.getValues())
-            .tag("field", influxdbResult.getId());
+            .startTimeMillis(influxDbResult.getStartTimeMillis())
+            .startTimeIso(Instant.ofEpochMilli(influxDbResult.getStartTimeMillis()).toString())
+            .stepMillis(influxDbResult.getStepMillis())
+            .values(influxDbResult.getValues())
+            .tag("field", influxDbResult.getId());
         
-        Map<String, String> tags = influxdbResult.getTags();
+        Map<String, String> tags = influxDbResult.getTags();
         if (tags != null) {
           metricSetBuilder.tags(tags);
         }
@@ -128,5 +128,4 @@ public class InfluxdbMetricsService implements MetricsService {
     }
     return metricSets;
   }
-
 }

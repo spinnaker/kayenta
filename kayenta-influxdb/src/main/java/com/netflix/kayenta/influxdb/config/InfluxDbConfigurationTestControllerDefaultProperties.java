@@ -17,11 +17,22 @@
 package com.netflix.kayenta.influxdb.config;
 
 import lombok.Getter;
+import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * This configuration class allows you to specify default values for the InfluxdbFetchController.
+ */
+public class InfluxDbConfigurationTestControllerDefaultProperties {
 
-public class InfluxdbConfigurationProperties {
-  @Getter
-  private List<InfluxdbManagedAccount> accounts = new ArrayList<>();
+    @Getter
+    @Setter
+    private String scope;
+
+    @Getter
+    @Setter
+    private String start;
+
+    @Getter
+    @Setter
+    private String end;
 }

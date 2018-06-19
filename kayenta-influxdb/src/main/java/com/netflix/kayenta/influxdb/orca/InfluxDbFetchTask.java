@@ -37,13 +37,13 @@ import java.util.Map;
 
 @Component
 @Slf4j
-public class InfluxdbFetchTask implements RetryableTask {
+public class InfluxDbFetchTask implements RetryableTask {
   private final ObjectMapper kayentaObjectMapper;
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final SynchronousQueryProcessor synchronousQueryProcessor;
 
   @Autowired
-  public InfluxdbFetchTask(ObjectMapper kayentaObjectMapper,
+  public InfluxDbFetchTask(ObjectMapper kayentaObjectMapper,
                           AccountCredentialsRepository accountCredentialsRepository,
                           SynchronousQueryProcessor synchronousQueryProcessor) {
     this.kayentaObjectMapper = kayentaObjectMapper;

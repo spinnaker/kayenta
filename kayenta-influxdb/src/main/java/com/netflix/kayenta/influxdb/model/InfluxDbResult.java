@@ -14,27 +14,44 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.influxdb.config;
+package com.netflix.kayenta.influxdb.model;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
-import com.netflix.kayenta.retrofit.config.RemoteService;
-import com.netflix.kayenta.security.AccountCredentials;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-import lombok.Data;
+@Builder
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+public class InfluxDbResult {
 
-@Data
-public class InfluxdbManagedAccount {
   @NotNull
-  private String name;
-  private String apiKey;
-  private String applicationKey;
+  @Getter
+  private String id;
 
   @NotNull
-  private RemoteService endpoint;
+  @Getter
+  private long startTimeMillis;
 
-  private List<AccountCredentials.Type> supportedTypes;
+  @NotNull
+  @Getter
+  private long stepMillis;
+
+  @NotNull
+  @Getter
+  private Map<String, String> tags;
+
+  @NotNull
+  @Getter
+  private List<Double> values;
 }
-

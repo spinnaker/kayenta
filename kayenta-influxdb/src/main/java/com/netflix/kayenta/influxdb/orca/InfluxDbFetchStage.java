@@ -25,13 +25,13 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nonnull;
 
 @Component
-public class InfluxdbFetchStage {
+public class InfluxDbFetchStage {
   @Bean
-  StageDefinitionBuilder influxdbFetchStageBuilder() {
+  StageDefinitionBuilder influxDbFetchStageBuilder() {
     return new StageDefinitionBuilder() {
       @Override
       public void taskGraph(@Nonnull Stage stage, @Nonnull TaskNode.Builder builder) {
-        builder.withTask("influxdbFetch", InfluxdbFetchTask.class);
+        builder.withTask("influxdbFetch", InfluxDbFetchTask.class);
       }
 
       @Nonnull
