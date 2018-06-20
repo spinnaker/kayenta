@@ -37,4 +37,3 @@ public class InfluxDbManagedAccount {
 
   private List<AccountCredentials.Type> supportedTypes;
 }
-

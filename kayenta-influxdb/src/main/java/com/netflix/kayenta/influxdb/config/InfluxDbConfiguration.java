@@ -97,4 +97,3 @@ public class InfluxDbConfiguration {
     return metricsServiceBuilder.build();
   }
 }
-

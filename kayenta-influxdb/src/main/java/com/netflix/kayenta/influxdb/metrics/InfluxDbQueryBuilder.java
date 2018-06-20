@@ -107,5 +107,4 @@ public class InfluxDbQueryBuilder {
     query.append(" AND");
     query.append(" time < '" + canaryScope.getEnd().toString() + "'");
   }
-
 }
