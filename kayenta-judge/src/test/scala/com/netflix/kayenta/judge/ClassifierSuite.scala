@@ -17,7 +17,6 @@
 package com.netflix.kayenta.judge
 
 import com.netflix.kayenta.judge.classifiers.metric._
-import com.netflix.kayenta.mannwhitney.MannWhitney
 import org.scalatest.FunSuite
 
 
@@ -374,6 +373,32 @@ class ClassifierSuite extends FunSuite{
     assert(result.classification == Pass)
   }
 
+  test("Mann-Whitney Majority Tied Observations"){
+    val experimentData = Array(1.0, 1.0, 1.0, 1.0, 10.0)
+    val controlData = Array(1.0, 1.0, 1.0, 1.0, 1.0)
+
+    val experimentMetric = Metric("pass-metric", experimentData, "canary")
+    val controlMetric = Metric("pass-metric", controlData, "baseline")
+
+    val classifier = new MannWhitneyClassifier(tolerance = 0.10, confLevel = 0.95)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
+
+    assert(result.classification == Pass)
+  }
+
+  test("Mann-Whitney Tied Ranks"){
+    val experimentData = Array(10.0, 10.0, 10.0, 10.0, 10.0)
+    val controlData = Array(1.0, 1.0, 1.0, 1.0, 1.0)
+
+    val experimentMetric = Metric("high-metric", experimentData, "canary")
+    val controlMetric = Metric("high-metric", controlData, "baseline")
+
+    val classifier = new MannWhitneyClassifier(tolerance = 0.10, confLevel = 0.95)
+    val result = classifier.classify(controlMetric, experimentMetric, MetricDirection.Either)
+
+    assert(result.classification == High)
+  }
+  
   test("Mean Inequality Classifier Test: High Metric"){
     val experimentData = Array(10.0, 20.0, 30.0, 40.0, 50.0)
     val controlData = Array(1.0, 2.0, 3.0, 4.0, 5.0)
