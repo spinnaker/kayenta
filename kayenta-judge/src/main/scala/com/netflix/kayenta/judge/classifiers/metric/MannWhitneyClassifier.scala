@@ -27,12 +27,14 @@ class MannWhitneyClassifier(tolerance: Double=0.25, confLevel: Double=0.95) exte
 
   /**
     * Mann-Whitney U Test
-    * An implementation of the Mann-Whitney U test (also called Wilcoxon rank-sum test).
+    * An implementation of the Mann-Whitney U test (also called the Wilcoxon rank-sum test).
+    * Note: In the case of the degenerate distribution, Gaussian noise is added
     */
-  def MannWhitneyUTest(experimentValues: Array[Double], controlValues: Array[Double], addNoise: Boolean): MannWhitneyResult = {
+  def MannWhitneyUTest(experimentValues: Array[Double], controlValues: Array[Double]): MannWhitneyResult = {
     val mwTest = new MannWhitney()
 
-    //Add Gaussian noise to the input data to prevent tied ranks
+    //Check for tied ranks and transform the data by adding Gaussian noise
+    val addNoise = if (experimentValues.distinct.length == 1 && controlValues.distinct.length == 1) true else false
     val experiment = if(addNoise) addGaussianNoise(experimentValues) else experimentValues
     val control = if(addNoise) addGaussianNoise(controlValues) else controlValues
 
@@ -42,6 +44,17 @@ class MannWhitneyClassifier(tolerance: Double=0.25, confLevel: Double=0.95) exte
     val estimate = testResult.estimate
 
     MannWhitneyResult(confInterval(0), confInterval(1), estimate)
+  }
+
+  /**
+    * Add Gaussian noise to the input array
+    * Scale the amplitude of the noise based on the input values
+    * Note: the input array should not contain NaN values
+    */
+  private def addGaussianNoise(values: Array[Double]): Array[Double] = {
+    val scalingFactor = 1e-5
+    val metricScale = values.distinct.head * scalingFactor
+    Transforms.addGaussianNoise(values, mean=0.0, stdev = metricScale)
   }
 
   /**
@@ -55,15 +68,6 @@ class MannWhitneyClassifier(tolerance: Double=0.25, confLevel: Double=0.95) exte
     val lowerBound = -1 * criticalValue
     val upperBound = criticalValue
     (lowerBound, upperBound)
-  }
-
-  /**
-    * Add Gaussian noise to the input array
-    */
-  private def addGaussianNoise(values: Array[Double]): Array[Double] = {
-    val scalingFactor = 1e-5
-    val metricScale = values.distinct.head * scalingFactor
-    Transforms.addGaussianNoise(values, mean=0.0, stdev = metricScale)
   }
 
   override def classify(control: Metric, experiment: Metric, direction: MetricDirection, nanStrategy: NaNStrategy): MetricClassification = {
@@ -83,16 +87,13 @@ class MannWhitneyClassifier(tolerance: Double=0.25, confLevel: Double=0.95) exte
       return MetricClassification(Pass, Some(reason), 1.0)
     }
 
-    //Check the number of unique observations; check for tied ranks
+    //Check the number of unique observations
     if (experiment.values.union(control.values).distinct.length == 1) {
       return MetricClassification(Pass, None, 1.0)
     }
 
-    //Check for tied ranks and transform the data by adding Gaussian noise
-    val addNoise = if (experiment.values.distinct.length == 1 && experiment.values.distinct.length ==1) true else false
-
     //Perform the Mann-Whitney U Test
-    val mwResult = MannWhitneyUTest(experiment.values, control.values, addNoise = addNoise)
+    val mwResult = MannWhitneyUTest(experiment.values, control.values)
     val meanRatio = StatUtils.mean(experiment.values)/StatUtils.mean(control.values)
     val (lowerBound, upperBound) = calculateBounds(mwResult)
 
