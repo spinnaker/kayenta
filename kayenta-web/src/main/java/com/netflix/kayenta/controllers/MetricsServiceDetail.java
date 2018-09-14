@@ -26,7 +26,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MetricSourceDetail {
+public class MetricsServiceDetail {
   @Getter
   @NonNull
   String name;

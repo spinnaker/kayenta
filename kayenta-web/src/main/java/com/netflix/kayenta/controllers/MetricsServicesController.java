@@ -32,25 +32,25 @@ import java.util.stream.Collectors;
 import static com.netflix.kayenta.security.AccountCredentials.Type.METRICS_STORE;
 
 @RestController
-@RequestMapping("/metricSources")
-public class MetricSourcesController {
+@RequestMapping("/metricsServices")
+public class MetricsServicesController {
 
   private final AccountCredentialsRepository accountCredentialsRepository;
 
   @Autowired
-  public MetricSourcesController(AccountCredentialsRepository accountCredentialsRepository) {
+  public MetricsServicesController(AccountCredentialsRepository accountCredentialsRepository) {
     this.accountCredentialsRepository = accountCredentialsRepository;
   }
 
-  @ApiOperation(value = "Retrieve a list of all configured metrics sources")
+  @ApiOperation(value = "Retrieve a list of all configured metrics services")
   @RequestMapping(method = RequestMethod.GET)
-  List<MetricSourceDetail> list() {
+  List<MetricsServiceDetail> list() {
     Set<AccountCredentials> metricAccountCredentials = CredentialsHelper.getAllAccountsOfType(METRICS_STORE, accountCredentialsRepository);
 
     return metricAccountCredentials
       .stream()
       .map(account ->
-        MetricSourceDetail
+        MetricsServiceDetail
           .builder()
           .name(account.getName())
           .type(account.getType())
