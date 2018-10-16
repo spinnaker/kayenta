@@ -30,7 +30,8 @@ It spawns threads that act like mock services that report metrics to SignalFx, t
 The data flowing through SignalFx from these clusters can then be used for end to end testing.
 
 Running the end to end integration tests.
+Requires that you have a local redis-server installation compatible with Kayenta.
 
 ```bash
-./gradlew kayenta-signalfx:integrationTest -Dkayenta.signalfx.apiKey=${SIGNALFX_API_TOKEN}
+./gradlew kayenta-signalfx:integrationTest -Dkayenta.signalfx.apiKey=${SIGNALFX_API_TOKEN} -Dredis.path=$(which redis-server)
 ```

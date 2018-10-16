@@ -28,9 +28,6 @@ configurations {
   integrationTestRuntime.extendsFrom testRuntime
 }
 
-def redisPort = getOpenPort()
-def redisServer = new RedisServer(redisPort)
-
 int getOpenPort() {
   ServerSocket socket
   try {
@@ -38,6 +35,7 @@ int getOpenPort() {
     socket.setReuseAddress(true)
     def port = socket.getLocalPort()
     logger.lifecycle("Using port: ${port} for Redis")
+    socket.close()
     return port
   } catch (Exception e) {
     logger.lifecycle("Failed to find open port for Redis", e)
@@ -54,24 +52,46 @@ task startEmbeddedRedis() {
   description 'Starts an embedded Redis server on an open port.'
 
   doLast {
+    def redisPort = getOpenPort()
+    String redisBinPath = getRequiredSystemProp('redis.path')
+    File redisBin = new File(redisBinPath)
+    if (!redisBin.exists()) {
+      //noinspection GroovyAssignabilityCheck
+      throw new GradleScriptException("The redis executable at '${redisBinPath}' did not exist")
+    }
+    def redisServer = new RedisServer(redisBin, redisPort)
     redisServer.start()
+    startEmbeddedRedis.ext.redisServer = redisServer
+    startEmbeddedRedis.ext.redisPort = redisPort
   }
 }
 
 //noinspection GroovyAssignabilityCheck
 task stopEmbeddedRedis() {
+  dependsOn startEmbeddedRedis
   group 'Application'
   description 'Stops the embedded Redis server.'
 
   doLast {
-    redisServer.stop()
+    startEmbeddedRedis.ext.redisServer.stop()
   }
+}
+
+@SuppressWarnings("GrMethodMayBeStatic")
+String getRequiredSystemProp(String key) {
+  String value = System.getProperty(key)
+  if (value == null || value == "") {
+    throw new IllegalStateException("The system property ${key} was not supplied to the gradle script via a -D prarm".toString())
+  }
+  return value
 }
 
 //noinspection GroovyAssignabilityCheck
 task integrationTest(type: Test) {
-  systemProperty("redis.port", redisPort)
-  systemProperty("kayenta.signalfx.apiKey", System.getProperty("kayenta.signalfx.apiKey"))
+  doFirst {
+    systemProperty("redis.port", startEmbeddedRedis.ext.redisPort)
+    systemProperty("kayenta.signalfx.apiKey", getRequiredSystemProp('kayenta.signalfx.apiKey'))
+  }
   systemProperty("spring.application.name", "kayenta")
   systemProperty('spring.config.name', "spinnaker,kayenta")
   systemProperty('spring.config.location', "file:${project.rootDir}/kayenta-signalfx/src/integration-test/resources/config/")
