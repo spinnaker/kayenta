@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.kayenta.graphite.config.GraphiteConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
@@ -53,6 +54,7 @@ import com.netflix.kayenta.stackdriver.config.StackdriverConfiguration;
   DatadogConfiguration.class,
   GcsConfiguration.class,
   GoogleConfiguration.class,
+  GraphiteConfiguration.class,
   InfluxDbConfiguration.class,
   KayentaConfiguration.class,
   MemoryConfiguration.class,

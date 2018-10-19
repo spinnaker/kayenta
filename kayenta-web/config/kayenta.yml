@@ -31,14 +31,16 @@ kayenta:
 #          - CONFIGURATION_STORE
 
   aws:
-    enabled: false
-#    accounts:
-#      - name:
-#        bucket:
-#        rootFolder: kayenta
-#        supportedTypes:
-#          - OBJECT_STORE
-#          - CONFIGURATION_STORE
+    enabled: true
+    accounts:
+      - name: my-aws-account
+        bucket: test-test
+        region: us-east-1
+        endpoint: http://127.0.0.1:9000
+        rootFolder: kayenta
+        supportedTypes:
+          - OBJECT_STORE
+          - CONFIGURATION_STORE
 
   datadog:
     enabled: false
@@ -51,13 +53,13 @@ kayenta:
 #        endpoint.baseUrl: https://app.datadoghq.com
 
   prometheus:
-    enabled: false
-#    accounts:
-#      - name: my-prometheus-account
-#        endpoint:
-#          baseUrl: http://localhost:9090
-#        supportedTypes:
-#          - METRICS_STORE
+    enabled: true
+    accounts:
+      - name: my-prometheus-account
+        endpoint:
+          baseUrl: http://localhost:9090
+        supportedTypes:
+          - METRICS_STORE
 
   influxdb:
     enabled: false
@@ -72,7 +74,7 @@ kayenta:
     enabled: false
 
   s3:
-    enabled: false
+    enabled: true
 
   stackdriver:
     enabled: false
