@@ -7,75 +7,73 @@ redis:
 kayenta:
   atlas:
     enabled: false
-  #    stageTimeoutMinutes: 3
-  #    maxBackoffPeriodSeconds: 30
-  #    accounts:
-  #      - name:
-  #        endpoint:
-  #          baseUrl: http://localhost:7101
-  #        namespace:
-  #        supportedTypes:
-  #          - METRICS_STORE
+#    stageTimeoutMinutes: 3
+#    maxBackoffPeriodSeconds: 30
+#    accounts:
+#      - name:
+#        endpoint:
+#          baseUrl: http://localhost:7101
+#        namespace:
+#        supportedTypes:
+#          - METRICS_STORE
 
   google:
     enabled: false
-  #    accounts:
-  #      - name:
-  #        project:
-  #        jsonPath:
-  #        bucket:
-  #        rootFolder: kayenta
-  #        supportedTypes:
-  #          - METRICS_STORE
-  #          - OBJECT_STORE
-  #          - CONFIGURATION_STORE
+#    accounts:
+#      - name:
+#        project:
+#        jsonPath:
+#        bucket:
+#        rootFolder: kayenta
+#        supportedTypes:
+#          - METRICS_STORE
+#          - OBJECT_STORE
+#          - CONFIGURATION_STORE
 
   aws:
     enabled: false
-  #    accounts:
-  #      - name:
-  #        bucket:
-  #        rootFolder: kayenta
-  #        supportedTypes:
-  #          - OBJECT_STORE
-  #          - CONFIGURATION_STORE
+#    accounts:
+#      - name:
+#        bucket:
+#        rootFolder: kayenta
+#        supportedTypes:
+#          - OBJECT_STORE
+#          - CONFIGURATION_STORE
 
   datadog:
     enabled: false
-  #    accounts:
-  #      - name: my-datadog-account
-  #        apiKey: xxxx
-  #        applicationKey: xxxx
-  #        supportedTypes:
-  #          - METRICS_STORE
-  #        endpoint.baseUrl: https://app.datadoghq.com
+#    accounts:
+#      - name: my-datadog-account
+#        apiKey: xxxx
+#        applicationKey: xxxx
+#        supportedTypes:
+#          - METRICS_STORE
+#        endpoint.baseUrl: https://app.datadoghq.com
 
   graphite:
     enabled: false
 #    accounts:
-#    - name: my-graphite-account
+#      -name: my-graphite-account
 #      endpoint:
 #        baseUrl: http://localhost
-#      supportedTypes:
-#      - METRICS_STORE
 
   prometheus:
     enabled: false
-  #    accounts:
-  #      - name: my-prometheus-account
-  #        endpoint:
-  #          baseUrl: http://localhost:9090
-  #        supportedTypes:
-  #          - METRICS_STORE
+#    accounts:
+#      - name: my-prometheus-account
+#        endpoint:
+#          baseUrl: http://localhost:9090
+#        supportedTypes:
+#          - METRICS_STORE
 
   influxdb:
     enabled: false
-  #    accounts:
-  #      - name:
-  #        endpoint:
-  #          baseUrl: http://localhost:8086
-  #        supportedTypes:
-  #          - METRICS_STORE
+#    accounts:
+#      - name:
+#        endpoint:
+#          baseUrl: http://localhost:8086
+#        supportedTypes:
+#          - METRICS_STORE
 
   gcs:
     enabled: false
@@ -111,16 +109,16 @@ swagger:
   description:
   contact:
   patterns:
-  - /admin.*
-  - /canary.*
-  - /canaryConfig.*
-  - /canaryJudgeResult.*
-  - /credentials.*
-  - /fetch.*
-  - /health
-  - /judges.*
-  - /metadata.*
-  - /metricSetList.*
-  - /metricSetPairList.*
-  - /metricServices.*
-  - /pipeline.*
+    - /admin.*
+    - /canary.*
+    - /canaryConfig.*
+    - /canaryJudgeResult.*
+    - /credentials.*
+    - /fetch.*
+    - /health
+    - /judges.*
+    - /metadata.*
+    - /metricSetList.*
+    - /metricSetPairList.*
+    - /metricServices.*
+    - /pipeline.*
