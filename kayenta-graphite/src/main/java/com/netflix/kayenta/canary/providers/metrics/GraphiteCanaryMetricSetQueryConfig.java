@@ -24,6 +24,9 @@ public class GraphiteCanaryMetricSetQueryConfig implements CanaryMetricSetQueryC
     @Getter
     private String metricName;
 
+    @Getter
+    private String customFilterTemplate;
+
     @Override
     public String getServiceType() {
         return SERVICE_TYPE;

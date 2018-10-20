@@ -1,5 +1,6 @@
 package com.netflix.kayenta.graphite.controller;
 
+import com.google.common.base.Strings;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
@@ -13,6 +14,7 @@ import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,12 +50,21 @@ public class GraphiteFetchController {
                             @RequestParam(required = false) final String storageAccountName,
                             @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
                             @ApiParam(defaultValue = "system.cpu.user") @RequestParam String metricName,
+                            @ApiParam(value = "The location to use when scoping the query. Valid choices depend on what cloud " +
+                                    "platform the query relates to (could be a region, a namespace, or something else).")
+                                @RequestParam(required = false) String location,
+                            @ApiParam(value = "The name of the resource to use when scoping the query. " +
+                                    "The most common use-case is to provide a server group name.")
+                                @RequestParam(required = false) String scope,
                             @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
                             @RequestParam String start,
                             @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
                             @RequestParam String end) throws IOException {
+
         start = determineDefaultProperty(start, "start", graphiteConfigurationTestControllerDefaultProperties);
         end = determineDefaultProperty(end, "end", graphiteConfigurationTestControllerDefaultProperties);
+        location = determineDefaultProperty(location, "location", graphiteConfigurationTestControllerDefaultProperties);
+        scope = determineDefaultProperty(scope, "scope", graphiteConfigurationTestControllerDefaultProperties);
 
         if (StringUtils.isEmpty(start)) {
             throw new IllegalArgumentException("Start time is required.");
@@ -70,13 +81,18 @@ public class GraphiteFetchController {
                 AccountCredentials.Type.OBJECT_STORE,
                 accountCredentialsRepository);
 
-        GraphiteCanaryMetricSetQueryConfig graphiteCanaryMetricSetQueryConfig =
-                GraphiteCanaryMetricSetQueryConfig.builder().metricName(metricName).build();
+        GraphiteCanaryMetricSetQueryConfig.GraphiteCanaryMetricSetQueryConfigBuilder
+                graphiteCanaryMetricSetQueryConfigBuilder = GraphiteCanaryMetricSetQueryConfig.builder();
+
+        graphiteCanaryMetricSetQueryConfigBuilder.metricName(metricName);
 
         CanaryMetricConfig canaryMetricConfig =
-                CanaryMetricConfig.builder().name(metricSetName).query(graphiteCanaryMetricSetQueryConfig).build();
+                CanaryMetricConfig.builder()
+                        .name(metricSetName)
+                        .query(graphiteCanaryMetricSetQueryConfigBuilder.build())
+                        .build();
 
-        CanaryScope canaryScope = new CanaryScope(null, null, Instant.parse(start),
+        CanaryScope canaryScope = new CanaryScope(scope, location, Instant.parse(start),
                 Instant.parse(end), null, Collections.EMPTY_MAP);
 
         String metricsSetListId =

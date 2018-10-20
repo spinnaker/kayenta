@@ -4,9 +4,8 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.graphite.cancary.GraphiteCanaryScope;
+import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
 import com.netflix.kayenta.graphite.model.GraphiteResults;
-import com.netflix.kayenta.graphite.security.GraphiteCredentials;
 import com.netflix.kayenta.graphite.security.GraphiteNamedAccountCredentials;
 import com.netflix.kayenta.graphite.service.GraphiteRemoteService;
 import com.netflix.kayenta.metrics.MetricSet;
@@ -18,7 +17,6 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -26,6 +24,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Builder
 @Slf4j
@@ -66,8 +65,17 @@ public class GraphiteMetricsService implements MetricsService {
         GraphiteCanaryMetricSetQueryConfig queryConfig =
                 (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
+        String filter = QueryConfigUtils.expandCustomFilter(
+                canaryConfig,
+                queryConfig,
+                canaryScope,
+                new String[]{"scope"});
+
+        String query = String.format("%s.%s", queryConfig.getMetricName(), filter);
+        log.info("Query sent to graphite: {}.", query);
+
         List<GraphiteResults> graphiteResultsList = remoteService.rangeQuery(
-            queryConfig.getMetricName(),
+                query,
                 (int)canaryScope.getStart().getEpochSecond(),
                 (int)canaryScope.getEnd().getEpochSecond(),
                 DEFAULT_FORMAT
