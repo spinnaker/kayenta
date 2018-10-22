@@ -5,5 +5,7 @@ dependencies {
     compile spinnaker.dependency("korkSwagger")
     compile spinnaker.dependency('lombok')
 
+    compile "org.apache.commons:commons-io:1.3.2"
+
     compile "com.netflix.spinnaker.orca:orca-core:$orcaVersion"
 }
