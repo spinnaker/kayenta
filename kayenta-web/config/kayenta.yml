@@ -81,7 +81,7 @@ kayenta:
     enabled: false
 
   s3:
-    enabled: true
+    enabled: false
 
   stackdriver:
     enabled: false
