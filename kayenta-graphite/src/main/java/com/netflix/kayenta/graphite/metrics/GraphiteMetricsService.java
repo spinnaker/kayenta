@@ -81,11 +81,11 @@ public class GraphiteMetricsService implements MetricsService {
             metricSets.add(
                     MetricSet.builder()
                             .name(canaryMetricConfig.getName())
-                            .startTimeMillis(entry.getStart() * 1000)
+                            .startTimeMillis(entry.getStartMills())
                             .startTimeIso(Instant.ofEpochSecond(entry.getStart()).toString())
-                            .endTimeMillis(entry.getEnd() * 1000)
+                            .endTimeMillis(entry.getEndMills())
                             .endTimeIso(Instant.ofEpochSecond(entry.getEnd()).toString())
-                            .stepMillis(entry.getInterval() * 1000)
+                            .stepMillis(entry.getIntervalMills())
                             .values(entry.getDataPoints().collect(Collectors.toList()))
                             .build()
             );

@@ -53,27 +53,54 @@ public class GraphiteResults {
     @JsonIgnore
     public Long getInterval() {
         if (datapoints.size() >= 2) {
-            return (long)(datapoints.get(1).get(1) - datapoints.get(0).get(1));
+            if (datapoints.get(0).size() == 2 && datapoints.get(1).size() == 2) {
+                return (long)(datapoints.get(1).get(1) - datapoints.get(0).get(1));
+            } else {
+                throw new IllegalArgumentException("data format from graphite is invalid");
+            }
         } else {
             return 1L;
         }
     }
 
     @JsonIgnore
+    public Long getIntervalMills() {
+        return this.getInterval() * 1000;
+    }
+
+    @JsonIgnore
     public Long getStart() {
         if (!CollectionUtils.isEmpty(this.datapoints)) {
-            return this.datapoints.get(0).get(1).longValue();
+            if (this.datapoints.get(0).size() == 2) {
+                return this.datapoints.get(0).get(1).longValue();
+            } else {
+                throw new IllegalArgumentException("data format from graphite is invalid");
+            }
         } else {
             return 0L;
         }
     }
 
     @JsonIgnore
+    public Long getStartMills() {
+        return this.getStart() * 1000;
+    }
+
+    @JsonIgnore
     public Long getEnd() {
         if (!CollectionUtils.isEmpty(this.datapoints)) {
-            return this.datapoints.get(this.datapoints.size() - 1).get(1).longValue();
+            if (this.datapoints.get(this.datapoints.size() - 1).size() == 2) {
+                return this.datapoints.get(this.datapoints.size() - 1).get(1).longValue();
+            } else {
+                throw new IllegalArgumentException("data format from graphite is invalid");
+            }
         } else {
             return 0L;
         }
+    }
+
+    @JsonIgnore
+    public Long getEndMills() {
+        return this.getEnd() * 1000;
     }
 }
