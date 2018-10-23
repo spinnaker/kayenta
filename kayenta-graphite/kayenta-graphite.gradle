@@ -90,7 +90,6 @@ String getRequiredSystemProp(String key) {
 task integrationTest(type: Test) {
     doFirst {
         systemProperty("redis.port", startEmbeddedRedis.ext.redisPort)
-        systemProperty("kayenta.signalfx.apiKey", getRequiredSystemProp('kayenta.signalfx.apiKey'))
     }
     systemProperty("spring.application.name", "kayenta")
     systemProperty('spring.config.name', "spinnaker,kayenta")
