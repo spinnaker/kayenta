@@ -33,7 +33,7 @@ kayenta:
   aws:
     enabled: false
 #    accounts:
-#      - name: my-aws-account
+#      - name: 
 #        bucket:
 #        rootFolder: kayenta
 #        supportedTypes:
