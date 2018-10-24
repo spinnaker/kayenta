@@ -40,7 +40,7 @@ kayenta:
     accounts:
     - name: my-graphite-account
       endpoint:
-        baseUrl: http://localhost
+        baseUrl: http://localhost:${graphite.queryPort}
       supportedTypes:
       - METRICS_STORE
 

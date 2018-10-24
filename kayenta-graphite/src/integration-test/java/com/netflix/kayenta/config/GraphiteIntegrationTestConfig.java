@@ -27,7 +27,6 @@ public class GraphiteIntegrationTestConfig {
     public static final String EXPERIMENT_SCOPE_UNHEALTHY = "test-unhealthy";
 
     private static final String LOCAL_GRAPHITE_HOST = "localhost";
-    private static final int LOCAL_GRAPHITE_PORT = 2003;
     private static final String TEST_METRIC = "test.server.request.400";
     private static final int MOCK_SERVICE_REPORTING_INTERVAL_IN_MILLISECONDS = 1000;
     public static final int[] HEALTHY_SERVER_METRICS = {0, 10};
@@ -38,7 +37,7 @@ public class GraphiteIntegrationTestConfig {
     private Instant metricsReportingStartTime;
 
     public GraphiteIntegrationTestConfig() {
-        this.executorService = Executors.newFixedThreadPool(9);
+        this.executorService = Executors.newFixedThreadPool(2);
     }
 
     @Bean
@@ -55,7 +54,7 @@ public class GraphiteIntegrationTestConfig {
         metricsReportingStartTime = Instant.now();
         try {
             long pause = TimeUnit.MINUTES.toMillis(CANARY_WINDOW_IN_MINUTES) + TimeUnit.SECONDS.toMillis(10);
-            log.info("Waiting for {} milliseconds for mock data to flow through graphote, before letting the " +
+            log.info("Waiting for {} milliseconds for mock data to flow through graphite, before letting the " +
                     "integration" +
                     " tests run", pause);
             Thread.sleep(pause);
@@ -71,9 +70,10 @@ public class GraphiteIntegrationTestConfig {
     }
 
     public static Runnable createMetricReportingMockService(String scope, int[] countRange) {
+        int graphiteFeedPort = Integer.parseInt(System.getProperty("graphite.feedPort"));
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
-                try (Socket socket = new Socket(LOCAL_GRAPHITE_HOST, LOCAL_GRAPHITE_PORT)) {
+                try (Socket socket = new Socket(LOCAL_GRAPHITE_HOST, graphiteFeedPort)) {
                     OutputStream outputStream = socket.getOutputStream();
                     String metrics = TEST_METRIC + "." + scope;
                     String s = String.format("%s %d %d%n", metrics,

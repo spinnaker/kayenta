@@ -7,10 +7,16 @@ buildscript {
     dependencies {
         // Apache 2.0, https://github.com/ozimov/embedded-redis#license
         classpath 'it.ozimov:embedded-redis:0.7.2'
+        classpath 'com.github.docker-java:docker-java:3.1.0-rc-5'
     }
 }
 
 import redis.embedded.RedisServer
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.core.DockerClientBuilder;
 
 sourceSets {
     integrationTest {
@@ -28,17 +34,17 @@ configurations {
     integrationTestRuntime.extendsFrom testRuntime
 }
 
-int getOpenPort() {
+int getOpenPort(String service) {
     ServerSocket socket
     try {
         socket = new ServerSocket(0)
         socket.setReuseAddress(true)
         def port = socket.getLocalPort()
-        logger.lifecycle("Using port: ${port} for Redis")
+        logger.lifecycle("Using port: ${port} for ${service}")
         socket.close()
         return port
     } catch (Exception e) {
-        logger.lifecycle("Failed to find open port for Redis", e)
+        logger.lifecycle("Failed to find open port for ${service}", e)
         if (socket != null) {
             socket.close()
         }
@@ -52,7 +58,7 @@ task startEmbeddedRedis() {
     description 'Starts an embedded Redis server on an open port.'
 
     doLast {
-        def redisPort = getOpenPort()
+        def redisPort = getOpenPort("Redis")
         String redisBinPath = getRequiredSystemProp('redis.path')
         File redisBin = new File(redisBinPath)
         if (!redisBin.exists()) {
@@ -77,6 +83,48 @@ task stopEmbeddedRedis() {
     }
 }
 
+//noinspection GroovyAssignabilityCheck
+task startGraphite() {
+    group 'Application'
+    description 'Starts an embedded Graphite'
+
+    doLast {
+        def graphiteTag = getRequiredSystemPropWithDefault('graphite.tag', 'latest')
+
+        def graphiteQueryPort = getOpenPort("Graphite query")
+        def graphiteFeedPort = getOpenPort("Graphite feed")
+
+        def dockerClient = DockerClientBuilder.getInstance().build()
+        def tcp80 = ExposedPort.tcp(80)
+        def tcp2003 = ExposedPort.tcp(2003)
+
+        def portBindings = new Ports()
+        portBindings.bind(tcp80, Ports.Binding.bindPort(graphiteQueryPort))
+        portBindings.bind(tcp2003, Ports.Binding.bindPort(graphiteFeedPort))
+
+        def container = dockerClient.createContainerCmd("graphiteapp/graphite-statsd:${graphiteTag}")
+                .withExposedPorts(tcp80)
+                .withPortBindings(portBindings)
+                .exec()
+        dockerClient.startContainerCmd(container.getId()).exec()
+        startGraphite.ext.dockerClient = dockerClient
+        startGraphite.ext.container = container
+        startGraphite.ext.graphiteQueryPort = graphiteQueryPort
+        startGraphite.ext.graphiteFeedPort = graphiteFeedPort
+    }
+}
+
+//noinspection GroovyAssignabilityCheck
+task stopGraphite() {
+    dependsOn startGraphite
+    group 'Application'
+    description 'Stops the embedded Graphite'
+
+    doLast {
+        startGraphite.ext.dockerClient.stopContainerCmd(startGraphite.ext.container.getId()).exec()
+    }
+}
+
 @SuppressWarnings("GrMethodMayBeStatic")
 String getRequiredSystemProp(String key) {
     String value = System.getProperty(key)
@@ -86,10 +134,22 @@ String getRequiredSystemProp(String key) {
     return value
 }
 
+@SuppressWarnings("GrMethodMayBeStatic")
+String getRequiredSystemPropWithDefault(String key, String defaultValue) {
+    String value = System.getProperty(key)
+    if (value == null || value == "") {
+        logger.lifecycle("Could not find the input for ${key}, will use the dafault value ${defaultValue}")
+        return defaultValue
+    }
+    return value
+}
+
 //noinspection GroovyAssignabilityCheck
 task integrationTest(type: Test) {
     doFirst {
         systemProperty("redis.port", startEmbeddedRedis.ext.redisPort)
+        systemProperty("graphite.queryPort", startGraphite.ext.graphiteQueryPort)
+        systemProperty("graphite.feedPort", startGraphite.ext.graphiteFeedPort)
     }
     systemProperty("spring.application.name", "kayenta")
     systemProperty('spring.config.name', "spinnaker,kayenta")
@@ -98,8 +158,8 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
 
-tasks.integrationTest.dependsOn 'startEmbeddedRedis'
-tasks.integrationTest.finalizedBy 'stopEmbeddedRedis'
+tasks.integrationTest.dependsOn 'startEmbeddedRedis', 'startGraphite'
+tasks.integrationTest.finalizedBy 'stopEmbeddedRedis', 'stopGraphite'
 
 integrationTest {
     testLogging {
