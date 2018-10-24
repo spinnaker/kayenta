@@ -95,15 +95,12 @@ task startGraphite() {
         def graphiteFeedPort = getOpenPort("Graphite feed")
 
         def dockerClient = DockerClientBuilder.getInstance().build()
-        def tcp80 = ExposedPort.tcp(80)
-        def tcp2003 = ExposedPort.tcp(2003)
 
         def portBindings = new Ports()
-        portBindings.bind(tcp80, Ports.Binding.bindPort(graphiteQueryPort))
-        portBindings.bind(tcp2003, Ports.Binding.bindPort(graphiteFeedPort))
+        portBindings.bind(ExposedPort.tcp(80), Ports.Binding.bindPort(graphiteQueryPort))
+        portBindings.bind(ExposedPort.tcp(2003), Ports.Binding.bindPort(graphiteFeedPort))
 
         def container = dockerClient.createContainerCmd("graphiteapp/graphite-statsd:${graphiteTag}")
-                .withExposedPorts(tcp80)
                 .withPortBindings(portBindings)
                 .exec()
         dockerClient.startContainerCmd(container.getId()).exec()
