@@ -150,7 +150,7 @@ task integrationTest(type: Test) {
     }
     systemProperty("spring.application.name", "kayenta")
     systemProperty('spring.config.name', "spinnaker,kayenta")
-    systemProperty('spring.config.location', "file:${project.rootDir}/kayenta-signalfx/src/integration-test/resources/config/")
+    systemProperty('spring.config.location', "file:${project.rootDir}/kayenta-graphite/src/integration-test/resources/config/")
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
