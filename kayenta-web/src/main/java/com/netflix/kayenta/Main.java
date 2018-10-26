@@ -16,6 +16,7 @@
 
 package com.netflix.kayenta;
 
+import com.netflix.kayenta.newrelic.config.NewrelicConfiguration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,7 @@ import com.netflix.kayenta.stackdriver.config.StackdriverConfiguration;
   InfluxDbConfiguration.class,
   KayentaConfiguration.class,
   MemoryConfiguration.class,
+  NewrelicConfiguration.class,
   PrometheusConfiguration.class,
   S3Configuration.class,
   SignalFxConfiguration.class,

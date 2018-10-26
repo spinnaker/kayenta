@@ -20,6 +20,7 @@ include 'kayenta-atlas'
 include 'kayenta-aws'
 include 'kayenta-core'
 include 'kayenta-datadog'
+include 'kayenta-newrelic-insights'
 include 'kayenta-gcs'
 include 'kayenta-google'
 include 'kayenta-influxdb'
@@ -44,4 +45,3 @@ def setBuildFile(project) {
 rootProject.children.each {
   setBuildFile(it)
 }
-
