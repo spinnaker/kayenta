@@ -65,7 +65,8 @@ public class GraphiteMetricsService implements MetricsService {
         GraphiteCanaryMetricSetQueryConfig queryConfig =
                 (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
-        String query = String.format("%s.%s", queryConfig.getMetricName(), canaryScope.getScope());
+        String query = String.format("template(%s, scope=\"%s\")",
+                queryConfig.getMetricName(), canaryScope.getScope());
         log.info("Query sent to graphite: {}.", query);
 
         List<GraphiteResults> graphiteResultsList = remoteService.rangeQuery(

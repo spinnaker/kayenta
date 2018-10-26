@@ -9,7 +9,7 @@
     {
       "name": "test",
       "query": {
-        "metricName": "test.server.request.400",
+        "metricName": "test.server.request.400.$scope",
         "type": "graphite"
       },
       "analysisConfigurations": {
