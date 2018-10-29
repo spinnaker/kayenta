@@ -34,3 +34,16 @@ Starts the integration test with the following command
 ```bash
 ./gradlew kayenta-graphite:integrationTest  -Dredis.path=$(which redis-server) -Dgraphite.tag=<Graphite Version to Test on, default: latest>
 ```
+
+Add new test canary config:
+- Add config json file to integration-test/resources folder and run test with file name passed in
+
+```bash
+./gradlew kayenta-graphite:integrationTest -Dcanaryconfig.file=integration-test-canary-config.json -Dredis.path=$(which redis-server) -Dgraphite.tag=<Graphite Version to Test on, default: latest>
+```
+
+Also, can change the value of marginal and pass by pass in value by
+```bash
+-Dcanaryconfig.marginal=50 
+-Dcanaryconfig.pass = 75
+```
