@@ -147,10 +147,10 @@ task integrationTest(type: Test) {
         systemProperty("redis.port", startEmbeddedRedis.ext.redisPort)
         systemProperty("graphite.queryPort", startGraphite.ext.graphiteQueryPort)
         systemProperty("graphite.feedPort", startGraphite.ext.graphiteFeedPort)
-        systemProperty("canaryconfig.file",
+        systemProperty("canary.config",
                 getRequiredSystemPropWithDefault("canary.config", "integration-test-canary-config.json"))
-        systemProperty("canaryconfig.marginal", getRequiredSystemPropWithDefault("canary.marginal", "50"))
-        systemProperty("canaryconfig.pass", getRequiredSystemPropWithDefault("canary.pass", "75"))
+        systemProperty("canary.marginal", getRequiredSystemPropWithDefault("canary.marginal", "50"))
+        systemProperty("canary.pass", getRequiredSystemPropWithDefault("canary.pass", "75"))
     }
     systemProperty("spring.application.name", "kayenta")
     systemProperty('spring.config.name', "spinnaker,kayenta")

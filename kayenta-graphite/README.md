@@ -44,6 +44,6 @@ Add new test canary config:
 
 Also, can change the value of marginal and pass by pass in value by
 ```bash
--Dcanaryconfig.marginal=50 
--Dcanaryconfig.pass = 75
+-Dcanary.marginal=50 
+-Dcanary.pass = 75
 ```
