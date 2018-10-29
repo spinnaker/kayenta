@@ -67,12 +67,12 @@ public class GraphiteMetricsService implements MetricsService {
 
         String query = String.format("template(%s, scope=\"%s\")",
                 queryConfig.getMetricName(), canaryScope.getScope());
-        log.info("Query sent to graphite: {}.", query);
+        log.debug("Query sent to graphite: {}.", query);
 
         List<GraphiteResults> graphiteResultsList = remoteService.rangeQuery(
                 query,
-                (int)canaryScope.getStart().getEpochSecond(),
-                (int)canaryScope.getEnd().getEpochSecond(),
+                canaryScope.getStart().getEpochSecond(),
+                canaryScope.getEnd().getEpochSecond(),
                 DEFAULT_FORMAT
         );
 

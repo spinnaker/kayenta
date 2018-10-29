@@ -48,9 +48,21 @@ public class GraphiteIntegrationTestConfig {
     @PostConstruct
     public void start() {
         metricsReportingStartTime = Instant.now();
-        executorService.submit(createMetricReportingMockService(CONTROL_SCOPE_NAME, HEALTHY_SERVER_METRICS));
-        executorService.submit(createMetricReportingMockService(EXPERIMENT_SCOPE_HEALTHY, HEALTHY_SERVER_METRICS));
-        executorService.submit(createMetricReportingMockService(EXPERIMENT_SCOPE_UNHEALTHY, UNHEALTHY_SERVER_METRICS));
+        executorService.submit(createMetricReportingMockService(
+                getGraphiteMetricProvider(
+                        CONTROL_SCOPE_NAME,
+                        HEALTHY_SERVER_METRICS[0],
+                        HEALTHY_SERVER_METRICS[1])));
+        executorService.submit(createMetricReportingMockService(
+               getGraphiteMetricProvider(
+                       EXPERIMENT_SCOPE_HEALTHY,
+                       HEALTHY_SERVER_METRICS[0],
+                       HEALTHY_SERVER_METRICS[1])));
+        executorService.submit(createMetricReportingMockService(
+                getGraphiteMetricProvider(
+                        EXPERIMENT_SCOPE_UNHEALTHY,
+                        UNHEALTHY_SERVER_METRICS[0],
+                        UNHEALTHY_SERVER_METRICS[1])));
         metricsReportingStartTime = Instant.now();
         try {
             long pause = TimeUnit.MINUTES.toMillis(CANARY_WINDOW_IN_MINUTES) + TimeUnit.SECONDS.toMillis(10);
@@ -69,18 +81,14 @@ public class GraphiteIntegrationTestConfig {
         executorService.shutdownNow();
     }
 
-    public static Runnable createMetricReportingMockService(String scope, int[] countRange) {
+    private Runnable createMetricReportingMockService(GraphiteMetricProvider graphiteMetricProvider) {
         int graphiteFeedPort = Integer.parseInt(System.getProperty("graphite.feedPort"));
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try (Socket socket = new Socket(LOCAL_GRAPHITE_HOST, graphiteFeedPort)) {
                     OutputStream outputStream = socket.getOutputStream();
-                    String metrics = TEST_METRIC + "." + scope;
-                    String s = String.format("%s %d %d%n", metrics,
-                            new Random().nextInt((countRange[1] - countRange[0]) + 1) + countRange[0],
-                            Instant.now().getEpochSecond());
                     PrintWriter out = new PrintWriter(outputStream);
-                    out.println(s);
+                    out.println(graphiteMetricProvider.getRandomMetricWithinRange());
                     out.flush();
                     out.close();
                     Thread.sleep(MOCK_SERVICE_REPORTING_INTERVAL_IN_MILLISECONDS);
@@ -93,5 +101,10 @@ public class GraphiteIntegrationTestConfig {
                 }
             }
         };
+    }
+
+    private GraphiteMetricProvider getGraphiteMetricProvider(String scope, int min, int max) {
+        String metricName = TEST_METRIC + "." + scope;
+        return new GraphiteMetricProvider(min, max, metricName);
     }
 }

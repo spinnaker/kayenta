@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.graphite.cancary.GraphiteCanaryScope;
+import com.netflix.kayenta.graphite.canary.GraphiteCanaryScope;
 import com.netflix.kayenta.graphite.model.GraphiteResults;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

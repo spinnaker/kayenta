@@ -7,8 +7,13 @@ import com.netflix.kayenta.canary.CanaryAdhocExecutionRequest;
 import com.netflix.kayenta.canary.CanaryClassifierThresholdsConfig;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryExecutionRequest;
+import com.netflix.kayenta.canary.CanaryJudgeConfig;
+import com.netflix.kayenta.canary.CanaryMetricConfig;
+import com.netflix.kayenta.canary.CanaryMetricSetQueryConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopePair;
+import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
+
 import io.restassured.response.ValidatableResponse;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +23,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Instant;
 
 import static com.netflix.kayenta.config.GraphiteIntegrationTestConfig.*;
@@ -45,18 +52,19 @@ public class E2EIntegrationTest {
     @LocalServerPort
     protected int serverPort;
 
-    private String getUriTemplate() {
-        return "http://localhost:" + serverPort + "%s";
+    private String getUrl(String path) throws MalformedURLException {
+        URL url = new URL("http","localhost", serverPort, path);
+        return url.toString();
     }
 
     @Test
-    public void test_that_graphite_can_be_used_as_a_data_source_for_a_canary_execution_healthy() throws IOException {
+    public void test_healthy_graphite_canary_execution() throws IOException {
         ValidatableResponse response = doCanaryExec(EXPERIMENT_SCOPE_HEALTHY);
         response.body("result.judgeResult.score.classification", is("Pass"));
     }
 
     @Test
-    public void test_that_graphite_can_be_used_as_a_data_source_for_a_canary_execution_unhealthy() throws IOException {
+    public void test_unhealthy_graphite_canary_execution() throws IOException {
         ValidatableResponse response = doCanaryExec(EXPERIMENT_SCOPE_UNHEALTHY);
         response.body("result.judgeResult.score.classification", is("Fail"));
 
@@ -98,7 +106,7 @@ public class E2EIntegrationTest {
                         .queryParam("storageAccountName", "in-memory-store")
                         .body(request)
                         .when()
-                        .post(String.format(getUriTemplate(), "/canary"))
+                        .post(getUrl("/canary"))
                         .then()
                         .log().ifValidationFails()
                         .statusCode(200);
@@ -106,7 +114,7 @@ public class E2EIntegrationTest {
         String canaryExecutionId = canaryExRes.extract().body().jsonPath().getString("canaryExecutionId");
         ValidatableResponse response;
         do {
-            response = when().get(String.format(getUriTemplate(), "/canary/" + canaryExecutionId))
+            response = when().get(String.format(getUrl("/canary/" + canaryExecutionId)))
                     .then().statusCode(200);
         } while (!response.extract().body().jsonPath().getBoolean("complete"));
 

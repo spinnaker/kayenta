@@ -28,6 +28,14 @@ public class GraphiteResults {
     @JsonIgnore
     private List<Double> adjustedPointList;
 
+    /**
+     * graphite returns datapoints as a list of tuples of timestamp and value,
+     * Like: [[12312312, 1], [12312322, 0], ...]
+     * we need to convert them to a list of values
+     *
+     *
+     * @return A list of data points the match the format of kayenta
+     */
     @JsonIgnore
     private List<Double> getAdjustedPointList() {
         if (!CollectionUtils.isEmpty(adjustedPointList)) {
@@ -50,13 +58,25 @@ public class GraphiteResults {
         return this.getAdjustedPointList().stream();
     }
 
+    /**
+     * graphite's json render api will not explicitly show interval of datapoints.
+     * as it returns a list a tuple of (timestamp, value), we need to get the diff of first two endpoints
+     *
+     * @return the interval of two datapoints
+     */
     @JsonIgnore
     public Long getInterval() {
         if (datapoints.size() >= 2) {
-            if (datapoints.get(0).size() == 2 && datapoints.get(1).size() == 2) {
-                return (long)(datapoints.get(1).get(1) - datapoints.get(0).get(1));
+            List<Double> first = datapoints.get(0);
+            List<Double> second = datapoints.get(1);
+
+            if (first.size() == 2 && second.size() == 2) {
+                return (long)(second.get(1) - first.get(1));
             } else {
-                throw new IllegalArgumentException("data format from graphite is invalid");
+                throw new IllegalArgumentException(
+                        "data format from graphite is invalid, expected size of 2 for datapoint, got: "
+                                + " first: " + first
+                                + " second: " + second);
             }
         } else {
             return 1L;
@@ -71,10 +91,12 @@ public class GraphiteResults {
     @JsonIgnore
     public Long getStart() {
         if (!CollectionUtils.isEmpty(this.datapoints)) {
-            if (this.datapoints.get(0).size() == 2) {
-                return this.datapoints.get(0).get(1).longValue();
+            List<Double> firstDatapoint = this.datapoints.get(0);
+            if (firstDatapoint.size() == 2) {
+                return firstDatapoint.get(1).longValue();
             } else {
-                throw new IllegalArgumentException("data format from graphite is invalid");
+                throw new IllegalArgumentException(
+                        "data format from graphite is invalid, expected size of 2 for datapoint, got: " + firstDatapoint);
             }
         } else {
             return 0L;
@@ -89,10 +111,12 @@ public class GraphiteResults {
     @JsonIgnore
     public Long getEnd() {
         if (!CollectionUtils.isEmpty(this.datapoints)) {
-            if (this.datapoints.get(this.datapoints.size() - 1).size() == 2) {
-                return this.datapoints.get(this.datapoints.size() - 1).get(1).longValue();
+            List<Double> lastDatapoint = this.datapoints.get(this.datapoints.size() - 1);
+            if (lastDatapoint.size() == 2) {
+                return lastDatapoint.get(1).longValue();
             } else {
-                throw new IllegalArgumentException("data format from graphite is invalid");
+                throw new IllegalArgumentException(
+                        "data format from graphite is invalid, expected size of 2 for datapoint, got: " + lastDatapoint);
             }
         } else {
             return 0L;

@@ -28,6 +28,8 @@ It creates three threads that feeds data to embedded graphite server with differ
 - Healthy Experiment: the experiment cluster acts like the control cluster 
 - Unhealthy Experiment: the experiment cluster which will have higher failure rate than the control and healthy cluster
 
+Note: To run the integration test, needs docker and redis-server be installed. 
+
 Starts the integration test with the following command
 ```bash
 ./gradlew kayenta-graphite:integrationTest  -Dredis.path=$(which redis-server) -Dgraphite.tag=<Graphite Version to Test on, default: latest>
