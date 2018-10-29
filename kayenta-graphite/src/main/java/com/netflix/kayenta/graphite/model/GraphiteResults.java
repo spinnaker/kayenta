@@ -29,8 +29,8 @@ public class GraphiteResults {
     private List<Double> adjustedPointList;
 
     /**
-     * graphite returns datapoints as a list of tuples of timestamp and value,
-     * Like: [[12312312, 1], [12312322, 0], ...]
+     * graphite returns datapoints as a list of tuples of value and timestamp,
+     * Like: [[1, 12312312], [0, 12312322], ...]
      * we need to convert them to a list of values
      *
      *
@@ -60,7 +60,7 @@ public class GraphiteResults {
 
     /**
      * graphite's json render api will not explicitly show interval of datapoints.
-     * as it returns a list a tuple of (timestamp, value), we need to get the diff of first two endpoints
+     * as it returns a list a tuple of (value, timestamp), we need to get the diff of first two endpoints
      *
      * @return the interval of two datapoints
      */

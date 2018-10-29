@@ -71,14 +71,18 @@ public class E2EIntegrationTest {
     }
 
     private ValidatableResponse doCanaryExec(String scope) throws IOException {
+        String canaryConfigJson = System.getProperty("canary.config");
+        Double marginal = Double.parseDouble(System.getProperty("canary.marginal"));
+        Double pass = Double.parseDouble(System.getProperty("canary.pass"));
+
         CanaryAdhocExecutionRequest request = new CanaryAdhocExecutionRequest();
         CanaryConfig canaryConfig = objectMapper.readValue(getClass().getClassLoader()
-                .getResourceAsStream("integration-test-canary-config.json"), CanaryConfig.class);
+                .getResourceAsStream(canaryConfigJson), CanaryConfig.class);
         request.setCanaryConfig(canaryConfig);
 
         CanaryExecutionRequest executionRequest = new CanaryExecutionRequest();
         CanaryClassifierThresholdsConfig canaryClassifierThresholdsConfig = CanaryClassifierThresholdsConfig.builder()
-                .marginal(50D).pass(75D).build();
+                .marginal(marginal).pass(pass).build();
         executionRequest.setThresholds(canaryClassifierThresholdsConfig);
 
         Instant end = metricsReportingStartTime.plus(CANARY_WINDOW_IN_MINUTES, MINUTES);
