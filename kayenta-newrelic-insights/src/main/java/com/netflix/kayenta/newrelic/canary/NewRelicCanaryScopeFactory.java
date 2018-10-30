@@ -21,7 +21,7 @@ import com.netflix.kayenta.canary.CanaryScopeFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class NewrelicCanaryScopeFactory implements CanaryScopeFactory {
+public class NewRelicCanaryScopeFactory implements CanaryScopeFactory {
 
   @Override
   public boolean handles(String serviceType) {

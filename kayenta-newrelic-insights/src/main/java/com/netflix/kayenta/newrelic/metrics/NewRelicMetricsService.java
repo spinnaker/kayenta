@@ -19,13 +19,13 @@ package com.netflix.kayenta.newrelic.metrics;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
-import com.netflix.kayenta.canary.providers.metrics.NewrelicCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.canary.providers.metrics.NewRelicCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
-import com.netflix.kayenta.newrelic.security.NewrelicCredentials;
-import com.netflix.kayenta.newrelic.security.NewrelicNamedAccountCredentials;
-import com.netflix.kayenta.newrelic.service.NewrelicRemoteService;
-import com.netflix.kayenta.newrelic.service.NewrelicTimeSeries;
+import com.netflix.kayenta.newrelic.security.NewRelicCredentials;
+import com.netflix.kayenta.newrelic.security.NewRelicNamedAccountCredentials;
+import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
+import com.netflix.kayenta.newrelic.service.NewRelicTimeSeries;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.spectator.api.Registry;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import org.springframework.util.StringUtils;
 
 @Builder
 @Slf4j
-public class NewrelicMetricsService implements MetricsService {
+public class NewRelicMetricsService implements MetricsService {
 
   @NotNull
   @Singular
@@ -71,16 +71,16 @@ public class NewrelicMetricsService implements MetricsService {
     CanaryConfig canaryConfig,
     CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope)
     throws IOException {
-    NewrelicNamedAccountCredentials accountCredentials =
-      (NewrelicNamedAccountCredentials) accountCredentialsRepository
+    NewRelicNamedAccountCredentials accountCredentials =
+      (NewRelicNamedAccountCredentials) accountCredentialsRepository
         .getOne(accountName)
         .orElseThrow(() -> new IllegalArgumentException(
           "Unable to resolve account " + accountName + "."));
 
-    NewrelicCredentials credentials = accountCredentials.getCredentials();
-    NewrelicRemoteService remoteService = accountCredentials.getNewrelicRemoteService();
-    NewrelicCanaryMetricSetQueryConfig queryConfig =
-      (NewrelicCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
+    NewRelicCredentials credentials = accountCredentials.getCredentials();
+    NewRelicRemoteService remoteService = accountCredentials.getNewRelicRemoteService();
+    NewRelicCanaryMetricSetQueryConfig queryConfig =
+      (NewRelicCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
     // Example for a query produced by this class:
     // SELECT count(*) FROM Transaction TIMESERIES MAX SINCE 1540382125 UNTIL 1540392125
@@ -101,7 +101,7 @@ public class NewrelicMetricsService implements MetricsService {
     }
     query.append(canaryScope.getScope());
 
-    NewrelicTimeSeries timeSeries = remoteService.getTimeSeries(
+    NewRelicTimeSeries timeSeries = remoteService.getTimeSeries(
       credentials.getApiKey(),
       credentials.getApplicationKey(),
       query.toString()

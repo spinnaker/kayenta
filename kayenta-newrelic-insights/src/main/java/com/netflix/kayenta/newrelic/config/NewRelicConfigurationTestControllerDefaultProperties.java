@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.newrelic.security;
+package com.netflix.kayenta.newrelic.config;
 
-import java.util.Optional;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
+import lombok.Setter;
 
-@Builder
-@Data
-@Slf4j
-public class NewrelicCredentials {
+/**
+ * This configuration class allows you to specify default values for the NewRelic Fetch Controller.
+ */
+public class NewRelicConfigurationTestControllerDefaultProperties {
 
-  private static String applicationVersion =
-    Optional.ofNullable(NewrelicCredentials.class.getPackage().getImplementationVersion())
-      .orElse("Unknown");
+  @Getter
+  @Setter
+  private String scope;
 
-  private String apiKey;
-  private String applicationKey;
+  @Getter
+  @Setter
+  private String start;
+
+  @Getter
+  @Setter
+  private String end;
 }

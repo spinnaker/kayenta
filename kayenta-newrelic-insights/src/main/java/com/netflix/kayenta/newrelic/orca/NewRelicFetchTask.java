@@ -36,14 +36,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class NewrelicFetchTask implements RetryableTask {
+public class NewRelicFetchTask implements RetryableTask {
 
   private final ObjectMapper kayentaObjectMapper;
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final SynchronousQueryProcessor synchronousQueryProcessor;
 
   @Autowired
-  public NewrelicFetchTask(ObjectMapper kayentaObjectMapper,
+  public NewRelicFetchTask(ObjectMapper kayentaObjectMapper,
     AccountCredentialsRepository accountCredentialsRepository,
     SynchronousQueryProcessor synchronousQueryProcessor) {
     this.kayentaObjectMapper = kayentaObjectMapper;

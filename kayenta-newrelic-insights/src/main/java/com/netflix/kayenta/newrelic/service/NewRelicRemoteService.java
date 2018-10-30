@@ -14,25 +14,18 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.newrelic.config;
+package com.netflix.kayenta.newrelic.service;
 
-import lombok.Getter;
-import lombok.Setter;
+import retrofit.http.GET;
+import retrofit.http.Header;
+import retrofit.http.Headers;
+import retrofit.http.Path;
+import retrofit.http.Query;
 
-/**
- * This configuration class allows you to specify default values for the Newrelic Fetch Controller.
- */
-public class NewrelicConfigurationTestControllerDefaultProperties {
+public interface NewRelicRemoteService {
 
-  @Getter
-  @Setter
-  private String scope;
-
-  @Getter
-  @Setter
-  private String start;
-
-  @Getter
-  @Setter
-  private String end;
+  @Headers("Accept: application/json")
+  @GET("/v1/accounts/{application_key}/query")
+  NewRelicTimeSeries getTimeSeries(@Header("X-Query-Key") String apiKey,
+    @Path("application_key") String applicationKey, @Query("nrql") String query);
 }

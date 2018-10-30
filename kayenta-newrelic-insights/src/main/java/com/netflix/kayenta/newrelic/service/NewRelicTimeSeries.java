@@ -25,13 +25,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Data
-public class NewrelicTimeSeries {
+public class NewRelicTimeSeries {
 
-  private List<NewrelicSeriesEntry> timeSeries;
+  private List<NewRelicSeriesEntry> timeSeries;
   private NewresultResultMetadata metadata;
 
   @Data
-  static public class NewrelicSeriesEntry {
+  static public class NewRelicSeriesEntry {
 
     private Long beginTimeSeconds;
     private Long inspectedCount;

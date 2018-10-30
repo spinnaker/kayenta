@@ -30,7 +30,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("newrelic")
-public class NewrelicCanaryMetricSetQueryConfig implements CanaryMetricSetQueryConfig {
+public class NewRelicCanaryMetricSetQueryConfig implements CanaryMetricSetQueryConfig {
 
   @Getter
   private String q;

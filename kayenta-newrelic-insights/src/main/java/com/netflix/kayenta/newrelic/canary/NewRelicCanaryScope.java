@@ -24,6 +24,6 @@ import lombok.ToString;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class NewrelicCanaryScope extends CanaryScope {
+public class NewRelicCanaryScope extends CanaryScope {
 
 }

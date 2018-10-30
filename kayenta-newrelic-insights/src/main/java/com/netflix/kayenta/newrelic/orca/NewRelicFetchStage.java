@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component
-public class NewrelicFetchStage {
+public class NewRelicFetchStage {
 
   @Bean
   StageDefinitionBuilder newrelicFetchStageBuilder() {
@@ -32,13 +32,13 @@ public class NewrelicFetchStage {
       @Override
       public void taskGraph(@Nonnull Stage stage,
         @Nonnull TaskNode.Builder builder) {
-        builder.withTask("newrelicFetch", NewrelicFetchTask.class);
+        builder.withTask("newRelicFetch", NewRelicFetchTask.class);
       }
 
       @Nonnull
       @Override
       public String getType() {
-        return "newrelicFetch";
+        return "newRelicFetch";
       }
     };
   }

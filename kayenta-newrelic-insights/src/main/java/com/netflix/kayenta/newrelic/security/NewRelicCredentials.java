@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.newrelic.config;
+package com.netflix.kayenta.newrelic.security;
 
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Getter;
+import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
-public class NewrelicConfigurationProperties {
+@Builder
+@Data
+@Slf4j
+public class NewRelicCredentials {
 
-  @Getter
-  private List<NewrelicManagedAccount> accounts = new ArrayList<>();
+  private static String applicationVersion =
+    Optional.ofNullable(NewRelicCredentials.class.getPackage().getImplementationVersion())
+      .orElse("Unknown");
+
+  private String apiKey;
+  private String applicationKey;
 }

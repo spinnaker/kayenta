@@ -16,23 +16,12 @@
 
 package com.netflix.kayenta.newrelic.config;
 
-import com.netflix.kayenta.retrofit.config.RemoteService;
-import com.netflix.kayenta.security.AccountCredentials;
+import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
 
-@Data
-public class NewrelicManagedAccount {
+public class NewRelicConfigurationProperties {
 
-  @NotNull
-  private String name;
-  private String apiKey;
-  private String applicationKey;
-
-  @NotNull
-  private RemoteService endpoint;
-
-  private List<AccountCredentials.Type> supportedTypes;
+  @Getter
+  private List<NewRelicManagedAccount> accounts = new ArrayList<>();
 }
-

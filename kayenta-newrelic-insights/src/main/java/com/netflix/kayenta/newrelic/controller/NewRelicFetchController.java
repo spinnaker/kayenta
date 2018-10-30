@@ -20,9 +20,9 @@ import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefa
 
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
-import com.netflix.kayenta.canary.providers.metrics.NewrelicCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.canary.providers.metrics.NewRelicCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
-import com.netflix.kayenta.newrelic.config.NewrelicConfigurationTestControllerDefaultProperties;
+import com.netflix.kayenta.newrelic.config.NewRelicConfigurationTestControllerDefaultProperties;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
@@ -42,18 +42,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/fetch/newrelic")
 @Slf4j
-public class NewrelicFetchController {
+public class NewRelicFetchController {
 
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final SynchronousQueryProcessor synchronousQueryProcessor;
-  private final NewrelicConfigurationTestControllerDefaultProperties
+  private final NewRelicConfigurationTestControllerDefaultProperties
     newrelicConfigurationTestControllerDefaultProperties;
 
   @Autowired
-  public NewrelicFetchController(
+  public NewRelicFetchController(
     AccountCredentialsRepository accountCredentialsRepository,
     SynchronousQueryProcessor synchronousQueryProcessor,
-    NewrelicConfigurationTestControllerDefaultProperties newrelicConfigurationTestControllerDefaultProperties) {
+    NewRelicConfigurationTestControllerDefaultProperties newrelicConfigurationTestControllerDefaultProperties) {
     this.accountCredentialsRepository = accountCredentialsRepository;
     this.synchronousQueryProcessor = synchronousQueryProcessor;
     this.newrelicConfigurationTestControllerDefaultProperties =
@@ -66,7 +66,7 @@ public class NewrelicFetchController {
     @RequestParam(required = false) final String storageAccountName,
     @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
     @ApiParam(defaultValue = "avg:system.cpu.user") @RequestParam String metricName,
-    @ApiParam(value = "The scope of the Newrelic query. e.g. autoscaling_group:myapp-prod-v002")
+    @ApiParam(value = "The scope of the NewRelic query. e.g. autoscaling_group:myapp-prod-v002")
     @RequestParam(required = false) String scope,
     @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
     @RequestParam String start,
@@ -102,8 +102,8 @@ public class NewrelicFetchController {
         AccountCredentials.Type.OBJECT_STORE,
         accountCredentialsRepository);
 
-    NewrelicCanaryMetricSetQueryConfig newrelicCanaryMetricSetQueryConfig =
-      NewrelicCanaryMetricSetQueryConfig
+    NewRelicCanaryMetricSetQueryConfig newrelicCanaryMetricSetQueryConfig =
+      NewRelicCanaryMetricSetQueryConfig
         .builder()
         .q(metricName)
         .build();

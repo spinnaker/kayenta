@@ -18,10 +18,10 @@ package com.netflix.kayenta.newrelic.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.metrics.MetricsService;
-import com.netflix.kayenta.newrelic.metrics.NewrelicMetricsService;
-import com.netflix.kayenta.newrelic.security.NewrelicCredentials;
-import com.netflix.kayenta.newrelic.security.NewrelicNamedAccountCredentials;
-import com.netflix.kayenta.newrelic.service.NewrelicRemoteService;
+import com.netflix.kayenta.newrelic.metrics.NewRelicMetricsService;
+import com.netflix.kayenta.newrelic.security.NewRelicCredentials;
+import com.netflix.kayenta.newrelic.security.NewRelicNamedAccountCredentials;
+import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -43,49 +43,49 @@ import retrofit.converter.JacksonConverter;
 @ConditionalOnProperty("kayenta.newrelic.enabled")
 @ComponentScan({"com.netflix.kayenta.newrelic"})
 @Slf4j
-public class NewrelicConfiguration {
+public class NewRelicConfiguration {
 
   @Bean
   @ConfigurationProperties("kayenta.newrelic")
-  NewrelicConfigurationProperties newrelicConfigurationProperties() {
-    return new NewrelicConfigurationProperties();
+  NewRelicConfigurationProperties newrelicConfigurationProperties() {
+    return new NewRelicConfigurationProperties();
   }
 
   @Bean
   @ConfigurationProperties("kayenta.newrelic.testControllerDefaults")
-  NewrelicConfigurationTestControllerDefaultProperties newrelicConfigurationTestControllerDefaultProperties() {
-    return new NewrelicConfigurationTestControllerDefaultProperties();
+  NewRelicConfigurationTestControllerDefaultProperties newrelicConfigurationTestControllerDefaultProperties() {
+    return new NewRelicConfigurationTestControllerDefaultProperties();
   }
 
   @Bean
   MetricsService newrelicMetricsService(
-    NewrelicConfigurationProperties newrelicConfigurationProperties,
+    NewRelicConfigurationProperties newrelicConfigurationProperties,
     RetrofitClientFactory retrofitClientFactory,
     ObjectMapper objectMapper,
     OkHttpClient okHttpClient,
     AccountCredentialsRepository accountCredentialsRepository) throws IOException {
-    NewrelicMetricsService.NewrelicMetricsServiceBuilder metricsServiceBuilder =
-      NewrelicMetricsService.builder();
+    NewRelicMetricsService.NewRelicMetricsServiceBuilder metricsServiceBuilder =
+      NewRelicMetricsService.builder();
 
-    for (NewrelicManagedAccount account : newrelicConfigurationProperties.getAccounts()) {
+    for (NewRelicManagedAccount account : newrelicConfigurationProperties.getAccounts()) {
       String name = account.getName();
       List<AccountCredentials.Type> supportedTypes = account.getSupportedTypes();
 
-      NewrelicCredentials credentials = NewrelicCredentials.builder()
+      NewRelicCredentials credentials = NewRelicCredentials.builder()
         .apiKey(account.getApiKey())
         .applicationKey(account.getApplicationKey())
         .build();
 
-      NewrelicNamedAccountCredentials.NewrelicNamedAccountCredentialsBuilder accountCredentialsBuilder =
-        NewrelicNamedAccountCredentials.builder()
+      NewRelicNamedAccountCredentials.NewRelicNamedAccountCredentialsBuilder accountCredentialsBuilder =
+        NewRelicNamedAccountCredentials.builder()
           .name(name)
           .endpoint(account.getEndpoint())
           .credentials(credentials);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
-          accountCredentialsBuilder.newrelicRemoteService(retrofitClientFactory.createClient(
-            NewrelicRemoteService.class,
+          accountCredentialsBuilder.newRelicRemoteService(retrofitClientFactory.createClient(
+            NewRelicRemoteService.class,
             new JacksonConverter(objectMapper),
             account.getEndpoint(),
             okHttpClient
@@ -98,7 +98,7 @@ public class NewrelicConfiguration {
       metricsServiceBuilder.accountName(name);
     }
 
-    log.info("Populated NewrelicMetricsService with {} Newrelic accounts.",
+    log.info("Populated NewRelicMetricsService with {} NewRelic accounts.",
       newrelicConfigurationProperties.getAccounts().size());
     return metricsServiceBuilder.build();
   }

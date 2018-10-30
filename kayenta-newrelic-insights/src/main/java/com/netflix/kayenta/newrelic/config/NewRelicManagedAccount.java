@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.newrelic.service;
+package com.netflix.kayenta.newrelic.config;
 
-import retrofit.http.GET;
-import retrofit.http.Header;
-import retrofit.http.Headers;
-import retrofit.http.Path;
-import retrofit.http.Query;
+import com.netflix.kayenta.retrofit.config.RemoteService;
+import com.netflix.kayenta.security.AccountCredentials;
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import lombok.Data;
 
-public interface NewrelicRemoteService {
+@Data
+public class NewRelicManagedAccount {
 
-  @Headers("Accept: application/json")
-  @GET("/v1/accounts/{application_key}/query")
-  NewrelicTimeSeries getTimeSeries(@Header("X-Query-Key") String apiKey,
-    @Path("application_key") String applicationKey, @Query("nrql") String query);
+  @NotNull
+  private String name;
+  private String apiKey;
+  private String applicationKey;
+
+  @NotNull
+  private RemoteService endpoint;
+
+  private List<AccountCredentials.Type> supportedTypes;
 }
+
