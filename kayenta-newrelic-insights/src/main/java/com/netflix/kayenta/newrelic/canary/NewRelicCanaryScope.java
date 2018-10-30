@@ -17,6 +17,7 @@
 package com.netflix.kayenta.newrelic.canary;
 
 import com.netflix.kayenta.canary.CanaryScope;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -26,4 +27,8 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class NewRelicCanaryScope extends CanaryScope {
 
+  @NotNull
+  private String scopeKey;
+
+  private String appName;
 }

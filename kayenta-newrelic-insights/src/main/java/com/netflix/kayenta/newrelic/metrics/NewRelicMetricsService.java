@@ -22,6 +22,7 @@ import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.NewRelicCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
+import com.netflix.kayenta.newrelic.canary.NewRelicCanaryScope;
 import com.netflix.kayenta.newrelic.security.NewRelicCredentials;
 import com.netflix.kayenta.newrelic.security.NewRelicNamedAccountCredentials;
 import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
@@ -67,18 +68,11 @@ public class NewRelicMetricsService implements MetricsService {
   }
 
   @Override
-  public List<MetricSet> queryMetrics(String accountName,
-    CanaryConfig canaryConfig,
-    CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope)
-    throws IOException {
-    NewRelicNamedAccountCredentials accountCredentials =
-      (NewRelicNamedAccountCredentials) accountCredentialsRepository
-        .getOne(accountName)
-        .orElseThrow(() -> new IllegalArgumentException(
-          "Unable to resolve account " + accountName + "."));
+  public String buildQuery(String metricsAccountName, CanaryConfig canaryConfig, CanaryMetricConfig canaryMetricConfig,
+    CanaryScope canaryScope) throws IOException {
 
-    NewRelicCredentials credentials = accountCredentials.getCredentials();
-    NewRelicRemoteService remoteService = accountCredentials.getNewRelicRemoteService();
+    NewRelicCanaryScope newRelicCanaryScope = (NewRelicCanaryScope) canaryScope;
+
     NewRelicCanaryMetricSetQueryConfig queryConfig =
       (NewRelicCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
@@ -91,20 +85,44 @@ public class NewRelicMetricsService implements MetricsService {
     query.append(" FROM Transaction TIMESERIES MAX ");
 
     query.append(" SINCE ");
-    query.append(canaryScope.getStart().getEpochSecond());
+    query.append(newRelicCanaryScope.getStart().getEpochSecond());
     query.append(" UNTIL ");
-    query.append(canaryScope.getEnd().getEpochSecond());
+    query.append(newRelicCanaryScope.getEnd().getEpochSecond());
     query.append(" WHERE ");
     if (!StringUtils.isEmpty(queryConfig.getQ())) {
       query.append(queryConfig.getQ());
       query.append(" AND ");
     }
-    query.append(canaryScope.getScope());
+    if (!StringUtils.isEmpty(newRelicCanaryScope.getAppName())) {
+      query.append("appName LIKE '");
+      query.append(newRelicCanaryScope.getAppName());
+      query.append("' ");
+    }
+    query.append(newRelicCanaryScope.getScopeKey());
+    query.append(" LIKE '");
+    query.append(newRelicCanaryScope.getScope());
+    query.append('\'');
+    return query.toString();
+  }
+
+  @Override
+  public List<MetricSet> queryMetrics(String accountName,
+    CanaryConfig canaryConfig,
+    CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope)
+    throws IOException {
+    NewRelicNamedAccountCredentials accountCredentials =
+      (NewRelicNamedAccountCredentials) accountCredentialsRepository
+        .getOne(accountName)
+        .orElseThrow(() -> new IllegalArgumentException(
+          "Unable to resolve account " + accountName + "."));
+
+    NewRelicCredentials credentials = accountCredentials.getCredentials();
+    NewRelicRemoteService remoteService = accountCredentials.getNewRelicRemoteService();
 
     NewRelicTimeSeries timeSeries = remoteService.getTimeSeries(
       credentials.getApiKey(),
       credentials.getApplicationKey(),
-      query.toString()
+      buildQuery(accountName, canaryConfig, canaryMetricConfig, canaryScope).toString()
     );
 
     Instant begin =

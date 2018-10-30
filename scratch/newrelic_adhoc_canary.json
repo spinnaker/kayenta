@@ -45,14 +45,18 @@
       "default": {
         "controlScope": {
           "type": "node",
+          "scopeKey": "deployment_version",
           "scope": "appName LIKE 'PROD - MyComponent' and deployment_version like 'baseline_githash'",
+          "appName": "PROD - MyComponent",
           "start": "1537783860000",
           "end": "1537785660000",
           "step": "10"
         },
         "experimentScope": {
           "type": "node",
-          "scope": "appName LIKE 'PROD - MyComponent' and deployment_version like 'experiment_githash'",
+          "scopeKey": "deployment_version",
+          "scope": "experiment_githash",
+          "appName": "PROD - MyComponent",
           "start": "1537783860000",
           "end": "1537785660000",
           "step": "10"
