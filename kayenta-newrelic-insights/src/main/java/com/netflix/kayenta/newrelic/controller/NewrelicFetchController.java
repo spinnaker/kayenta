@@ -18,7 +18,6 @@ package com.netflix.kayenta.newrelic.controller;
 
 import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefaultProperty;
 
-import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.NewrelicCanaryMetricSetQueryConfig;
@@ -48,43 +47,43 @@ public class NewrelicFetchController {
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final SynchronousQueryProcessor synchronousQueryProcessor;
   private final NewrelicConfigurationTestControllerDefaultProperties
-      newrelicConfigurationTestControllerDefaultProperties;
+    newrelicConfigurationTestControllerDefaultProperties;
 
   @Autowired
   public NewrelicFetchController(
-      AccountCredentialsRepository accountCredentialsRepository,
-      SynchronousQueryProcessor synchronousQueryProcessor,
-      NewrelicConfigurationTestControllerDefaultProperties newrelicConfigurationTestControllerDefaultProperties) {
+    AccountCredentialsRepository accountCredentialsRepository,
+    SynchronousQueryProcessor synchronousQueryProcessor,
+    NewrelicConfigurationTestControllerDefaultProperties newrelicConfigurationTestControllerDefaultProperties) {
     this.accountCredentialsRepository = accountCredentialsRepository;
     this.synchronousQueryProcessor = synchronousQueryProcessor;
     this.newrelicConfigurationTestControllerDefaultProperties =
-        newrelicConfigurationTestControllerDefaultProperties;
+      newrelicConfigurationTestControllerDefaultProperties;
   }
 
   @RequestMapping(value = "/query", method = RequestMethod.POST)
   public Map queryMetrics(
-      @RequestParam(required = false) final String metricsAccountName,
-      @RequestParam(required = false) final String storageAccountName,
-      @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
-      @ApiParam(defaultValue = "avg:system.cpu.user") @RequestParam String metricName,
-      @ApiParam(value = "The scope of the Newrelic query. e.g. autoscaling_group:myapp-prod-v002")
-      @RequestParam(required = false) String scope,
-      @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-      @RequestParam String start,
-      @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-      @RequestParam String end,
-      @ApiParam(defaultValue = "60", value = "seconds") @RequestParam Long step,
-      @ApiParam(defaultValue = "false")
-      @RequestParam(required = false) final boolean dryRun)
-      throws IOException {
+    @RequestParam(required = false) final String metricsAccountName,
+    @RequestParam(required = false) final String storageAccountName,
+    @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
+    @ApiParam(defaultValue = "avg:system.cpu.user") @RequestParam String metricName,
+    @ApiParam(value = "The scope of the Newrelic query. e.g. autoscaling_group:myapp-prod-v002")
+    @RequestParam(required = false) String scope,
+    @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
+    @RequestParam String start,
+    @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
+    @RequestParam String end,
+    @ApiParam(defaultValue = "60", value = "seconds") @RequestParam Long step,
+    @ApiParam(defaultValue = "false")
+    @RequestParam(required = false) final boolean dryRun)
+    throws IOException {
 
     // Apply defaults.
     scope = determineDefaultProperty(scope, "scope",
-        newrelicConfigurationTestControllerDefaultProperties);
+      newrelicConfigurationTestControllerDefaultProperties);
     start = determineDefaultProperty(start, "start",
-        newrelicConfigurationTestControllerDefaultProperties);
+      newrelicConfigurationTestControllerDefaultProperties);
     end = determineDefaultProperty(end, "end",
-        newrelicConfigurationTestControllerDefaultProperties);
+      newrelicConfigurationTestControllerDefaultProperties);
 
     if (StringUtils.isEmpty(start)) {
       throw new IllegalArgumentException("Start time is required.");
@@ -95,33 +94,33 @@ public class NewrelicFetchController {
     }
 
     String resolvedMetricsAccountName =
-        CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
-            AccountCredentials.Type.METRICS_STORE,
-            accountCredentialsRepository);
+      CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
+        AccountCredentials.Type.METRICS_STORE,
+        accountCredentialsRepository);
     String resolvedStorageAccountName =
-        CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
-            AccountCredentials.Type.OBJECT_STORE,
-            accountCredentialsRepository);
+      CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
+        AccountCredentials.Type.OBJECT_STORE,
+        accountCredentialsRepository);
 
     NewrelicCanaryMetricSetQueryConfig newrelicCanaryMetricSetQueryConfig =
-        NewrelicCanaryMetricSetQueryConfig
-            .builder()
-            .q(metricName)
-            .build();
+      NewrelicCanaryMetricSetQueryConfig
+        .builder()
+        .q(metricName)
+        .build();
 
     CanaryMetricConfig canaryMetricConfig =
-        CanaryMetricConfig
-            .builder()
-            .name(metricSetName)
-            .query(newrelicCanaryMetricSetQueryConfig)
-            .build();
+      CanaryMetricConfig
+        .builder()
+        .name(metricSetName)
+        .query(newrelicCanaryMetricSetQueryConfig)
+        .build();
 
     CanaryScope canaryScope =
-        new CanaryScope(scope, null, Instant.parse(start), Instant.parse(end), step,
-            Collections.emptyMap());
+      new CanaryScope(scope, null, Instant.parse(start), Instant.parse(end), step,
+        Collections.emptyMap());
 
     return synchronousQueryProcessor
-        .processQueryAndReturnMap(resolvedMetricsAccountName, resolvedStorageAccountName,
-            null, canaryMetricConfig, 0, canaryScope, dryRun);
+      .processQueryAndReturnMap(resolvedMetricsAccountName, resolvedStorageAccountName,
+        null, canaryMetricConfig, 0, canaryScope, dryRun);
   }
 }

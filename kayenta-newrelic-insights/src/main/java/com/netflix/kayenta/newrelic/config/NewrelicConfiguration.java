@@ -59,36 +59,36 @@ public class NewrelicConfiguration {
 
   @Bean
   MetricsService newrelicMetricsService(
-      NewrelicConfigurationProperties newrelicConfigurationProperties,
-      RetrofitClientFactory retrofitClientFactory,
-      ObjectMapper objectMapper,
-      OkHttpClient okHttpClient,
-      AccountCredentialsRepository accountCredentialsRepository) throws IOException {
+    NewrelicConfigurationProperties newrelicConfigurationProperties,
+    RetrofitClientFactory retrofitClientFactory,
+    ObjectMapper objectMapper,
+    OkHttpClient okHttpClient,
+    AccountCredentialsRepository accountCredentialsRepository) throws IOException {
     NewrelicMetricsService.NewrelicMetricsServiceBuilder metricsServiceBuilder =
-        NewrelicMetricsService.builder();
+      NewrelicMetricsService.builder();
 
     for (NewrelicManagedAccount account : newrelicConfigurationProperties.getAccounts()) {
       String name = account.getName();
       List<AccountCredentials.Type> supportedTypes = account.getSupportedTypes();
 
       NewrelicCredentials credentials = NewrelicCredentials.builder()
-          .apiKey(account.getApiKey())
-          .applicationKey(account.getApplicationKey())
-          .build();
+        .apiKey(account.getApiKey())
+        .applicationKey(account.getApplicationKey())
+        .build();
 
       NewrelicNamedAccountCredentials.NewrelicNamedAccountCredentialsBuilder accountCredentialsBuilder =
-          NewrelicNamedAccountCredentials.builder()
-              .name(name)
-              .endpoint(account.getEndpoint())
-              .credentials(credentials);
+        NewrelicNamedAccountCredentials.builder()
+          .name(name)
+          .endpoint(account.getEndpoint())
+          .credentials(credentials);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
           accountCredentialsBuilder.newrelicRemoteService(retrofitClientFactory.createClient(
-              NewrelicRemoteService.class,
-              new JacksonConverter(objectMapper),
-              account.getEndpoint(),
-              okHttpClient
+            NewrelicRemoteService.class,
+            new JacksonConverter(objectMapper),
+            account.getEndpoint(),
+            okHttpClient
           ));
         }
         accountCredentialsBuilder.supportedTypes(supportedTypes);
@@ -99,7 +99,7 @@ public class NewrelicConfiguration {
     }
 
     log.info("Populated NewrelicMetricsService with {} Newrelic accounts.",
-        newrelicConfigurationProperties.getAccounts().size());
+      newrelicConfigurationProperties.getAccounts().size());
     return metricsServiceBuilder.build();
   }
 }

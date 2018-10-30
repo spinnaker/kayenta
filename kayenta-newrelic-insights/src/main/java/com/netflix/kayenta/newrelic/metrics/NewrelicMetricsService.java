@@ -68,19 +68,19 @@ public class NewrelicMetricsService implements MetricsService {
 
   @Override
   public List<MetricSet> queryMetrics(String accountName,
-      CanaryConfig canaryConfig,
-      CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope)
-      throws IOException {
+    CanaryConfig canaryConfig,
+    CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope)
+    throws IOException {
     NewrelicNamedAccountCredentials accountCredentials =
-        (NewrelicNamedAccountCredentials) accountCredentialsRepository
-            .getOne(accountName)
-            .orElseThrow(() -> new IllegalArgumentException(
-                "Unable to resolve account " + accountName + "."));
+      (NewrelicNamedAccountCredentials) accountCredentialsRepository
+        .getOne(accountName)
+        .orElseThrow(() -> new IllegalArgumentException(
+          "Unable to resolve account " + accountName + "."));
 
     NewrelicCredentials credentials = accountCredentials.getCredentials();
     NewrelicRemoteService remoteService = accountCredentials.getNewrelicRemoteService();
     NewrelicCanaryMetricSetQueryConfig queryConfig =
-        (NewrelicCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
+      (NewrelicCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
     // Example for a query produced by this class:
     // SELECT count(*) FROM Transaction TIMESERIES MAX SINCE 1540382125 UNTIL 1540392125
@@ -102,25 +102,25 @@ public class NewrelicMetricsService implements MetricsService {
     query.append(canaryScope.getScope());
 
     NewrelicTimeSeries timeSeries = remoteService.getTimeSeries(
-        credentials.getApiKey(),
-        credentials.getApplicationKey(),
-        query.toString()
+      credentials.getApiKey(),
+      credentials.getApplicationKey(),
+      query.toString()
     );
 
     Instant begin =
-        Instant.ofEpochMilli(timeSeries.getMetadata().getBeginTimeMillis());
+      Instant.ofEpochMilli(timeSeries.getMetadata().getBeginTimeMillis());
     Instant end =
-        Instant.ofEpochMilli(timeSeries.getMetadata().getEndTimeMillis());
+      Instant.ofEpochMilli(timeSeries.getMetadata().getEndTimeMillis());
 
     return Arrays.asList(
-        MetricSet.builder()
-            .name(canaryMetricConfig.getName())
-            .startTimeMillis(begin.toEpochMilli())
-            .startTimeIso(begin.toString())
-            .endTimeMillis(end.toEpochMilli())
-            .endTimeIso(end.toString())
-            .values(timeSeries.getDataPoints().collect(Collectors.toList()))
-            .build()
+      MetricSet.builder()
+        .name(canaryMetricConfig.getName())
+        .startTimeMillis(begin.toEpochMilli())
+        .startTimeIso(begin.toString())
+        .endTimeMillis(end.toEpochMilli())
+        .endTimeIso(end.toString())
+        .values(timeSeries.getDataPoints().collect(Collectors.toList()))
+        .build()
     );
   }
 }

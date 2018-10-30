@@ -31,7 +31,7 @@ public class NewrelicFetchStage {
     return new StageDefinitionBuilder() {
       @Override
       public void taskGraph(@Nonnull Stage stage,
-          @Nonnull TaskNode.Builder builder) {
+        @Nonnull TaskNode.Builder builder) {
         builder.withTask("newrelicFetch", NewrelicFetchTask.class);
       }
 

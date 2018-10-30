@@ -27,5 +27,5 @@ public interface NewrelicRemoteService {
   @Headers("Accept: application/json")
   @GET("/v1/accounts/{application_key}/query")
   NewrelicTimeSeries getTimeSeries(@Header("X-Query-Key") String apiKey,
-      @Path("application_key") String applicationKey, @Query("nrql") String query);
+    @Path("application_key") String applicationKey, @Query("nrql") String query);
 }
