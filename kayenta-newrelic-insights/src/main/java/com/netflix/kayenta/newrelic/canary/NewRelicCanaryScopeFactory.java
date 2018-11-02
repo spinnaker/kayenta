@@ -18,10 +18,13 @@ package com.netflix.kayenta.newrelic.canary;
 
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopeFactory;
+import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NewRelicCanaryScopeFactory implements CanaryScopeFactory {
+  private final static String SCOPE_KEY_KEY = "_scope_key";
 
   @Override
   public boolean handles(String serviceType) {
@@ -29,7 +32,26 @@ public class NewRelicCanaryScopeFactory implements CanaryScopeFactory {
   }
 
   @Override
-  public CanaryScope buildCanaryScope(CanaryScope scope) {
-    return scope;
+  public CanaryScope buildCanaryScope(CanaryScope canaryScope) {
+    Map<String, String> extendedParameters = Optional.ofNullable(canaryScope.getExtendedScopeParams())
+      .orElseThrow(() -> new IllegalArgumentException("New Relic requires extended parameters"));
+
+    NewRelicCanaryScope newRelicCanaryScope = new NewRelicCanaryScope();
+    newRelicCanaryScope.setScope(canaryScope.getScope());
+    newRelicCanaryScope.setStart(canaryScope.getStart());
+    newRelicCanaryScope.setEnd(canaryScope.getEnd());
+    newRelicCanaryScope.setStep(canaryScope.getStep());
+    newRelicCanaryScope.setExtendedScopeParams(extendedParameters);
+    newRelicCanaryScope.setScopeKey(getRequiredExtendedParam(SCOPE_KEY_KEY, extendedParameters));
+
+    return newRelicCanaryScope;
+  }
+
+  private String getRequiredExtendedParam(String key, Map<String, String> extendedParameters) {
+    if (!extendedParameters.containsKey(key)) {
+      throw new IllegalArgumentException(
+        String.format("New Relic requires that %s is set in the extended scope params", key));
+    }
+    return extendedParameters.get(key);
   }
 }

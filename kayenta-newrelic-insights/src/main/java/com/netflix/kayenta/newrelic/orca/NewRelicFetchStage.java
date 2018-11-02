@@ -27,18 +27,18 @@ import org.springframework.stereotype.Component;
 public class NewRelicFetchStage {
 
   @Bean
-  StageDefinitionBuilder newrelicFetchStageBuilder() {
+  StageDefinitionBuilder newRelicFetchStageBuilder() {
     return new StageDefinitionBuilder() {
       @Override
       public void taskGraph(@Nonnull Stage stage,
         @Nonnull TaskNode.Builder builder) {
-        builder.withTask("newRelicFetch", NewRelicFetchTask.class);
+        builder.withTask("newrelicFetch", NewRelicFetchTask.class);
       }
 
       @Nonnull
       @Override
       public String getType() {
-        return "newRelicFetch";
+        return "newrelicFetch";
       }
     };
   }

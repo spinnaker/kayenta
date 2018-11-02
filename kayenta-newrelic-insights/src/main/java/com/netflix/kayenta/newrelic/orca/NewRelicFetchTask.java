@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
+import com.netflix.kayenta.newrelic.canary.NewRelicCanaryScope;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
@@ -69,7 +70,7 @@ public class NewRelicFetchTask implements RetryableTask {
 
     try {
       canaryScope = kayentaObjectMapper
-        .readValue((String) context.get("canaryScope"), CanaryScope.class);
+        .readValue((String) context.get("canaryScope"), NewRelicCanaryScope.class);
     } catch (IOException e) {
       log.warn("Unable to parse JSON scope", e);
       throw new RuntimeException(e);

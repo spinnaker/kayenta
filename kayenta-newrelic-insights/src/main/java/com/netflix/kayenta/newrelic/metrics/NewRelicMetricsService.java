@@ -30,9 +30,11 @@ import com.netflix.kayenta.newrelic.service.NewRelicTimeSeries;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.spectator.api.Registry;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -82,7 +84,14 @@ public class NewRelicMetricsService implements MetricsService {
     StringBuilder query = new StringBuilder("SELECT ");
 
     query.append(queryConfig.getSelect());
-    query.append(" FROM Transaction TIMESERIES MAX ");
+    query.append(" FROM Transaction TIMESERIES ");
+    if (newRelicCanaryScope.getStep() == 0) {
+      query.append("MAX ");
+    }
+    else {
+      query.append(newRelicCanaryScope.getStep());
+      query.append(" seconds ");
+    }
 
     query.append(" SINCE ");
     query.append(newRelicCanaryScope.getStart().getEpochSecond());
@@ -93,11 +102,19 @@ public class NewRelicMetricsService implements MetricsService {
       query.append(queryConfig.getQ());
       query.append(" AND ");
     }
-    if (!StringUtils.isEmpty(newRelicCanaryScope.getAppName())) {
-      query.append("appName LIKE '");
-      query.append(newRelicCanaryScope.getAppName());
-      query.append("' ");
+
+    for (Map.Entry<String, String> extendedParam : newRelicCanaryScope.getExtendedScopeParams().entrySet()) {
+      if (extendedParam.getKey().startsWith("_")) {
+        continue;
+      }
+      query.append(extendedParam.getKey());
+      query.append(" LIKE ");
+      query.append('\'');
+      query.append(extendedParam.getValue());
+      query.append('\'');
+      query.append(" AND ");
     }
+
     query.append(newRelicCanaryScope.getScopeKey());
     query.append(" LIKE '");
     query.append(newRelicCanaryScope.getScope());
@@ -135,6 +152,7 @@ public class NewRelicMetricsService implements MetricsService {
         .name(canaryMetricConfig.getName())
         .startTimeMillis(begin.toEpochMilli())
         .startTimeIso(begin.toString())
+        .stepMillis(Duration.ofSeconds(canaryScope.getStep()).toMillis())
         .endTimeMillis(end.toEpochMilli())
         .endTimeIso(end.toString())
         .values(timeSeries.getDataPoints().collect(Collectors.toList()))

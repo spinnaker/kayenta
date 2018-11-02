@@ -29,6 +29,4 @@ public class NewRelicCanaryScope extends CanaryScope {
 
   @NotNull
   private String scopeKey;
-
-  private String appName;
 }
