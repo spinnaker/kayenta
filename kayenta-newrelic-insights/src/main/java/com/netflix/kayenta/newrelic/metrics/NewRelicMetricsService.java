@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -86,11 +87,10 @@ public class NewRelicMetricsService implements MetricsService {
     query.append(queryConfig.getSelect());
     query.append(" FROM Transaction TIMESERIES ");
     if (newRelicCanaryScope.getStep() == 0) {
-      query.append("MAX ");
-    }
-    else {
+      query.append("MAX");
+    } else {
       query.append(newRelicCanaryScope.getStep());
-      query.append(" seconds ");
+      query.append(" seconds");
     }
 
     query.append(" SINCE ");
@@ -147,16 +147,41 @@ public class NewRelicMetricsService implements MetricsService {
     Instant end =
       Instant.ofEpochMilli(timeSeries.getMetadata().getEndTimeMillis());
 
+    Duration stepDuration = Duration.ofSeconds(canaryScope.getStep());
+    if (stepDuration.isZero()) {
+      stepDuration = calculateStepDuration(timeSeries);
+    }
+
     return Arrays.asList(
       MetricSet.builder()
         .name(canaryMetricConfig.getName())
         .startTimeMillis(begin.toEpochMilli())
         .startTimeIso(begin.toString())
-        .stepMillis(Duration.ofSeconds(canaryScope.getStep()).toMillis())
+        .stepMillis(stepDuration.toMillis())
         .endTimeMillis(end.toEpochMilli())
         .endTimeIso(end.toString())
         .values(timeSeries.getDataPoints().collect(Collectors.toList()))
         .build()
     );
+  }
+
+  /**
+   * identifies the stepDuration based on the data, assuming that
+   * @param timeSeries
+   * @return
+   */
+  private Duration calculateStepDuration(NewRelicTimeSeries timeSeries) {
+    Long firstTimestamp = null;
+    for (NewRelicTimeSeries.NewRelicSeriesEntry entry : timeSeries.getTimeSeries()) {
+      if (firstTimestamp == null) {
+        firstTimestamp = entry.getBeginTimeSeconds();
+      }
+      else {
+        if (!firstTimestamp.equals(entry.getBeginTimeSeconds())) {
+          return Duration.ofSeconds(entry.getBeginTimeSeconds() - firstTimestamp);
+        }
+      }
+    }
+    return Duration.ZERO;
   }
 }
