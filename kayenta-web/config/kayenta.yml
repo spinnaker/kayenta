@@ -58,7 +58,6 @@ kayenta:
 #      applicationKey: xxxx
 #      supportedTypes:
 #      - METRICS_STORE
-#      endpoint.baseUrl: https://insights-api.newrelic.com
 
   prometheus:
     enabled: false
