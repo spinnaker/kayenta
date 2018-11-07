@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -166,17 +165,19 @@ public class NewRelicMetricsService implements MetricsService {
   }
 
   /**
-   * identifies the stepDuration based on the data, assuming that
-   * @param timeSeries
-   * @return
+   * identifies the stepDuration based on the timeseries. With 'TIMESERIES MAX' New Relic returns the maximum possible
+   * resolution we need to determine the step size.
+   * @param timeSeries to identify stepsize for
+   * @return step size
    */
   private Duration calculateStepDuration(NewRelicTimeSeries timeSeries) {
     Long firstTimestamp = null;
     for (NewRelicTimeSeries.NewRelicSeriesEntry entry : timeSeries.getTimeSeries()) {
       if (firstTimestamp == null) {
+        // get first
         firstTimestamp = entry.getBeginTimeSeconds();
-      }
-      else {
+      } else {
+        // get next which differs from first
         if (!firstTimestamp.equals(entry.getBeginTimeSeconds())) {
           return Duration.ofSeconds(entry.getBeginTimeSeconds() - firstTimestamp);
         }

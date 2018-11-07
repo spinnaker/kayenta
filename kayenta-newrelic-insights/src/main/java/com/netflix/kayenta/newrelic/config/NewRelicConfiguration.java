@@ -22,6 +22,7 @@ import com.netflix.kayenta.newrelic.metrics.NewRelicMetricsService;
 import com.netflix.kayenta.newrelic.security.NewRelicCredentials;
 import com.netflix.kayenta.newrelic.security.NewRelicNamedAccountCredentials;
 import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
+import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -44,6 +45,8 @@ import retrofit.converter.JacksonConverter;
 @ComponentScan({"com.netflix.kayenta.newrelic"})
 @Slf4j
 public class NewRelicConfiguration {
+
+  private static final String NEWRELIC_INSIGHTS_ENDPOINT = "https://insights-api.newrelic.com";
 
   @Bean
   @ConfigurationProperties("kayenta.newrelic")
@@ -76,10 +79,12 @@ public class NewRelicConfiguration {
         .applicationKey(account.getApplicationKey())
         .build();
 
+      RemoteService remoteService = new RemoteService().setBaseUrl(NEWRELIC_INSIGHTS_ENDPOINT);
+
       NewRelicNamedAccountCredentials.NewRelicNamedAccountCredentialsBuilder accountCredentialsBuilder =
         NewRelicNamedAccountCredentials.builder()
           .name(name)
-          .endpoint(account.getEndpoint())
+          .endpoint(remoteService)
           .credentials(credentials);
 
       if (!CollectionUtils.isEmpty(supportedTypes)) {
@@ -87,7 +92,7 @@ public class NewRelicConfiguration {
           accountCredentialsBuilder.newRelicRemoteService(retrofitClientFactory.createClient(
             NewRelicRemoteService.class,
             new JacksonConverter(objectMapper),
-            account.getEndpoint(),
+            remoteService,
             okHttpClient
           ));
         }
