@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,60 +20,60 @@ import spock.lang.Specification
 import spock.lang.Unroll;
 
 class RetrySpec extends Specification {
-    @Unroll
-    def "should retry until success or #maxRetries attempts is reached"() {
-        given:
-        def retry = Spy(Retry) {
-            Math.min(maxRetries - 1, failures) * sleep(10000) >> { /* do nothing */ }
-        }
-
-        int attemptCounter = 0;
-
-        when:
-        def exceptionMessage
-        try {
-            retry.retry({
-                if (attemptCounter++ < failures) {
-                    throw new IllegalStateException("Failed after " + attemptCounter + " attempts");
-                }
-            }, maxRetries, 10000)
-        } catch (Exception e) {
-            exceptionMessage = e.message
-        }
-
-        then:
-        attemptCounter == expectedAttempts
-        exceptionMessage == expectedExceptionMessage
-
-        where:
-        failures || maxRetries || expectedAttempts || expectedExceptionMessage
-        3        || 10         || 4                || null
-        11       || 10         || 10               || "Failed after 10 attempts"
+  @Unroll
+  def "should retry until success or #maxRetries attempts is reached"() {
+    given:
+    def retry = Spy(Retry) {
+      Math.min(maxRetries - 1, failures) * sleep(10000) >> { /* do nothing */ }
     }
 
-    def "should sleep exponentially"() {
-        given:
-        def retry = Spy(Retry) {
-            1 * sleep(10000) >> { /* do nothing */ }
-            1 * sleep(20000) >> { /* do nothing */ }
-            1 * sleep(40000) >> { /* do nothing */ }
-            1 * sleep(80000) >> { /* do nothing */ }
+    int attemptCounter = 0;
+
+    when:
+    def exceptionMessage
+    try {
+      retry.retry({
+        if (attemptCounter++ < failures) {
+          throw new IllegalStateException("Failed after " + attemptCounter + " attempts");
         }
-
-        int attemptCounter = 0;
-
-        when:
-        retry.exponential({
-            if (attemptCounter++ < failures) {
-                throw new IllegalStateException("Failed after " + attemptCounter + " attempts");
-            }
-        }, maxRetries, 10000)
-
-        then:
-        attemptCounter == expectedAttempts
-
-        where:
-        failures || maxRetries || expectedAttempts
-        4        || 10         || 5
+      }, maxRetries, 10000)
+    } catch (Exception e) {
+      exceptionMessage = e.message
     }
+
+    then:
+    attemptCounter == expectedAttempts
+    exceptionMessage == expectedExceptionMessage
+
+    where:
+    failures || maxRetries || expectedAttempts || expectedExceptionMessage
+    3        || 10         || 4                || null
+    11       || 10         || 10               || "Failed after 10 attempts"
+  }
+
+  def "should sleep exponentially"() {
+    given:
+    def retry = Spy(Retry) {
+      1 * sleep(10000) >> { /* do nothing */ }
+      1 * sleep(20000) >> { /* do nothing */ }
+      1 * sleep(40000) >> { /* do nothing */ }
+      1 * sleep(80000) >> { /* do nothing */ }
+    }
+
+    int attemptCounter = 0;
+
+    when:
+    retry.exponential({
+      if (attemptCounter++ < failures) {
+        throw new IllegalStateException("Failed after " + attemptCounter + " attempts");
+      }
+    }, maxRetries, 10000)
+
+    then:
+    attemptCounter == expectedAttempts
+
+    where:
+    failures || maxRetries || expectedAttempts
+    4        || 10         || 5
+  }
 }

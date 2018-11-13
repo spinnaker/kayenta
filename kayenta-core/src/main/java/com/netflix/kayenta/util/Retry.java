@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,23 +19,23 @@ package com.netflix.kayenta.util;
 import java.util.function.Supplier;
 
 public class Retry {
-  public void retry(Runnable fn, int maxRetries, long retryBackoff) {
-    retry(fn, maxRetries, retryBackoff, false);
+  public void retry(Runnable fn, int maxRetries, long retryBackoffMillis) {
+    retry(fn, maxRetries, retryBackoffMillis, false);
   }
 
-  public void  exponential(Runnable fn, int maxRetries, long retryBackoff) {
-    retry(fn, maxRetries, retryBackoff, true);
+  public void exponential(Runnable fn, int maxRetries, long retryBackoffMillis) {
+    retry(fn, maxRetries, retryBackoffMillis, true);
   }
 
-  public <T> T retry(Supplier<T> fn, int maxRetries, long retryBackoff) {
-    return retry(fn, maxRetries, retryBackoff, false);
+  public <T> T retry(Supplier<T> fn, int maxRetries, long retryBackoffMillis) {
+    return retry(fn, maxRetries, retryBackoffMillis, false);
   }
 
-  public <T> T exponential(Supplier<T> fn, int maxRetries, long retryBackoff) {
-    return retry(fn, maxRetries, retryBackoff, true);
+  public <T> T exponential(Supplier<T> fn, int maxRetries, long retryBackoffMillis) {
+    return retry(fn, maxRetries, retryBackoffMillis, true);
   }
 
-  public void retry(Runnable fn, int maxRetries, long retryBackoff, boolean exponential) {
+  public void retry(Runnable fn, int maxRetries, long retryBackoffMillis, boolean exponential) {
     int retries = 0;
     while (true) {
       try {
@@ -46,7 +46,7 @@ public class Retry {
           throw e;
         }
 
-        long timeout = !exponential ? retryBackoff : (long) Math.pow(2, retries) * retryBackoff;
+        long timeout = !exponential ? retryBackoffMillis : (long) Math.pow(2, retries) * retryBackoffMillis;
         sleep(timeout);
 
         retries++;
@@ -54,7 +54,7 @@ public class Retry {
     }
   }
 
-  private <T> T retry(Supplier<T> fn, int maxRetries, long retryBackoff, boolean exponential) {
+  private <T> T retry(Supplier<T> fn, int maxRetries, long retryBackoffMillis, boolean exponential) {
     int retries = 0;
     while (true) {
       try {
@@ -64,7 +64,7 @@ public class Retry {
           throw e;
         }
 
-        long timeout = !exponential ? retryBackoff : (long) Math.pow(2, retries) * retryBackoff;
+        long timeout = !exponential ? retryBackoffMillis : (long) Math.pow(2, retries) * retryBackoffMillis;
         sleep(timeout);
 
         retries++;

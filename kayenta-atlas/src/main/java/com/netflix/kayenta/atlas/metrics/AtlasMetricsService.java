@@ -57,6 +57,9 @@ public class AtlasMetricsService implements MetricsService {
 
   public final String URI_SCHEME = "http";
 
+  public final int MAX_RETRIES = 10; // maximum number of times we'll retry an Atlas query
+  public final long RETRY_BACKOFF = 1000; // time between retries in millis
+
   @NotNull
   @Singular
   @Getter
@@ -151,7 +154,7 @@ public class AtlasMetricsService implements MetricsService {
       atlasResultsList = retry.retry(() -> atlasRemoteService.fetch(decoratedQuery,
                                                                     atlasCanaryScope.getStart().toEpochMilli(),
                                                                     atlasCanaryScope.getEnd().toEpochMilli(), isoStep, credentials.getFetchId(), UUID.randomUUID() + ""),
-      20, 1000);
+      MAX_RETRIES, RETRY_BACKOFF);
     } finally {
       long end = registry.clock().monotonicTime();
       registry.timer("atlas.fetchTime").record(end - start, TimeUnit.NANOSECONDS);
