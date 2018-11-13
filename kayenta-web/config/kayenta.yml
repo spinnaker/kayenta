@@ -59,6 +59,15 @@ kayenta:
 #        supportedTypes:
 #          - METRICS_STORE
 
+  newrelic:
+    enabled: false
+#    accounts:
+#    - name: my-newrelic-account
+#      apiKey: xxxx
+#      applicationKey: xxxx
+#      supportedTypes:
+#      - METRICS_STORE
+
   prometheus:
     enabled: false
 #    accounts:

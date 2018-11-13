@@ -1,14 +1,14 @@
-apply plugin: 'spring-boot'
-apply plugin: 'spinnaker.package'
+apply plugin: 'spinnaker.application'
 
 ext {
   springConfigLocation = System.getProperty('spring.config.location', "${System.getProperty('user.home')}/.spinnaker/")
   repackage = System.getProperty('springBoot.repackage', "false")
 }
 
-tasks.withType(org.springframework.boot.gradle.run.BootRunTask) {
+run {
   systemProperty('spring.config.location', project.springConfigLocation)
 }
+mainClassName='com.netflix.kayenta.Main'
 
 configurations.all {
   exclude group: 'javax.servlet', module: 'servlet-api'
@@ -25,6 +25,7 @@ dependencies {
   compile project(':kayenta-graphite')
   compile project(':kayenta-influxdb')
   compile project(':kayenta-judge')
+  compile project(':kayenta-newrelic-insights')
   compile project(':kayenta-objectstore-configbin')
   compile project(':kayenta-objectstore-memory')
   compile project(':kayenta-orca')
@@ -38,8 +39,6 @@ dependencies {
   compile spinnaker.dependency("korkSwagger")
   compile spinnaker.dependency("korkWeb")
 }
-
-tasks.bootRepackage.enabled = Boolean.valueOf(project.repackage)
 
 // SHOULDN'T HAVE TO SPECIFY THIS HERE BUT SOMETHING FORCES IT LOWER
 configurations.all {

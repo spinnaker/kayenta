@@ -17,11 +17,18 @@
 package com.netflix.kayenta.datadog.config;
 
 import lombok.Getter;
+import lombok.Setter;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DatadogConfigurationProperties {
+
+  @Getter
+  @Setter
+  private long metadataCachingIntervalMS = Duration.ofSeconds(60).toMillis();
+
   @Getter
   private List<DatadogManagedAccount> accounts = new ArrayList<>();
 }

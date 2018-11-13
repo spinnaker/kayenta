@@ -16,7 +16,6 @@
 
 package com.netflix.kayenta.prometheus.controllers;
 
-import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.providers.metrics.PrometheusCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
@@ -36,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +81,9 @@ public class PrometheusFetchController {
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-08T01:12:22Z")
                             @RequestParam(required = false) String end,
                           @ApiParam(defaultValue = "60", value = "seconds") @RequestParam Long step,
-                          @RequestParam(required = false) final String customFilter) throws IOException {
+                          @RequestParam(required = false) final String customFilter,
+                          @ApiParam(defaultValue = "false")
+                            @RequestParam(required = false) final boolean dryRun) throws IOException {
     // Apply defaults.
     project = determineDefaultProperty(project, "project", prometheusConfigurationTestControllerDefaultProperties);
     resourceType = determineDefaultProperty(resourceType, "resourceType", prometheusConfigurationTestControllerDefaultProperties);
@@ -91,14 +91,6 @@ public class PrometheusFetchController {
     scope = determineDefaultProperty(scope, "scope", prometheusConfigurationTestControllerDefaultProperties);
     start = determineDefaultProperty(start, "start", prometheusConfigurationTestControllerDefaultProperties);
     end = determineDefaultProperty(end, "end", prometheusConfigurationTestControllerDefaultProperties);
-
-    if (StringUtils.isEmpty(start)) {
-      throw new IllegalArgumentException("Start time is required.");
-    }
-
-    if (StringUtils.isEmpty(end)) {
-      throw new IllegalArgumentException("End time is required.");
-    }
 
     String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
                                                                                      AccountCredentials.Type.METRICS_STORE,
@@ -114,6 +106,10 @@ public class PrometheusFetchController {
         .labelBindings(labelBindings)
         .groupByFields(groupByFields);
 
+    if (!StringUtils.isEmpty(resourceType)) {
+      prometheusCanaryMetricSetQueryConfigBuilder.resourceType(resourceType);
+    }
+
     if (!StringUtils.isEmpty(customFilter)) {
       prometheusCanaryMetricSetQueryConfigBuilder.customFilter(customFilter);
     }
@@ -128,21 +124,20 @@ public class PrometheusFetchController {
     PrometheusCanaryScope prometheusCanaryScope = new PrometheusCanaryScope();
     prometheusCanaryScope.setScope(scope);
     prometheusCanaryScope.setLocation(location);
-    prometheusCanaryScope.setResourceType(resourceType);
-    prometheusCanaryScope.setStart(Instant.parse(start));
-    prometheusCanaryScope.setEnd(Instant.parse(end));
+    prometheusCanaryScope.setStart(start != null ? Instant.parse(start) : null);
+    prometheusCanaryScope.setEnd(end != null ? Instant.parse(end) : null);
     prometheusCanaryScope.setStep(step);
 
     if (!StringUtils.isEmpty(project)) {
       prometheusCanaryScope.setProject(project);
     }
 
-    String metricSetListId = synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,
-                                                                    resolvedStorageAccountName,
-                                                                    CanaryConfig.builder().metric(canaryMetricConfig).build(),
-                                                                    0,
-                                                                    prometheusCanaryScope);
-
-    return Collections.singletonMap("metricSetListId", metricSetListId);
+    return synchronousQueryProcessor.processQueryAndReturnMap(resolvedMetricsAccountName,
+                                                              resolvedStorageAccountName,
+                                                              null,
+                                                              canaryMetricConfig,
+                                                              0,
+                                                              prometheusCanaryScope,
+                                                              dryRun);
   }
 }
