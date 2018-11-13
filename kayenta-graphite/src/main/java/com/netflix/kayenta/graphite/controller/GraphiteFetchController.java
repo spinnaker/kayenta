@@ -55,7 +55,9 @@ public class GraphiteFetchController {
                             @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
                             @RequestParam String start,
                             @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-                            @RequestParam String end) throws IOException {
+                            @RequestParam String end,
+                            @ApiParam(defaultValue = "false")
+                            @RequestParam(required = false) final boolean dryRun) throws IOException {
 
         start = determineDefaultProperty(start, "start", graphiteConfigurationTestControllerDefaultProperties);
         end = determineDefaultProperty(end, "end", graphiteConfigurationTestControllerDefaultProperties);
@@ -90,12 +92,13 @@ public class GraphiteFetchController {
         CanaryScope canaryScope = new CanaryScope(scope, null, Instant.parse(start),
                 Instant.parse(end), null, Collections.EMPTY_MAP);
 
-        String metricsSetListId =
-                synchronousQueryProcessor.processQuery(resolvedMetricsAccountName,
-                        resolvedStorageAccountName,
-                        CanaryConfig.builder().metric(canaryMetricConfig).build(),
-                        0,
-                        canaryScope);
-        return Collections.singletonMap("metricSetListId", metricsSetListId);
+        return synchronousQueryProcessor.processQueryAndReturnMap(
+                resolvedMetricsAccountName,
+                resolvedStorageAccountName,
+                null,
+                canaryMetricConfig,
+                0,
+                canaryScope,
+                dryRun);
     }
 }
