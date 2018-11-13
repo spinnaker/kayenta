@@ -33,6 +33,7 @@ import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
+import com.netflix.kayenta.util.Retry;
 import com.netflix.spectator.api.Registry;
 import com.squareup.okhttp.OkHttpClient;
 import lombok.Builder;
@@ -73,6 +74,8 @@ public class AtlasMetricsService implements MetricsService {
   @Autowired
   private final Registry registry;
 
+  private final Retry retry = new Retry();
+
   @Override
   public String getType() {
     return "atlas";
@@ -96,8 +99,7 @@ public class AtlasMetricsService implements MetricsService {
                                       CanaryScope canaryScope) {
 
     OkHttpClient okHttpClient = new OkHttpClient();
-    // TODO: (mgraff, duftler) -- we should find out the defaults, and if too small, make this reasonable / configurable
-    okHttpClient.setConnectTimeout(90, TimeUnit.SECONDS);
+    okHttpClient.setConnectTimeout(30, TimeUnit.SECONDS);
     okHttpClient.setReadTimeout(90, TimeUnit.SECONDS);
 
     if (!(canaryScope instanceof AtlasCanaryScope)) {
@@ -146,12 +148,10 @@ public class AtlasMetricsService implements MetricsService {
     long start = registry.clock().monotonicTime();
     List <AtlasResults> atlasResultsList;
     try {
-      atlasResultsList = atlasRemoteService.fetch(decoratedQuery,
-                                                  atlasCanaryScope.getStart().toEpochMilli(),
-                                                  atlasCanaryScope.getEnd().toEpochMilli(),
-                                                  isoStep,
-                                                  credentials.getFetchId(),
-                                                  UUID.randomUUID() + "");
+      atlasResultsList = retry.retry(() -> atlasRemoteService.fetch(decoratedQuery,
+                                                                    atlasCanaryScope.getStart().toEpochMilli(),
+                                                                    atlasCanaryScope.getEnd().toEpochMilli(), isoStep, credentials.getFetchId(), UUID.randomUUID() + ""),
+      20, 1000);
     } finally {
       long end = registry.clock().monotonicTime();
       registry.timer("atlas.fetchTime").record(end - start, TimeUnit.NANOSECONDS);
