@@ -120,7 +120,7 @@ public class GraphiteMetricsService implements MetricsService {
                 .getMetrics()
                 .stream()
                 .map(metricDescriptorResponseEntity ->
-                        new GraphiteMetricDescriptor(metricDescriptorResponseEntity.getName()).getMap())
+                        new GraphiteMetricDescriptor(metricDescriptorResponseEntity.getPath()).getMap())
                 .collect(Collectors.toList());
         return metricDescriptor;
     }
