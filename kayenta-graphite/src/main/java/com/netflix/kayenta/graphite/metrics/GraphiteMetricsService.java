@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -114,14 +115,25 @@ public class GraphiteMetricsService implements MetricsService {
 
         GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
 
+        List<Map> metricDescriptor = findLeaf(remoteService, filter);
+
+        return metricDescriptor;
+    }
+
+    private List<Map> findLeaf(GraphiteRemoteService remoteService, String filter) {
+        List<Map> result = new LinkedList<>();
         GraphiteMetricDescriptorsResponse graphiteMetricDescriptorsResponse =
                 remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
-        List<Map> metricDescriptor = graphiteMetricDescriptorsResponse
-                .getMetrics()
-                .stream()
-                .map(metricDescriptorResponseEntity ->
-                        new GraphiteMetricDescriptor(metricDescriptorResponseEntity.getPath()).getMap())
-                .collect(Collectors.toList());
-        return metricDescriptor;
+
+        for (GraphiteMetricDescriptorsResponse.GraphiteMetricDescriptorResponseEntity entity
+                : graphiteMetricDescriptorsResponse.getMetrics()) {
+            if ("1".equals(entity.getIsLeaf())) {
+                result.add(new GraphiteMetricDescriptor(entity.getPath()).getMap());
+            } else {
+                result.addAll(findLeaf(remoteService, entity.getPath()));
+            }
+        }
+
+        return result;
     }
 }

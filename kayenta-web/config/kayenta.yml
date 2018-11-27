@@ -51,13 +51,13 @@ kayenta:
 #        endpoint.baseUrl: https://app.datadoghq.com
 
   graphite:
-    enabled: false
-#    accounts:
-#      - name: my-graphite-account
-#        endpoint:
-#          baseUrl: http://localhost
-#        supportedTypes:
-#          - METRICS_STORE
+    enabled: true
+    accounts:
+      - name: my-graphite-account
+        endpoint:
+          baseUrl: http://localhost
+        supportedTypes:
+          - METRICS_STORE
 
   newrelic:
     enabled: false
@@ -96,7 +96,12 @@ kayenta:
     enabled: false
 
   memory:
-    enabled: false
+    enabled: true
+    accounts:
+    - name: in-memory-store
+      supportedTypes:
+      - OBJECT_STORE
+
 
   configbin:
     enabled: false
