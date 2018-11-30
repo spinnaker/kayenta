@@ -1,5 +1,7 @@
 package com.netflix.kayenta.graphite.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -34,6 +36,7 @@ public class GraphiteMetricDescriptorsResponse {
 
         private String name;
 
+        @JsonProperty("is_leaf")
         private String isLeaf;
     }
 }
