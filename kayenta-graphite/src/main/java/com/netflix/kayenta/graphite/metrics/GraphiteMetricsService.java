@@ -20,8 +20,11 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
@@ -37,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 public class GraphiteMetricsService implements MetricsService {
     private static final String DEFAULT_FORMAT = "json";
     private static final String DEFAULT_DESCRIPTOR_FORMAT = "completer";
+    private static final String SCOPE_VARIABLE = "$scope";
+    private static final String LOCATION_VARIABLE = "$location";
 
     @NotNull
     @Singular
@@ -107,21 +112,41 @@ public class GraphiteMetricsService implements MetricsService {
 
     @Override
     public List<Map> getMetadata(String metricsAccountName, String filter) throws IOException {
-        GraphiteNamedAccountCredentials accountCredentials =
-                (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                String.format("Unable to resolve account %s.", metricsAccountName)));
 
-        GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
+        String baseFilter = filter.substring(0, filter.lastIndexOf(".") + 1);
 
-        GraphiteMetricDescriptorsResponse graphiteMetricDescriptorsResponse =
-                remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
-        List<Map> metricDescriptor = graphiteMetricDescriptorsResponse
-                .getMetrics()
-                .stream()
-                .map(metricDescriptorResponseEntity ->
-                        new GraphiteMetricDescriptor(metricDescriptorResponseEntity.getPath()).getMap())
-                .collect(Collectors.toList());
-        return metricDescriptor;
+        List<Map> result = new LinkedList<>();
+
+        if (filter.substring(filter.lastIndexOf(".")).contains("$")) {
+            result.add(
+                    new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE + ".").getMap()
+            );
+            result.add(
+                    new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE + ".").getMap()
+            );
+        } else {
+            GraphiteNamedAccountCredentials accountCredentials =
+                    (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    String.format("Unable to resolve account %s.", metricsAccountName)));
+
+            GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
+
+            filter = filter.replace(SCOPE_VARIABLE, "*");
+            filter = filter.replace(LOCATION_VARIABLE, "*");
+
+            GraphiteMetricDescriptorsResponse graphiteMetricDescriptorsResponse =
+                    remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
+
+            Set<String> resultSet = graphiteMetricDescriptorsResponse
+                    .getMetrics()
+                    .stream()
+                    .map(metricDescriptorResponseEntity -> baseFilter + metricDescriptorResponseEntity.getName() + "."
+                    ).collect(Collectors.toSet());
+
+            resultSet.stream().forEach( name -> result.add(new GraphiteMetricDescriptor(name).getMap()));
+        }
+
+        return result;
     }
 }
