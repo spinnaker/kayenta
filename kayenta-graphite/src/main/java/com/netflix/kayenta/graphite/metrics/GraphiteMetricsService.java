@@ -141,8 +141,13 @@ public class GraphiteMetricsService implements MetricsService {
             Set<String> resultSet = graphiteMetricDescriptorsResponse
                     .getMetrics()
                     .stream()
-                    .map(metricDescriptorResponseEntity -> baseFilter + metricDescriptorResponseEntity.getName() + "."
-                    ).collect(Collectors.toSet());
+                    .map(metricDescriptorResponseEntity -> {
+                        if ("1".equals(metricDescriptorResponseEntity.getIsLeaf())) {
+                            return baseFilter + metricDescriptorResponseEntity.getName();
+                        } else {
+                            return baseFilter + metricDescriptorResponseEntity.getName() + ".";
+                        }
+                    }).collect(Collectors.toSet());
 
             resultSet.stream().forEach( name -> result.add(new GraphiteMetricDescriptor(name).getMap()));
         }
