@@ -42,6 +42,7 @@ public class GraphiteMetricsService implements MetricsService {
     private static final String DEFAULT_DESCRIPTOR_FORMAT = "completer";
     private static final String SCOPE_VARIABLE = "$scope";
     private static final String LOCATION_VARIABLE = "$location";
+    private static final String DELIMITER = ".";
 
     @NotNull
     @Singular
@@ -112,12 +113,17 @@ public class GraphiteMetricsService implements MetricsService {
 
     @Override
     public List<Map> getMetadata(String metricsAccountName, String filter) throws IOException {
-
-        String baseFilter = filter.substring(0, filter.lastIndexOf(".") + 1);
-
+        log.info("received filter " + filter);
+        String baseFilter;
+        if (filter.contains(DELIMITER)) {
+            baseFilter = filter.substring(0, filter.lastIndexOf(DELIMITER) + 1);
+        } else {
+            baseFilter = "";
+        }
         List<Map> result = new LinkedList<>();
 
-        if (filter.substring(filter.lastIndexOf(".")).contains("$")) {
+        if (filter.contains(DELIMITER)
+                && filter.substring(filter.lastIndexOf(DELIMITER)).contains("$")) {
             result.add(
                     new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE).getMap()
             );
@@ -137,7 +143,7 @@ public class GraphiteMetricsService implements MetricsService {
 
             GraphiteMetricDescriptorsResponse graphiteMetricDescriptorsResponse =
                     remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
-
+            log.info("get response: " + graphiteMetricDescriptorsResponse.getMetrics().size());
             Set<String> resultSet = graphiteMetricDescriptorsResponse
                     .getMetrics()
                     .stream()
@@ -145,7 +151,7 @@ public class GraphiteMetricsService implements MetricsService {
                         if ("1".equals(metricDescriptorResponseEntity.getIsLeaf())) {
                             return baseFilter + metricDescriptorResponseEntity.getName();
                         } else {
-                            return baseFilter + metricDescriptorResponseEntity.getName() + ".";
+                            return baseFilter + metricDescriptorResponseEntity.getName() + DELIMITER;
                         }
                     }).collect(Collectors.toSet());
 
