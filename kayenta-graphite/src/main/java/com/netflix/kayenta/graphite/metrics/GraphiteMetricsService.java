@@ -119,10 +119,10 @@ public class GraphiteMetricsService implements MetricsService {
 
         if (filter.substring(filter.lastIndexOf(".")).contains("$")) {
             result.add(
-                    new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE + ".").getMap()
+                    new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE).getMap()
             );
             result.add(
-                    new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE + ".").getMap()
+                    new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE).getMap()
             );
         } else {
             GraphiteNamedAccountCredentials accountCredentials =
