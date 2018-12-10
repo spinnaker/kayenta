@@ -1,5 +1,6 @@
 package com.netflix.kayenta.graphite.metrics;
 
+import com.google.common.collect.Lists;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
@@ -19,8 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,8 @@ public class GraphiteMetricsService implements MetricsService {
     private static final String SCOPE_VARIABLE = "$scope";
     private static final String LOCATION_VARIABLE = "$location";
     private static final String DELIMITER = ".";
+    private static final String GRAPHITE_QUERY_WILDCARD = "*";
+    private static final String GRAPHITE_IS_LEAF = "1";
 
     @NotNull
     @Singular
@@ -113,23 +116,20 @@ public class GraphiteMetricsService implements MetricsService {
 
     @Override
     public List<Map> getMetadata(String metricsAccountName, String filter) throws IOException {
-        log.info("received filter " + filter);
-        String baseFilter;
+        log.debug(String.format("Getting metadata for %s with filter %s", metricsAccountName, filter));
+
+        String baseFilter = "";
         if (filter.contains(DELIMITER)) {
             baseFilter = filter.substring(0, filter.lastIndexOf(DELIMITER) + 1);
-        } else {
-            baseFilter = "";
         }
+
         List<Map> result = new LinkedList<>();
 
-        if (filter.contains(DELIMITER)
-                && filter.substring(filter.lastIndexOf(DELIMITER)).contains("$")) {
-            result.add(
-                    new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE).getMap()
-            );
-            result.add(
-                    new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE).getMap()
-            );
+        boolean needSpecialDescriptors = filter.contains(DELIMITER)
+                && filter.substring(filter.lastIndexOf(DELIMITER)).contains("$");
+
+        if (needSpecialDescriptors) {
+            result.addAll(getSpecialMetricDescriptors(baseFilter));
         } else {
             GraphiteNamedAccountCredentials accountCredentials =
                     (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
@@ -138,20 +138,23 @@ public class GraphiteMetricsService implements MetricsService {
 
             GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
 
-            filter = filter.replace(SCOPE_VARIABLE, "*");
-            filter = filter.replace(LOCATION_VARIABLE, "*");
+            filter = convertFilterToGraphiteQuery(filter);
 
             GraphiteMetricDescriptorsResponse graphiteMetricDescriptorsResponse =
                     remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
-            log.info("get response: " + graphiteMetricDescriptorsResponse.getMetrics().size());
+
+            log.debug(String.format("Getting response for %s with response size %d",
+                    metricsAccountName, graphiteMetricDescriptorsResponse.getMetrics().size()));
+
+            String finalBaseFilter = baseFilter;
             Set<String> resultSet = graphiteMetricDescriptorsResponse
                     .getMetrics()
                     .stream()
                     .map(metricDescriptorResponseEntity -> {
-                        if ("1".equals(metricDescriptorResponseEntity.getIsLeaf())) {
-                            return baseFilter + metricDescriptorResponseEntity.getName();
+                        if (GRAPHITE_IS_LEAF.equals(metricDescriptorResponseEntity.getIsLeaf())) {
+                            return finalBaseFilter + metricDescriptorResponseEntity.getName();
                         } else {
-                            return baseFilter + metricDescriptorResponseEntity.getName() + DELIMITER;
+                            return finalBaseFilter + metricDescriptorResponseEntity.getName() + DELIMITER;
                         }
                     }).collect(Collectors.toSet());
 
@@ -159,5 +162,17 @@ public class GraphiteMetricsService implements MetricsService {
         }
 
         return result;
+    }
+
+    private List<Map> getSpecialMetricDescriptors(String baseFilter) {
+        return Arrays.asList(
+                new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE).getMap(),
+                new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE).getMap());
+    }
+
+    private String convertFilterToGraphiteQuery(String filter) {
+        return filter
+                .replace(SCOPE_VARIABLE, GRAPHITE_QUERY_WILDCARD)
+                .replace(LOCATION_VARIABLE, GRAPHITE_QUERY_WILDCARD);
     }
 }
