@@ -1,5 +1,6 @@
 package com.netflix.kayenta.graphite.service;
 
+import com.netflix.kayenta.graphite.model.GraphiteMetricDescriptorsResponse;
 import com.netflix.kayenta.graphite.model.GraphiteResults;
 import retrofit.http.GET;
 import retrofit.http.Query;
@@ -14,4 +15,7 @@ public interface GraphiteRemoteService {
                                     @Query("from") long from,
                                     @Query("until") long until,
                                     @Query("format") String format);
+
+    @GET("/metrics/find")
+    GraphiteMetricDescriptorsResponse findMetrics(@Query("query") String query, @Query("format") String format);
 }

@@ -1,9 +1,9 @@
 package com.netflix.kayenta.graphite.config;
 
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Getter;
 
 public class GraphiteConfigurationProperties {
     @Getter
