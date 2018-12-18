@@ -6,6 +6,11 @@ dependencies {
   compile spinnaker.dependency('lombok')
   compile spinnaker.dependency('spectatorApi')
 
+  // Force a newer version than what comes with korkSwagger, so that the api docs page isn't broken.
+  // TODO update korkSwagger?
+  compile "io.springfox:springfox-swagger2:2.9.2"
+  compile "io.springfox:springfox-swagger-ui:2.9.2"
+
   compile "com.netflix.spinnaker.orca:orca-core:$orcaVersion"
   compile "com.netflix.spinnaker.orca:orca-retrofit:$orcaVersion"
   compile "net.lariverosc:jesque-spring:1.0.1"

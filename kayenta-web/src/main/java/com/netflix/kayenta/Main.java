@@ -18,6 +18,7 @@ package com.netflix.kayenta;
 
 import com.netflix.kayenta.atlas.config.AtlasConfiguration;
 import com.netflix.kayenta.aws.config.AwsConfiguration;
+import com.netflix.kayenta.canaryanalysis.config.CanaryAnalysisModuleConfiguration;
 import com.netflix.kayenta.config.KayentaConfiguration;
 import com.netflix.kayenta.config.WebConfiguration;
 import com.netflix.kayenta.configbin.config.ConfigBinConfiguration;
@@ -48,6 +49,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Import({
   AtlasConfiguration.class,
   AwsConfiguration.class,
+  CanaryAnalysisModuleConfiguration.class,
   ConfigBinConfiguration.class,
   DatadogConfiguration.class,
   GcsConfiguration.class,

@@ -18,6 +18,7 @@ configurations.all {
 dependencies {
   compile project(':kayenta-atlas')
   compile project(':kayenta-aws')
+  compile project(':kayenta-canary-analysis')
   compile project(':kayenta-core')
   compile project(':kayenta-datadog')
   compile project(':kayenta-gcs')

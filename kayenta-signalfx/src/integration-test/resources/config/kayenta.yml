@@ -50,6 +50,8 @@ kayenta:
   configbin:
     enabled: false
 
+  canaryAnalysis.enabled: true
+
 management.security.enabled: false
 
 keiko:
