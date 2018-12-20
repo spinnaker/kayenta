@@ -24,6 +24,7 @@ import com.netflix.kayenta.configbin.config.ConfigBinConfiguration;
 import com.netflix.kayenta.datadog.config.DatadogConfiguration;
 import com.netflix.kayenta.gcs.config.GcsConfiguration;
 import com.netflix.kayenta.google.config.GoogleConfiguration;
+import com.netflix.kayenta.graphite.config.GraphiteConfiguration;
 import com.netflix.kayenta.influxdb.config.InfluxDbConfiguration;
 import com.netflix.kayenta.judge.config.NetflixJudgeConfiguration;
 import com.netflix.kayenta.memory.config.MemoryConfiguration;
@@ -52,6 +53,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
   DatadogConfiguration.class,
   GcsConfiguration.class,
   GoogleConfiguration.class,
+  GraphiteConfiguration.class,
   InfluxDbConfiguration.class,
   KayentaConfiguration.class,
   MemoryConfiguration.class,
