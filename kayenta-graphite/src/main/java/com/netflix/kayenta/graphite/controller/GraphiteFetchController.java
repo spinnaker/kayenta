@@ -1,7 +1,23 @@
+/*
+ * Copyright 2018 Snap Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.netflix.kayenta.graphite.controller;
 
-import com.google.common.base.Strings;
-import com.netflix.kayenta.canary.CanaryConfig;
+import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefaultProperty;
+
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
@@ -10,8 +26,7 @@ import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
-import io.swagger.annotations.ApiParam;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,7 +39,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.netflix.kayenta.canary.util.FetchControllerUtils.determineDefaultProperty;
+import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/fetch/graphite")
