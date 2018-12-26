@@ -16,6 +16,7 @@
 
 package com.netflix.kayenta.graphite.metrics;
 
+import com.google.common.base.Strings;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
@@ -88,19 +89,27 @@ public class GraphiteMetricsService implements MetricsService {
 
     @Override
     public List<MetricSet> queryMetrics(String metricsAccountName,
-                                        CanaryConfig canaryConfig,
-                                        CanaryMetricConfig canaryMetricConfig,
-                                        CanaryScope canaryScope) throws IOException {
+            CanaryConfig canaryConfig,
+            CanaryMetricConfig canaryMetricConfig,
+            CanaryScope canaryScope) throws IOException {
         GraphiteNamedAccountCredentials accountCredentials =
                 (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Unable to resolve account %s.", metricsAccountName)));
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                String.format("Unable to resolve account %s.", metricsAccountName)));
 
         GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
         GraphiteCanaryMetricSetQueryConfig queryConfig =
                 (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
-        String query = String.format("template(%s, scope=\"%s\", location=\"%s\")",
-                queryConfig.getMetricName(), canaryScope.getScope(), canaryScope.getLocation());
+        String query = queryConfig.getMetricName();
+        if (!Strings.isNullOrEmpty(canaryScope.getScope())) {
+            query = query.replace(SCOPE_VARIABLE, canaryScope.getScope());
+        }
+
+        if (!Strings.isNullOrEmpty(canaryScope.getLocation())) {
+            query = query.replace(LOCATION_VARIABLE, canaryScope.getLocation());
+        }
+
         log.debug("Query sent to graphite: {}.", query);
 
         List<GraphiteResults> graphiteResultsList = remoteService.rangeQuery(
@@ -173,7 +182,7 @@ public class GraphiteMetricsService implements MetricsService {
                         }
                     }).collect(Collectors.toSet());
 
-            resultSet.stream().forEach( name -> result.add(new GraphiteMetricDescriptor(name).getMap()));
+            resultSet.stream().forEach(name -> result.add(new GraphiteMetricDescriptor(name).getMap()));
         }
 
         return result;
