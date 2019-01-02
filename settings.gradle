@@ -18,7 +18,6 @@ rootProject.name="kayenta"
 
 include 'kayenta-atlas'
 include 'kayenta-aws'
-include 'kayenta-canary-analysis'
 include 'kayenta-core'
 include 'kayenta-datadog'
 include 'kayenta-gcs'
@@ -34,6 +33,7 @@ include 'kayenta-prometheus'
 include 'kayenta-s3'
 include 'kayenta-signalfx'
 include 'kayenta-stackdriver'
+include 'kayenta-standalone-canary-analysis'
 include 'kayenta-web'
 
 def setBuildFile(project) {

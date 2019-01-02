@@ -50,7 +50,7 @@ kayenta:
   configbin:
     enabled: false
 
-  canaryAnalysis.enabled: true
+  standaloneCanaryAnalysis.enabled: true
 
 management.security.enabled: false
 

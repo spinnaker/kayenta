@@ -72,5 +72,4 @@ public abstract class BaseSignalFxIntegrationTest {
       throw new IllegalStateException("Failed to load SignalFx integration test canary config");
     }
   }
-
 }
