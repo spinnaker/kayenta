@@ -49,6 +49,7 @@ import static com.netflix.kayenta.canaryanalysis.orca.task.GenerateCanaryAnalysi
 public class CanaryAnalysisService {
 
   public static final String CANARY_ANALYSIS_CONFIG_CONTEXT_KEY = "canaryAnalysisExecutionRequest";
+  public static final String CANARY_ANALYSIS_PIPELINE_NAME = "Canary Analysis Pipeline";
 
   private final ExecutionLauncher executionLauncher;
   private final ExecutionRepository executionRepository;
@@ -75,7 +76,7 @@ public class CanaryAnalysisService {
     String application = canaryAnalysisConfig.getApplication();
 
     PipelineBuilder pipelineBuilder = new PipelineBuilder(application)
-        .withName("Canary Analysis Pipeline")
+        .withName(CANARY_ANALYSIS_PIPELINE_NAME)
         .withPipelineConfigId(application + "-canary-analysis-referee-pipeline")
         .withStage(
             SetupAndExecuteCanariesStage.STAGE_TYPE,
