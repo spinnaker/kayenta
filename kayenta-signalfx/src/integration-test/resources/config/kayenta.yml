@@ -83,3 +83,4 @@ swagger:
   - /metricSetList.*
   - /metricSetPairList.*
   - /pipeline.*
+  - /standalone.*

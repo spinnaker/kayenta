@@ -53,6 +53,7 @@ import java.util.stream.IntStream;
 public class ExecutionMapper {
 
   public static final String PIPELINE_NAME = "Standard Canary Pipeline";
+
   private final StorageServiceRepository storageServiceRepository;
   private final AccountCredentialsRepository accountCredentialsRepository;
   private final ObjectMapper objectMapper;

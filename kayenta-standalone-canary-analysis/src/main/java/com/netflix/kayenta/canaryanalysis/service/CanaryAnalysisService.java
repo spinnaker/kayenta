@@ -49,7 +49,7 @@ import static com.netflix.kayenta.canaryanalysis.orca.task.GenerateCanaryAnalysi
 public class CanaryAnalysisService {
 
   public static final String CANARY_ANALYSIS_CONFIG_CONTEXT_KEY = "canaryAnalysisExecutionRequest";
-  public static final String CANARY_ANALYSIS_PIPELINE_NAME = "Canary Analysis Pipeline";
+  public static final String CANARY_ANALYSIS_PIPELINE_NAME = "Standalone Canary Analysis Pipeline";
 
   private final ExecutionLauncher executionLauncher;
   private final ExecutionRepository executionRepository;

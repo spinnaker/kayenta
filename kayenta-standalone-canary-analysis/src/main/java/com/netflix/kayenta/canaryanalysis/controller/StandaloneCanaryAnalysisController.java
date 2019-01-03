@@ -127,8 +127,8 @@ public class StandaloneCanaryAnalysisController {
 
     return canaryAnalysisService.initiateCanaryAnalysisExecution(
         CanaryAnalysisConfig.builder()
-            .user(user)
-            .application(application)
+            .user(Optional.ofNullable(application).orElse("anonymous"))
+            .application(Optional.ofNullable(application).orElse(AD_HOC))
             .parentPipelineExecutionId(parentPipelineExecutionId)
             .canaryConfigId(canaryConfigId)
             .executionRequest(canaryAnalysisExecutionRequest)
@@ -189,7 +189,7 @@ public class StandaloneCanaryAnalysisController {
 
     return canaryAnalysisService.initiateCanaryAnalysisExecution(
         CanaryAnalysisConfig.builder()
-            .user(user)
+            .user(Optional.ofNullable(application).orElse("anonymous"))
             .application(Optional.ofNullable(application).orElse(AD_HOC))
             .parentPipelineExecutionId(parentPipelineExecutionId)
             .executionRequest(canaryAnalysisAdhocExecutionRequest.getExecutionRequest())
