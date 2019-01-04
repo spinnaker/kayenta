@@ -26,7 +26,7 @@ import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.squareup.okhttp.OkHttpClient;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,10 +34,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
-import retrofit.converter.JacksonConverter;
 
 import java.io.IOException;
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+import retrofit.converter.JacksonConverter;
 
 @Configuration
 @EnableConfigurationProperties
@@ -59,12 +61,12 @@ public class GraphiteConfiguration {
 
     @Bean
     MetricsService graphiteMetricsService(GraphiteConfigurationProperties graphiteConfigurationProperties,
-                                          RetrofitClientFactory retrofitClientFactory,
-                                          ObjectMapper objectMapper,
-                                          OkHttpClient okHttpClient,
-                                          AccountCredentialsRepository accountCredentialsRepository) throws IOException {
+        RetrofitClientFactory retrofitClientFactory,
+        ObjectMapper objectMapper,
+        OkHttpClient okHttpClient,
+        AccountCredentialsRepository accountCredentialsRepository) throws IOException {
         GraphiteMetricsService.GraphiteMetricsServiceBuilder graphiteMetricsServiceBuilder =
-                GraphiteMetricsService.builder();
+            GraphiteMetricsService.builder();
 
         for (GraphiteManagedAccount account : graphiteConfigurationProperties.getAccounts()) {
             String accountName = account.getName();
@@ -72,19 +74,18 @@ public class GraphiteConfiguration {
 
             GraphiteCredentials credentials = GraphiteCredentials.builder().build();
 
-            GraphiteNamedAccountCredentials.GraphiteNamedAccountCredentialsBuilder
-                    accountCredentialsBuilder =
-                    GraphiteNamedAccountCredentials
-                            .builder()
-                            .name(accountName)
-                            .endpoint(account.getEndpoint())
-                            .credentials(credentials);
+            GraphiteNamedAccountCredentials.GraphiteNamedAccountCredentialsBuilder accountCredentialsBuilder =
+                GraphiteNamedAccountCredentials
+                    .builder()
+                    .name(accountName)
+                    .endpoint(account.getEndpoint())
+                    .credentials(credentials);
             if (!CollectionUtils.isEmpty(supportedTypes)) {
                 if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
                     accountCredentialsBuilder
-                            .graphiteRemoteService(
-                                    retrofitClientFactory.createClient(GraphiteRemoteService.class,
-                                            new JacksonConverter(objectMapper), account.getEndpoint(), okHttpClient));
+                        .graphiteRemoteService(
+                            retrofitClientFactory.createClient(GraphiteRemoteService.class,
+                                new JacksonConverter(objectMapper), account.getEndpoint(), okHttpClient));
                 }
 
                 accountCredentialsBuilder.supportedTypes(supportedTypes);
@@ -96,7 +97,7 @@ public class GraphiteConfiguration {
         }
 
         log.info("Populated GraphiteMetricsService with {} Graphite accounts.",
-                graphiteConfigurationProperties.getAccounts().size());
+            graphiteConfigurationProperties.getAccounts().size());
         return graphiteMetricsServiceBuilder.build();
     }
 }

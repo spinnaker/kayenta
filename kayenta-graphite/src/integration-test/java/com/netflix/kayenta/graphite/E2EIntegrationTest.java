@@ -53,8 +53,8 @@ import io.restassured.response.ValidatableResponse;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = Main.class
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    classes = Main.class
 )
 
 public class E2EIntegrationTest {
@@ -71,7 +71,7 @@ public class E2EIntegrationTest {
     protected int serverPort;
 
     private String getUrl(String path) throws MalformedURLException {
-        URL url = new URL("http","localhost", serverPort, path);
+        URL url = new URL("http", "localhost", serverPort, path);
         return url.toString();
     }
 
@@ -95,25 +95,25 @@ public class E2EIntegrationTest {
 
         CanaryAdhocExecutionRequest request = new CanaryAdhocExecutionRequest();
         CanaryConfig canaryConfig = objectMapper.readValue(getClass().getClassLoader()
-                .getResourceAsStream(canaryConfigJson), CanaryConfig.class);
+            .getResourceAsStream(canaryConfigJson), CanaryConfig.class);
         request.setCanaryConfig(canaryConfig);
 
         CanaryExecutionRequest executionRequest = new CanaryExecutionRequest();
         CanaryClassifierThresholdsConfig canaryClassifierThresholdsConfig = CanaryClassifierThresholdsConfig.builder()
-                .marginal(marginal).pass(pass).build();
+            .marginal(marginal).pass(pass).build();
         executionRequest.setThresholds(canaryClassifierThresholdsConfig);
 
         Instant end = metricsReportingStartTime.plus(CANARY_WINDOW_IN_MINUTES, MINUTES);
 
         CanaryScope control = new CanaryScope()
-                .setScope(CONTROL_SCOPE_NAME)
-                .setStart(metricsReportingStartTime)
-                .setEnd(end);
+            .setScope(CONTROL_SCOPE_NAME)
+            .setStart(metricsReportingStartTime)
+            .setEnd(end);
 
         CanaryScope experiment = new CanaryScope()
-                .setScope(scope)
-                .setStart(metricsReportingStartTime)
-                .setEnd(end);
+            .setScope(scope)
+            .setStart(metricsReportingStartTime)
+            .setEnd(end);
 
         CanaryScopePair canaryScopePair = new CanaryScopePair();
         canaryScopePair.setControlScope(control);
@@ -122,22 +122,22 @@ public class E2EIntegrationTest {
         request.setExecutionRequest(executionRequest);
 
         ValidatableResponse canaryExRes =
-                given()
-                        .contentType("application/json")
-                        .queryParam("metricsAccountName", "my-graphite-account")
-                        .queryParam("storageAccountName", "in-memory-store")
-                        .body(request)
-                        .when()
-                        .post(getUrl("/canary"))
-                        .then()
-                        .log().ifValidationFails()
-                        .statusCode(200);
+            given()
+                .contentType("application/json")
+                .queryParam("metricsAccountName", "my-graphite-account")
+                .queryParam("storageAccountName", "in-memory-store")
+                .body(request)
+                .when()
+                .post(getUrl("/canary"))
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200);
 
         String canaryExecutionId = canaryExRes.extract().body().jsonPath().getString("canaryExecutionId");
         ValidatableResponse response;
         do {
             response = when().get(String.format(getUrl("/canary/" + canaryExecutionId)))
-                    .then().statusCode(200);
+                .then().statusCode(200);
         } while (!response.extract().body().jsonPath().getBoolean("complete"));
 
         // verify the results are as expected

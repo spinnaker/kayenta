@@ -16,24 +16,25 @@
 
 package com.netflix.kayenta.config;
 
-import lombok.extern.slf4j.Slf4j;
+import static com.netflix.kayenta.graphite.E2EIntegrationTest.CANARY_WINDOW_IN_MINUTES;
+
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.time.Instant;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static com.netflix.kayenta.graphite.E2EIntegrationTest.CANARY_WINDOW_IN_MINUTES;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
 
 @TestConfiguration
 @Slf4j
@@ -65,26 +66,26 @@ public class GraphiteIntegrationTestConfig {
     public void start() {
         metricsReportingStartTime = Instant.now();
         executorService.submit(createMetricReportingMockService(
-                getGraphiteMetricProvider(
-                        CONTROL_SCOPE_NAME,
-                        HEALTHY_SERVER_METRICS[0],
-                        HEALTHY_SERVER_METRICS[1])));
+            getGraphiteMetricProvider(
+                CONTROL_SCOPE_NAME,
+                HEALTHY_SERVER_METRICS[0],
+                HEALTHY_SERVER_METRICS[1])));
         executorService.submit(createMetricReportingMockService(
-               getGraphiteMetricProvider(
-                       EXPERIMENT_SCOPE_HEALTHY,
-                       HEALTHY_SERVER_METRICS[0],
-                       HEALTHY_SERVER_METRICS[1])));
+            getGraphiteMetricProvider(
+                EXPERIMENT_SCOPE_HEALTHY,
+                HEALTHY_SERVER_METRICS[0],
+                HEALTHY_SERVER_METRICS[1])));
         executorService.submit(createMetricReportingMockService(
-                getGraphiteMetricProvider(
-                        EXPERIMENT_SCOPE_UNHEALTHY,
-                        UNHEALTHY_SERVER_METRICS[0],
-                        UNHEALTHY_SERVER_METRICS[1])));
+            getGraphiteMetricProvider(
+                EXPERIMENT_SCOPE_UNHEALTHY,
+                UNHEALTHY_SERVER_METRICS[0],
+                UNHEALTHY_SERVER_METRICS[1])));
         metricsReportingStartTime = Instant.now();
         try {
             long pause = TimeUnit.MINUTES.toMillis(CANARY_WINDOW_IN_MINUTES) + TimeUnit.SECONDS.toMillis(10);
             log.info("Waiting for {} milliseconds for mock data to flow through graphite, before letting the " +
-                    "integration" +
-                    " tests run", pause);
+                "integration" +
+                " tests run", pause);
             Thread.sleep(pause);
         } catch (InterruptedException e) {
             log.error("Failed to wait to send metrics", e);
@@ -109,7 +110,7 @@ public class GraphiteIntegrationTestConfig {
                     out.close();
                     Thread.sleep(MOCK_SERVICE_REPORTING_INTERVAL_IN_MILLISECONDS);
                 } catch (UnknownHostException e) {
-                   log.error("UNABLE TO FIND HOST", e);
+                    log.error("UNABLE TO FIND HOST", e);
                 } catch (IOException e) {
                     log.error("CONNECTION ERROR", e);
                 } catch (InterruptedException e) {

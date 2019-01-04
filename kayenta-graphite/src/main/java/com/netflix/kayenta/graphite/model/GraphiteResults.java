@@ -17,6 +17,13 @@
 package com.netflix.kayenta.graphite.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,11 +31,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
 
 @ToString
 @EqualsAndHashCode
@@ -48,7 +50,6 @@ public class GraphiteResults {
      * graphite returns datapoints as a list of tuples of value and timestamp,
      * Like: [[1, 12312312], [0, 12312322], ...]
      * we need to convert them to a list of values
-     *
      *
      * @return A list of data points the match the format of kayenta
      */
@@ -87,12 +88,12 @@ public class GraphiteResults {
             List<Double> second = datapoints.get(1);
 
             if (first.size() == 2 && second.size() == 2) {
-                return (long)(second.get(1) - first.get(1));
+                return (long) (second.get(1) - first.get(1));
             } else {
                 throw new IllegalArgumentException(
-                        "data format from graphite is invalid, expected size of 2 for datapoint, got: "
-                                + " first: " + first
-                                + " second: " + second);
+                    "data format from graphite is invalid, expected size of 2 for datapoint, got: "
+                        + " first: " + first
+                        + " second: " + second);
             }
         } else {
             return 1L;
@@ -112,7 +113,7 @@ public class GraphiteResults {
                 return firstDatapoint.get(1).longValue();
             } else {
                 throw new IllegalArgumentException(
-                        "data format from graphite is invalid, expected size of 2 for datapoint, got: " + firstDatapoint);
+                    "data format from graphite is invalid, expected size of 2 for datapoint, got: " + firstDatapoint);
             }
         } else {
             return 0L;
@@ -132,7 +133,7 @@ public class GraphiteResults {
                 return lastDatapoint.get(1).longValue();
             } else {
                 throw new IllegalArgumentException(
-                        "data format from graphite is invalid, expected size of 2 for datapoint, got: " + lastDatapoint);
+                    "data format from graphite is invalid, expected size of 2 for datapoint, got: " + lastDatapoint);
             }
         } else {
             return 0L;

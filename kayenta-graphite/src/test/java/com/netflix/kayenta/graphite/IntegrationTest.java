@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.graphite;
 
+import static org.junit.Assert.assertEquals;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -24,16 +26,8 @@ import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.graphite.canary.GraphiteCanaryScope;
 import com.netflix.kayenta.graphite.model.GraphiteResults;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+
 import org.apache.commons.io.IOUtils;
-
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +37,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -54,9 +47,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import javax.validation.constraints.NotNull;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 @Configuration
 @ComponentScan({
-        "com.netflix.kayenta.retrofit.config"
+    "com.netflix.kayenta.retrofit.config"
 })
 class TestConfig {
 }
@@ -109,7 +111,7 @@ public class IntegrationTest {
         Long count = (end - start) / step;
 
         GraphiteCanaryMetricSetQueryConfig graphiteMetricSetQuery =
-                (GraphiteCanaryMetricSetQueryConfig) metric.getQuery();
+            (GraphiteCanaryMetricSetQueryConfig) metric.getQuery();
 
         List<List<Double>> dataPoints = new LinkedList<>();
         LongStream.range(0, count).forEach(i -> {
@@ -118,13 +120,13 @@ public class IntegrationTest {
         });
 
         GraphiteResults graphiteResults = GraphiteResults.builder()
-                .target(graphiteMetricSetQuery.getMetricName() + "." + scope.getScope())
-                .datapoints(dataPoints).build();
+            .target(graphiteMetricSetQuery.getMetricName() + "." + scope.getScope())
+            .datapoints(dataPoints).build();
 
         return CanaryMetricConfigWithResults.builder()
-                .canaryMetricConfig(metric)
-                .graphiteResults(Collections.singletonList(graphiteResults))
-                .build();
+            .canaryMetricConfig(metric)
+            .graphiteResults(Collections.singletonList(graphiteResults))
+            .build();
     }
 
     @Test
@@ -142,14 +144,14 @@ public class IntegrationTest {
         control.setScope("prod");
 
         Map<CanaryMetricConfig, List<GraphiteResults>> experimentMetrics = config.getMetrics().stream()
-                .map((metric) -> queryMetric(metric, experiment))
-                .collect(Collectors.toMap(CanaryMetricConfigWithResults::getCanaryMetricConfig,
-                        CanaryMetricConfigWithResults::getGraphiteResults));
+            .map((metric) -> queryMetric(metric, experiment))
+            .collect(Collectors.toMap(CanaryMetricConfigWithResults::getCanaryMetricConfig,
+                CanaryMetricConfigWithResults::getGraphiteResults));
 
         Map<CanaryMetricConfig, List<GraphiteResults>> controlMetrics = config.getMetrics().stream()
-                .map((metric) -> queryMetric(metric, control))
-                .collect(Collectors.toMap(CanaryMetricConfigWithResults::getCanaryMetricConfig,
-                        CanaryMetricConfigWithResults::getGraphiteResults));
+            .map((metric) -> queryMetric(metric, control))
+            .collect(Collectors.toMap(CanaryMetricConfigWithResults::getCanaryMetricConfig,
+                CanaryMetricConfigWithResults::getGraphiteResults));
 
         GraphiteResults experimentResult = Lists.newArrayList(experimentMetrics.values()).get(0).get(0);
         assertEquals(946685480L, experimentResult.getStart().longValue());

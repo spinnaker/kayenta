@@ -11,10 +11,11 @@ buildscript {
     }
 }
 
-import redis.embedded.RedisServer
+
 import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.core.DockerClientBuilder
+import redis.embedded.RedisServer
 
 sourceSets {
     integrationTest {

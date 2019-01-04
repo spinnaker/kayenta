@@ -21,12 +21,14 @@ import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQuery
 import com.netflix.kayenta.graphite.service.GraphiteRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
+
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
-
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Builder
 @Data

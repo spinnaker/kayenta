@@ -32,8 +32,8 @@ class GraphiteMetricProvider {
 
     String getRandomMetricWithinRange() {
         return String.format("%s %d %d%n", metricName,
-                new Random().nextInt((max - min) + 1) + min,
-                Instant.now().getEpochSecond());
+            new Random().nextInt((max - min) + 1) + min,
+            Instant.now().getEpochSecond());
     }
 }
 

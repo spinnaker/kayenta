@@ -89,9 +89,9 @@ public class GraphiteMetricsService implements MetricsService {
 
     @Override
     public String buildQuery(String metricsAccountName, CanaryConfig canaryConfig,
-            CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope) throws IOException {
+        CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope) throws IOException {
         GraphiteCanaryMetricSetQueryConfig queryConfig =
-                (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
+            (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
         String query = queryConfig.getMetricName();
         if (!Strings.isNullOrEmpty(canaryScope.getScope())) {
@@ -108,43 +108,44 @@ public class GraphiteMetricsService implements MetricsService {
 
     @Override
     public List<MetricSet> queryMetrics(String metricsAccountName,
-            CanaryConfig canaryConfig,
-            CanaryMetricConfig canaryMetricConfig,
-            CanaryScope canaryScope) throws IOException {
+        CanaryConfig canaryConfig,
+        CanaryMetricConfig canaryMetricConfig,
+        CanaryScope canaryScope) throws IOException {
         GraphiteNamedAccountCredentials accountCredentials =
-                (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                String.format("Unable to resolve account %s.", metricsAccountName)));
+            (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
+                .orElseThrow(() -> new IllegalArgumentException(
+                    String.format("Unable to resolve account %s.", metricsAccountName)));
 
         GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
 
         String query = buildQuery(metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
         List<GraphiteResults> graphiteResultsList = remoteService.rangeQuery(
-                query,
-                canaryScope.getStart().getEpochSecond(),
-                canaryScope.getEnd().getEpochSecond(),
-                DEFAULT_FORMAT
+            query,
+            canaryScope.getStart().getEpochSecond(),
+            canaryScope.getEnd().getEpochSecond(),
+            DEFAULT_FORMAT
         );
 
         List<MetricSet> metricSets = new ArrayList<>();
 
         for (GraphiteResults entry : graphiteResultsList) {
             metricSets.add(
-                    MetricSet.builder()
-                            .name(canaryMetricConfig.getName())
-                            .startTimeMillis(entry.getStartMills())
-                            .startTimeIso(Instant.ofEpochSecond(entry.getStart()).toString())
-                            .endTimeMillis(entry.getEndMills())
-                            .endTimeIso(Instant.ofEpochSecond(entry.getEnd()).toString())
-                            .stepMillis(entry.getIntervalMills())
-                            .values(entry.getDataPoints().collect(Collectors.toList()))
-                            .build()
+                MetricSet.builder()
+                    .name(canaryMetricConfig.getName())
+                    .startTimeMillis(entry.getStartMills())
+                    .startTimeIso(Instant.ofEpochSecond(entry.getStart()).toString())
+                    .endTimeMillis(entry.getEndMills())
+                    .endTimeIso(Instant.ofEpochSecond(entry.getEnd()).toString())
+                    .stepMillis(entry.getIntervalMills())
+                    .values(entry.getDataPoints().collect(Collectors.toList()))
+                    .build()
             );
         }
 
         return metricSets;
     }
 
+    //TODO: in case of performance issue when there are lots of users, we could cache last responses
     @Override
     public List<Map> getMetadata(String metricsAccountName, String filter) throws IOException {
         log.debug(String.format("Getting metadata for %s with filter %s", metricsAccountName, filter));
@@ -157,37 +158,37 @@ public class GraphiteMetricsService implements MetricsService {
         List<Map> result = new LinkedList<>();
 
         boolean needSpecialDescriptors = filter.contains(DELIMITER)
-                && filter.substring(filter.lastIndexOf(DELIMITER)).contains("$");
+            && filter.substring(filter.lastIndexOf(DELIMITER)).contains("$");
 
         if (needSpecialDescriptors) {
             result.addAll(getSpecialMetricDescriptors(baseFilter));
         } else {
             GraphiteNamedAccountCredentials accountCredentials =
-                    (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    String.format("Unable to resolve account %s.", metricsAccountName)));
+                (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                        String.format("Unable to resolve account %s.", metricsAccountName)));
 
             GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
 
             filter = convertFilterToGraphiteQuery(filter);
 
             GraphiteMetricDescriptorsResponse graphiteMetricDescriptorsResponse =
-                    remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
+                remoteService.findMetrics(filter, DEFAULT_DESCRIPTOR_FORMAT);
 
             log.debug(String.format("Getting response for %s with response size %d",
-                    metricsAccountName, graphiteMetricDescriptorsResponse.getMetrics().size()));
+                metricsAccountName, graphiteMetricDescriptorsResponse.getMetrics().size()));
 
             String finalBaseFilter = baseFilter;
             Set<String> resultSet = graphiteMetricDescriptorsResponse
-                    .getMetrics()
-                    .stream()
-                    .map(metricDescriptorResponseEntity -> {
-                        if (GRAPHITE_IS_LEAF.equals(metricDescriptorResponseEntity.getIsLeaf())) {
-                            return finalBaseFilter + metricDescriptorResponseEntity.getName();
-                        } else {
-                            return finalBaseFilter + metricDescriptorResponseEntity.getName() + DELIMITER;
-                        }
-                    }).collect(Collectors.toSet());
+                .getMetrics()
+                .stream()
+                .map(metricDescriptorResponseEntity -> {
+                    if (GRAPHITE_IS_LEAF.equals(metricDescriptorResponseEntity.getIsLeaf())) {
+                        return finalBaseFilter + metricDescriptorResponseEntity.getName();
+                    } else {
+                        return finalBaseFilter + metricDescriptorResponseEntity.getName() + DELIMITER;
+                    }
+                }).collect(Collectors.toSet());
 
             resultSet.stream().forEach(name -> result.add(new GraphiteMetricDescriptor(name).getMap()));
         }
@@ -197,13 +198,13 @@ public class GraphiteMetricsService implements MetricsService {
 
     private List<Map> getSpecialMetricDescriptors(String baseFilter) {
         return Arrays.asList(
-                new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE).getMap(),
-                new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE).getMap());
+            new GraphiteMetricDescriptor(baseFilter + SCOPE_VARIABLE).getMap(),
+            new GraphiteMetricDescriptor(baseFilter + LOCATION_VARIABLE).getMap());
     }
 
     private String convertFilterToGraphiteQuery(String filter) {
         return filter
-                .replace(SCOPE_VARIABLE, GRAPHITE_QUERY_WILDCARD)
-                .replace(LOCATION_VARIABLE, GRAPHITE_QUERY_WILDCARD);
+            .replace(SCOPE_VARIABLE, GRAPHITE_QUERY_WILDCARD)
+            .replace(LOCATION_VARIABLE, GRAPHITE_QUERY_WILDCARD);
     }
 }

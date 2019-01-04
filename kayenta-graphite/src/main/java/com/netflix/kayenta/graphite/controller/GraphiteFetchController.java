@@ -49,35 +49,35 @@ public class GraphiteFetchController {
     private final AccountCredentialsRepository accountCredentialsRepository;
     private final SynchronousQueryProcessor synchronousQueryProcessor;
     private final GraphiteConfigurationTestControllerDefaultProperties
-            graphiteConfigurationTestControllerDefaultProperties;
+        graphiteConfigurationTestControllerDefaultProperties;
 
     @Autowired
     public GraphiteFetchController(AccountCredentialsRepository accountCredentialsRepository,
-            SynchronousQueryProcessor synchronousQueryProcessor,
-            GraphiteConfigurationTestControllerDefaultProperties graphiteConfigurationTestControllerDefaultProperties) {
+        SynchronousQueryProcessor synchronousQueryProcessor,
+        GraphiteConfigurationTestControllerDefaultProperties graphiteConfigurationTestControllerDefaultProperties) {
         this.accountCredentialsRepository = accountCredentialsRepository;
         this.synchronousQueryProcessor = synchronousQueryProcessor;
         this.graphiteConfigurationTestControllerDefaultProperties =
-                graphiteConfigurationTestControllerDefaultProperties;
+            graphiteConfigurationTestControllerDefaultProperties;
     }
 
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     public Map queryMetrics(@RequestParam(required = false) final String metricsAccountName,
-            @RequestParam(required = false) final String storageAccountName,
-            @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
-            @ApiParam(defaultValue = "system.$location.$scope") @RequestParam String metricName,
-            @ApiParam(value = "The name of the resource to use when scoping the query. " +
-                    "This parameter will replace $scope in metricName")
-            @RequestParam(required = false) String scope,
-            @ApiParam(value = "The name of the resource to use when locating the query. " +
-                    "This parameter will replace $location in metricName")
-            @RequestParam(required = false) String location,
-            @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-            @RequestParam String start,
-            @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
-            @RequestParam String end,
-            @ApiParam(defaultValue = "false")
-            @RequestParam(required = false) final boolean dryRun) throws IOException {
+        @RequestParam(required = false) final String storageAccountName,
+        @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
+        @ApiParam(defaultValue = "system.$location.$scope") @RequestParam String metricName,
+        @ApiParam(value = "The name of the resource to use when scoping the query. " +
+            "This parameter will replace $scope in metricName")
+        @RequestParam(required = false) String scope,
+        @ApiParam(value = "The name of the resource to use when locating the query. " +
+            "This parameter will replace $location in metricName")
+        @RequestParam(required = false) String location,
+        @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
+        @RequestParam String start,
+        @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
+        @RequestParam String end,
+        @ApiParam(defaultValue = "false")
+        @RequestParam(required = false) final boolean dryRun) throws IOException {
 
         start = determineDefaultProperty(start, "start", graphiteConfigurationTestControllerDefaultProperties);
         end = determineDefaultProperty(end, "end", graphiteConfigurationTestControllerDefaultProperties);
@@ -92,33 +92,33 @@ public class GraphiteFetchController {
         }
 
         String resolvedMetricsAccountName = CredentialsHelper.resolveAccountByNameOrType(metricsAccountName,
-                AccountCredentials.Type.METRICS_STORE,
-                accountCredentialsRepository);
+            AccountCredentials.Type.METRICS_STORE,
+            accountCredentialsRepository);
         String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
-                AccountCredentials.Type.OBJECT_STORE,
-                accountCredentialsRepository);
+            AccountCredentials.Type.OBJECT_STORE,
+            accountCredentialsRepository);
 
         GraphiteCanaryMetricSetQueryConfig.GraphiteCanaryMetricSetQueryConfigBuilder
-                graphiteCanaryMetricSetQueryConfigBuilder = GraphiteCanaryMetricSetQueryConfig.builder();
+            graphiteCanaryMetricSetQueryConfigBuilder = GraphiteCanaryMetricSetQueryConfig.builder();
 
         graphiteCanaryMetricSetQueryConfigBuilder.metricName(metricName);
 
         CanaryMetricConfig canaryMetricConfig =
-                CanaryMetricConfig.builder()
-                        .name(metricSetName)
-                        .query(graphiteCanaryMetricSetQueryConfigBuilder.build())
-                        .build();
+            CanaryMetricConfig.builder()
+                .name(metricSetName)
+                .query(graphiteCanaryMetricSetQueryConfigBuilder.build())
+                .build();
 
         CanaryScope canaryScope = new CanaryScope(scope, location, Instant.parse(start),
-                Instant.parse(end), null, Collections.EMPTY_MAP);
+            Instant.parse(end), null, Collections.EMPTY_MAP);
 
         return synchronousQueryProcessor.processQueryAndReturnMap(
-                resolvedMetricsAccountName,
-                resolvedStorageAccountName,
-                null,
-                canaryMetricConfig,
-                0,
-                canaryScope,
-                dryRun);
+            resolvedMetricsAccountName,
+            resolvedStorageAccountName,
+            null,
+            canaryMetricConfig,
+            0,
+            canaryScope,
+            dryRun);
     }
 }

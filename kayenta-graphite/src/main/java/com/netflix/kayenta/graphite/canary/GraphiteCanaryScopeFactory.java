@@ -18,6 +18,7 @@ package com.netflix.kayenta.graphite.canary;
 
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopeFactory;
+
 import org.springframework.stereotype.Component;
 
 @Component

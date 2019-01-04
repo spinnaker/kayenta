@@ -8,8 +8,10 @@
         "type": "graphite",
         "metricName": "system.cpu.user"
       },
-      "groups": ["system"],
-      "analysisConfigurations": { },
+      "groups": [
+        "system"
+      ],
+      "analysisConfigurations": {},
       "scopeName": "default"
     }
   ],

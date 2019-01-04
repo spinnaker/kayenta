@@ -18,10 +18,12 @@ package com.netflix.kayenta.graphite.config;
 
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
-import lombok.Data;
+
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
+
+import lombok.Data;
 
 @Data
 public class GraphiteManagedAccount {
