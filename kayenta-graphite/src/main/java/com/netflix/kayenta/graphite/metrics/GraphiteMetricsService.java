@@ -88,16 +88,8 @@ public class GraphiteMetricsService implements MetricsService {
     }
 
     @Override
-    public List<MetricSet> queryMetrics(String metricsAccountName,
-            CanaryConfig canaryConfig,
-            CanaryMetricConfig canaryMetricConfig,
-            CanaryScope canaryScope) throws IOException {
-        GraphiteNamedAccountCredentials accountCredentials =
-                (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                String.format("Unable to resolve account %s.", metricsAccountName)));
-
-        GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
+    public String buildQuery(String metricsAccountName, CanaryConfig canaryConfig,
+            CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope) throws IOException {
         GraphiteCanaryMetricSetQueryConfig queryConfig =
                 (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
@@ -111,7 +103,22 @@ public class GraphiteMetricsService implements MetricsService {
         }
 
         log.debug("Query sent to graphite: {}.", query);
+        return query;
+    }
 
+    @Override
+    public List<MetricSet> queryMetrics(String metricsAccountName,
+            CanaryConfig canaryConfig,
+            CanaryMetricConfig canaryMetricConfig,
+            CanaryScope canaryScope) throws IOException {
+        GraphiteNamedAccountCredentials accountCredentials =
+                (GraphiteNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                String.format("Unable to resolve account %s.", metricsAccountName)));
+
+        GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
+
+        String query = buildQuery(metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
         List<GraphiteResults> graphiteResultsList = remoteService.rangeQuery(
                 query,
                 canaryScope.getStart().getEpochSecond(),

@@ -22,7 +22,7 @@ This module adds support for Graphite as Kayenta's metrics source.
 
 This module has an End to End test with in memory store, embedded redis and embedded graphite server.
 
-It creates three threads that feeds data to embedded graphite server with different value.
+It creates three threads that feed data to the embedded graphite server with different values.
 
 - Control: the control cluster
 - Healthy Experiment: the experiment cluster acts like the control cluster 
