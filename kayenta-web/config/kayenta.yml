@@ -86,6 +86,15 @@ kayenta:
 #        supportedTypes:
 #          - METRICS_STORE
 
+  opentsdb:
+    enabled: false
+#    accounts:
+#      - name: my-opentsdb-account
+#        endpoint:
+#          baseUrl: http://localhost:4242
+#        supportedTypes:
+#          - METRICS_STORE
+
   gcs:
     enabled: false
 

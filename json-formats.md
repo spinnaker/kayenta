@@ -130,6 +130,44 @@ Atlas, Stackdriver and Prometheus are used.
 ```
 ```JSON
 {
+  "name": "MySampleOpenTsdbCanaryConfig",
+  "description": "Example Kayenta Configuration using OpenTsdb",
+  "configVersion": "1.0",
+  "applications": [
+    "myapp"
+  ],
+  "judge": {
+    "name": "dredd-v1.0",
+    "judgeConfigurations": { }
+  },
+  "metrics": [
+    {
+      "name": "cpu",
+      "query": {
+        "type": "opentsdb",
+        "metricName": "sum:rate:proc.stat.cpu.total",
+        "labelBindings": [
+          "mode=~\"user|system\""
+        ]
+      },
+      "groups": ["system"],
+      "analysisConfigurations": { },
+      "scopeName": "default"
+    }
+  ],
+  "classifier": {
+    "groupWeights": {
+      "system": 100.0
+    },
+    "scoreThresholds": {
+      "pass": 95.0,
+      "marginal": 75.0
+    }
+  }
+}
+```
+```JSON
+{
   "name": "MySampleK8SPrometheusCanaryConfigWithCustomFilterTemplate",
   "description": "Example Kayenta Configuration with Custom Filter Template using Prometheus for K8S",
   "configVersion": "1.0",

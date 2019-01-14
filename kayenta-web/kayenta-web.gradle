@@ -28,6 +28,7 @@ dependencies {
   compile project(':kayenta-newrelic-insights')
   compile project(':kayenta-objectstore-configbin')
   compile project(':kayenta-objectstore-memory')
+  compile project(':kayenta-opentsdb')
   compile project(':kayenta-orca')
   compile project(':kayenta-prometheus')
   compile project(':kayenta-s3')

@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class GraphiteFetchTask implements RetryableTask {
+public class  GraphiteFetchTask implements RetryableTask {
     private final ObjectMapper kayentaObjectMapper;
     private final AccountCredentialsRepository accountCredentialsRepository;
     private final SynchronousQueryProcessor synchronousQueryProcessor;
