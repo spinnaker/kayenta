@@ -31,7 +31,7 @@ public class OpentsdbResults {
 
   @NotNull
   @Getter
-  private String id;
+  private String metricName;
 
   @NotNull
   @Getter
@@ -51,5 +51,6 @@ public class OpentsdbResults {
 
   @NotNull
   @Getter
-  private List<Double> values;
+  private List<Double> dataValues;
+
 }

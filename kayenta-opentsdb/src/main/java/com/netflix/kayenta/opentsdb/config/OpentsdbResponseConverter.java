@@ -62,14 +62,14 @@ public class OpentsdbResponseConverter implements Converter {
         List<OpentsdbResults> opentsdbResultsList = new ArrayList<OpentsdbResults>(resultList.size());
 
         if (CollectionUtils.isEmpty(resultList)) {
-          log.warn("Received no data from Opentsdb.");
+          log.warn("Received no data from opentsdb.");
           return null;
         }
 
         for (Map elem : resultList) {
           Map<String, String> tags = (Map<String, String>)elem.get("metric");
-          String id = tags.remove("__name__");
-          List<List> values = (List<List>)elem.get("values");
+          String metricName = tags.remove("metric");
+          List<List> values = (List<List>)elem.get("dps");
           List<Double> dataValues = new ArrayList<Double>(values.size());
 
           for (List tuple : values) {
@@ -84,7 +84,7 @@ public class OpentsdbResponseConverter implements Converter {
                           : 0;
           long endTimeMillis = startTimeMillis + values.size() * stepSecs * 1000;
 
-          opentsdbResultsList.add(new OpentsdbResults(id, startTimeMillis, stepSecs, endTimeMillis, tags, dataValues));
+          opentsdbResultsList.add(new OpentsdbResults(metricName, startTimeMillis, stepSecs, endTimeMillis, tags, dataValues));
         }
 
         return opentsdbResultsList;
