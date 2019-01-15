@@ -31,9 +31,9 @@ class OpentsdbMetricProvider {
     }
 
     String getRandomMetricWithinRange() {
-        return String.format("%s %d %d%n", metricName,
-            new Random().nextInt((max - min) + 1) + min,
-            Instant.now().getEpochSecond());
+        return String.format("put %s %d %d k1=v1%n", metricName,
+              Instant.now().getEpochSecond(),
+              new Random().nextInt((max - min) + 1) + min);
     }
 }
 
