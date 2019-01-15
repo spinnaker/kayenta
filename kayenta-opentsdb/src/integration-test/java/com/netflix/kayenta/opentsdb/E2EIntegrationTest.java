@@ -59,7 +59,7 @@ import io.restassured.response.ValidatableResponse;
 
 public class E2EIntegrationTest {
 
-    public static final int CANARY_WINDOW_IN_MINUTES = 40;
+    public static final int CANARY_WINDOW_IN_MINUTES = 1;
 
     @Autowired
     private ObjectMapper objectMapper = new ObjectMapper();
