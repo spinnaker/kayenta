@@ -121,7 +121,7 @@ public class OpentsdbIntegrationTestConfig {
     }
 
     private OpentsdbMetricProvider getOpentsdbMetricProvider(String scope, int min, int max) {
-        String metricName = TEST_METRIC + "." + scope;
-        return new OpentsdbMetricProvider(min, max, metricName);
+        String tags = String.format("scope=%s", scope);
+        return new OpentsdbMetricProvider(min, max, TEST_METRIC, tags);
     }
 }
