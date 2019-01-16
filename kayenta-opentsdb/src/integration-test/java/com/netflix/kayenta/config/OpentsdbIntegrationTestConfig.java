@@ -86,7 +86,8 @@ public class OpentsdbIntegrationTestConfig {
             log.info("Waiting for {} milliseconds for mock data to flow through opentsdb, before letting the " +
                 "integration" +
                 " tests run", pause);
-            Thread.sleep(pause);
+            // TODO restore to pause
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             log.error("Failed to wait to send metrics", e);
             throw new RuntimeException(e);

@@ -69,7 +69,7 @@ public class OpentsdbFetchController {
     OpentsdbCanaryMetricSetQueryConfig opentsdbCanaryMetricSetQueryConfig =
             OpentsdbCanaryMetricSetQueryConfig
                     .builder()
-                    .m(m)
+                    .metricName(m)
                     .build();
     CanaryMetricConfig canaryMetricConfig =
             CanaryMetricConfig

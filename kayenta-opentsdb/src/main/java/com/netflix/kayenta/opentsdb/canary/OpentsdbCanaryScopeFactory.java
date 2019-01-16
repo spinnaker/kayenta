@@ -40,15 +40,6 @@ public class OpentsdbCanaryScopeFactory implements CanaryScopeFactory {
     opentsdbCanaryScope.setStep(canaryScope.getStep());
     opentsdbCanaryScope.setExtendedScopeParams(canaryScope.getExtendedScopeParams());
 
-    Map<String, String> extendedScopeParams = opentsdbCanaryScope.getExtendedScopeParams();
-
-    if (extendedScopeParams != null) {
-      if (extendedScopeParams.containsKey("project")) {
-        opentsdbCanaryScope.setProject(extendedScopeParams.get("project"));
-      }
-
-    }
-
     return opentsdbCanaryScope;
   }
 }

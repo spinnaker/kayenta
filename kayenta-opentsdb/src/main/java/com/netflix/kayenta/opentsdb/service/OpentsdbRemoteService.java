@@ -25,7 +25,7 @@ import java.util.List;
 
 public interface OpentsdbRemoteService {
 
-  @GET("/api/query")
+  @GET("/api/query?arrays=true")
   OpentsdbTimeSeries fetch(@Query("m") String m,
                            @Query("start") Long start,
                            @Query("end") Long end,

@@ -27,8 +27,4 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class OpentsdbCanaryScope extends CanaryScope {
-  private String project;
-
-  @NotNull
-  private String scopeKey;
 }

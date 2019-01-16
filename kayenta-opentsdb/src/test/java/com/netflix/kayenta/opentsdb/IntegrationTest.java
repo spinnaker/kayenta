@@ -125,7 +125,7 @@ public class IntegrationTest {
         });
 
         OpentsdbResults opentsdbResults = OpentsdbResults.builder()
-            .metricName(opentsdbMetricSetQuery.getM() + "." + scope.getScope())
+            .metricName(opentsdbMetricSetQuery.getMetricName() + "." + scope.getScope())
             .dataValues(values).build();
 
         return CanaryMetricConfigWithResults.builder()

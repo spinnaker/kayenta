@@ -79,21 +79,14 @@ public class OpentsdbMetricsService implements MetricsService {
   public String buildQuery(String metricsAccountName, CanaryConfig canaryConfig, CanaryMetricConfig canaryMetricConfig,
                            CanaryScope canaryScope)  {
 
-    OpentsdbCanaryScope opentsdbCanaryScope = (OpentsdbCanaryScope) canaryScope;
-
     OpentsdbCanaryMetricSetQueryConfig queryConfig =
             (OpentsdbCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
-    // Example for a query produced by this class:
-    // SELECT count(*) FROM Transaction TIMESERIES MAX SINCE 1540382125 UNTIL 1540392125
-    // WHERE appName LIKE 'PROD - Service' AND httpResponseCode >= '500'
-
-    // we expect the full select statement to be in the config
     StringBuilder query = new StringBuilder("sum:");
-    query.append(queryConfig.getM());
+    query.append(queryConfig.getMetricName());
     query.append("{");
 
-    for (Map.Entry<String, String> extendedParam : opentsdbCanaryScope.getExtendedScopeParams().entrySet()) {
+    /*for (Map.Entry<String, String> extendedParam : canaryScope.getExtendedScopeParams().entrySet()) {
       if (extendedParam.getKey().startsWith("_")) {
         continue;
       }
@@ -101,11 +94,13 @@ public class OpentsdbMetricsService implements MetricsService {
       query.append("=");
       query.append(extendedParam.getValue());
       query.append(",");
-    }
+    }*/
 
-    query.append(opentsdbCanaryScope.getScopeKey());
-    query.append("=");
-    query.append(opentsdbCanaryScope.getScope());
+    query.append("scope=");
+    query.append(canaryScope.getScope());
+    query.append("}");
+
+    log.info("opentsdb query = {}", query.toString());
     return query.toString();
   }
   @Override

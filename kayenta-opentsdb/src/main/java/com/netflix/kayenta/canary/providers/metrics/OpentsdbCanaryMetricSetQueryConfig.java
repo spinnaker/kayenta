@@ -33,7 +33,7 @@ public class OpentsdbCanaryMetricSetQueryConfig implements CanaryMetricSetQueryC
 
   @NotNull
   @Getter
-  private String m;
+  private String metricName;
 
   @Override
   public String getServiceType() {
