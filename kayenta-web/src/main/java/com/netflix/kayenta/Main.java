@@ -30,7 +30,7 @@ import com.netflix.kayenta.influxdb.config.InfluxDbConfiguration;
 import com.netflix.kayenta.judge.config.NetflixJudgeConfiguration;
 import com.netflix.kayenta.memory.config.MemoryConfiguration;
 import com.netflix.kayenta.newrelic.config.NewRelicConfiguration;
-// import com.netflix.kayenta.opentsdb.config.OpenTsdbConfiguration;
+import com.netflix.kayenta.opentsdb.config.OpentsdbConfiguration;
 import com.netflix.kayenta.prometheus.config.PrometheusConfiguration;
 import com.netflix.kayenta.s3.config.S3Configuration;
 import com.netflix.kayenta.signalfx.config.SignalFxConfiguration;
@@ -60,7 +60,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
   KayentaConfiguration.class,
   MemoryConfiguration.class,
   NewRelicConfiguration.class,
-//  OpenTsdbConfiguration.class,
+  OpentsdbConfiguration.class,
   PrometheusConfiguration.class,
   S3Configuration.class,
   SignalFxConfiguration.class,
