@@ -9,8 +9,16 @@
     {
       "name": "test",
       "query": {
-        "metricName": "test.server.request.400",
-        "type": "opentsdb"
+        "metricName": "test.server.request",
+        "type": "opentsdb",
+        "serviceType": "opentsdb",
+        "tags": [
+          {
+            "key": "response_code",
+            "value": "400"
+          }
+        ],
+        "aggregationMethod": "sum"
       },
       "analysisConfigurations": {
         "canary": {

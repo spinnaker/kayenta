@@ -1,19 +1,3 @@
-/*
- * Copyright 2018 Snap Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License")
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.netflix.kayenta.opentsdb;
 
 import static com.netflix.kayenta.config.OpentsdbIntegrationTestConfig.CONTROL_SCOPE_NAME;
@@ -50,6 +34,7 @@ import java.net.URL;
 import java.time.Instant;
 
 import io.restassured.response.ValidatableResponse;
+import static com.netflix.kayenta.opentsdb.canary.OpentsdbCanaryScopeFactory.SCOPE_KEY_KEY;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
@@ -89,6 +74,7 @@ public class E2EIntegrationTest {
     }
 
     private ValidatableResponse doCanaryExec(String scope) throws IOException {
+        String scope_key = "scope";
         String canaryConfigJson = System.getProperty("canary.config");
         Double marginal = Double.parseDouble(System.getProperty("canary.marginal"));
         Double pass = Double.parseDouble(System.getProperty("canary.pass"));
@@ -108,12 +94,17 @@ public class E2EIntegrationTest {
         CanaryScope control = new CanaryScope()
             .setScope(CONTROL_SCOPE_NAME)
             .setStart(metricsReportingStartTime)
-            .setEnd(end);
+            .setEnd(end)
+            .setStep((long) 1)
+            .setExtendedScopeParams(ImmutableMap.of(SCOPE_KEY_KEY, scope_key));
+
 
         CanaryScope experiment = new CanaryScope()
             .setScope(scope)
             .setStart(metricsReportingStartTime)
-            .setEnd(end);
+            .setEnd(end)
+            .setStep((long) 1)
+            .setExtendedScopeParams(ImmutableMap.of(SCOPE_KEY_KEY, scope_key));
 
         CanaryScopePair canaryScopePair = new CanaryScopePair();
         canaryScopePair.setControlScope(control);

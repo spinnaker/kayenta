@@ -1,19 +1,3 @@
-/*
- * Copyright 2018 Armory, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License")
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.netflix.kayenta.opentsdb.metrics;
 
 import com.netflix.kayenta.canary.CanaryConfig;
@@ -44,11 +28,7 @@ import com.netflix.kayenta.opentsdb.canary.OpentsdbCanaryScope;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Builder
@@ -79,75 +59,70 @@ public class OpentsdbMetricsService implements MetricsService {
   public String buildQuery(String metricsAccountName, CanaryConfig canaryConfig, CanaryMetricConfig canaryMetricConfig,
                            CanaryScope canaryScope)  {
 
+    OpentsdbCanaryScope opentsdbCanaryScope = (OpentsdbCanaryScope)canaryScope;
     OpentsdbCanaryMetricSetQueryConfig queryConfig =
             (OpentsdbCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
-    StringBuilder query = new StringBuilder("sum:");
-    query.append(queryConfig.getMetricName());
-    query.append("{");
+    StringBuilder query = new StringBuilder();
 
-    /*for (Map.Entry<String, String> extendedParam : canaryScope.getExtendedScopeParams().entrySet()) {
-      if (extendedParam.getKey().startsWith("_")) {
-        continue;
-      }
-      query.append(extendedParam.getKey());
-      query.append("=");
-      query.append(extendedParam.getValue());
-      query.append(",");
-    }*/
+    String aggregator = Optional.ofNullable(queryConfig.getAggregator()).orElse("sum");
+    String downsample = Optional.ofNullable(queryConfig.getDownsample()).orElse("");
+    List<TagPair> tagPairs = Optional.ofNullable(queryConfig.getTags()).orElse(new LinkedList<>());
 
-    query.append("scope=");
-    query.append(canaryScope.getScope());
-    query.append("}");
-
-    log.info("opentsdb query = {}", query.toString());
-    return query.toString();
+    return OpentsdbQueryBuilder
+            .create(queryConfig.getMetricName(), aggregator, downsample, queryConfig.isRate())
+            .withTagPairs(tagPairs)
+            .withScope(opentsdbCanaryScope)
+            .build();
   }
+
   @Override
   public List<MetricSet> queryMetrics(String accountName, CanaryConfig canaryConfig, CanaryMetricConfig canaryMetricConfig, CanaryScope canaryScope) {
-    OpentsdbNamedAccountCredentials accountCredentials = (OpentsdbNamedAccountCredentials) accountCredentialsRepository
-            .getOne(accountName)
-            .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
-
-    OpentsdbCredentials credentials = accountCredentials.getCredentials();
-    OpentsdbRemoteService remoteService = accountCredentials.getOpentsdbRemoteService();
-
-    if (StringUtils.isEmpty(canaryScope.getStart())) {
-      throw new IllegalArgumentException("Start time is required.");
+    if (!(canaryScope instanceof OpentsdbCanaryScope)) {
+      throw new IllegalArgumentException("Canary scope not instance of OpentsdbCanaryScope: " + canaryScope +
+              ". One common cause is having multiple METRICS_STORE accounts configured but " +
+              "neglecting to explicitly specify which account to use for a given request.");
     }
 
-    if (StringUtils.isEmpty(canaryScope.getEnd())) {
-      throw new IllegalArgumentException("End time is required.");
-    }
+    OpentsdbCanaryScope opentsdbCanaryScope = (OpentsdbCanaryScope)canaryScope;
+    OpentsdbCanaryMetricSetQueryConfig queryConfig = (OpentsdbCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
+    List<TagPair> tagPairs = Optional.ofNullable(queryConfig.getTags()).orElse(new LinkedList<>());
+
+    OpentsdbNamedAccountCredentials accountCredentials =
+            (OpentsdbNamedAccountCredentials) accountCredentialsRepository.getOne(accountName)
+                    .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
 
     String query = buildQuery(accountName,
             canaryConfig,
             canaryMetricConfig,
             canaryScope);
 
-    OpentsdbTimeSeries timeSeries = remoteService.fetch(
+    log.info("query = {}", query);
+
+    OpentsdbCredentials credentials = accountCredentials.getCredentials();
+    OpentsdbRemoteService remoteService = accountCredentials.getOpentsdbRemoteService();
+
+    OpentsdbResults opentsdbResults = remoteService.fetch(
             query,
             canaryScope.getStart().getEpochSecond(),
-            canaryScope.getEnd().getEpochSecond(),
-            canaryScope.getStep()
+            canaryScope.getEnd().getEpochSecond()
     );
-
+    log.info("canaryScope={}", canaryScope);
+    log.info("adjustedPoints={}", opentsdbResults.getAdjustedDataValues(canaryScope.getStep(),
+            canaryScope.getStart().getEpochSecond(),
+            canaryScope.getEnd().getEpochSecond()));
     List<MetricSet> ret = new ArrayList<MetricSet>();
-
-    for (OpentsdbTimeSeries.OpentsdbSeriesEntry series : timeSeries.getSeries()) {
-      ret.add(
-              MetricSet.builder()
-                      .name(canaryMetricConfig.getName())
-                      .startTimeMillis(series.getStart())
-                      .startTimeIso(Instant.ofEpochMilli(series.getStart()).toString())
-                      .endTimeMillis(series.getEnd())
-                      .endTimeIso(Instant.ofEpochMilli(series.getEnd()).toString())
-                      .stepMillis(series.getInterval() * 1000)
-                      .values(series.getDataPoints().collect(Collectors.toList()))
-                      .attribute("query", query)
-                      .build()
-      );
-    }
+    ret.add(MetricSet.builder().name(canaryMetricConfig.getName())
+                               .startTimeMillis(canaryScope.getStart().getEpochSecond() * 1000)
+                               .startTimeIso(Instant.ofEpochSecond(canaryScope.getStart().getEpochSecond() * 1000).toString())
+                               .endTimeMillis(canaryScope.getEnd().getEpochSecond() * 1000)
+                               .endTimeIso(Instant.ofEpochSecond(canaryScope.getEnd().getEpochSecond() * 1000).toString())
+                               .stepMillis(canaryScope.getStep() * 1000)
+                               .values(opentsdbResults.getAdjustedDataValues(canaryScope.getStep(),
+                                       canaryScope.getStart().getEpochSecond(),
+                                       canaryScope.getEnd().getEpochSecond()))
+                               .attribute("query", query)
+                               .build());
 
     return ret;
   }

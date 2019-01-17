@@ -119,14 +119,17 @@ public class IntegrationTest {
             dataPoints.add(Lists.newArrayList((double) i, time.doubleValue()));
         });
 
-        List<Double> values = new LinkedList<>();
+        List<List> values = new LinkedList<>();
         LongStream.range(0, count).forEach(i -> {
-            values.add((double) i);
+            List<Double> point = new LinkedList<>();
+            point.add((double) i);
+            point.add((double) i);
+            values.add(point);
         });
 
         OpentsdbResults opentsdbResults = OpentsdbResults.builder()
             .metricName(opentsdbMetricSetQuery.getMetricName() + "." + scope.getScope())
-            .dataValues(values).build();
+            .dps(values).build();
 
         return CanaryMetricConfigWithResults.builder()
             .canaryMetricConfig(metric)

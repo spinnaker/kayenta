@@ -44,7 +44,8 @@ public class OpentsdbIntegrationTestConfig {
     public static final String EXPERIMENT_SCOPE_UNHEALTHY = "test-unhealthy";
 
     private static final String LOCAL_OPENTSDB_HOST = "localhost";
-    private static final String TEST_METRIC = "test.server.request.400";
+    private static final String TEST_METRIC = "test.server.request";
+    private static final String TEST_TAGS = "response_code=400";
     private static final int MOCK_SERVICE_REPORTING_INTERVAL_IN_MILLISECONDS = 1000;
     public static final int[] HEALTHY_SERVER_METRICS = {0, 10};
     public static final int[] UNHEALTHY_SERVER_METRICS = {10, 20};
@@ -54,7 +55,7 @@ public class OpentsdbIntegrationTestConfig {
     private Instant metricsReportingStartTime;
 
     public OpentsdbIntegrationTestConfig() {
-        this.executorService = Executors.newFixedThreadPool(2);
+        this.executorService = Executors.newFixedThreadPool(3);
     }
 
     @Bean
@@ -87,7 +88,7 @@ public class OpentsdbIntegrationTestConfig {
                 "integration" +
                 " tests run", pause);
             // TODO restore to pause
-            Thread.sleep(1000);
+            Thread.sleep(pause);
         } catch (InterruptedException e) {
             log.error("Failed to wait to send metrics", e);
             throw new RuntimeException(e);
@@ -122,7 +123,7 @@ public class OpentsdbIntegrationTestConfig {
     }
 
     private OpentsdbMetricProvider getOpentsdbMetricProvider(String scope, int min, int max) {
-        String tags = String.format("scope=%s", scope);
+        String tags = String.format("scope=%s %s", scope, TEST_TAGS);
         return new OpentsdbMetricProvider(min, max, TEST_METRIC, tags);
     }
 }
