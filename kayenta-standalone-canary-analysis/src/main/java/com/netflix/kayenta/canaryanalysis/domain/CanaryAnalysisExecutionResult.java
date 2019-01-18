@@ -35,10 +35,12 @@ import java.util.List;
 public class CanaryAnalysisExecutionResult {
 
   @ApiModelProperty(value = "This boolean represents whether the canary passed the defined thresholds.")
-  protected boolean didPassThresholds;
+  @Builder.Default
+  protected Boolean didPassThresholds = Boolean.FALSE;
 
   @ApiModelProperty(value = "This boolean is set to true if any of the judgements had warnings.")
-  protected boolean hasWarnings;
+  @Builder.Default
+  protected Boolean hasWarnings = Boolean.FALSE;
 
   @ApiModelProperty(value = "This string describes the aggregated judgement results.")
   protected String canaryScoreMessage;

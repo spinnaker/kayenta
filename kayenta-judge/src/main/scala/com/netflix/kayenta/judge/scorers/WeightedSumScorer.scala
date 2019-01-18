@@ -78,7 +78,7 @@ class WeightedSumScorer(groupWeights: Map[String, Double]) extends BaseScorer {
   }
 
   def criticalFailures(results: List[CanaryAnalysisResult]): List[CanaryAnalysisResult] = {
-    results.filter { result => result.isCritical && !result.getClassification.equals(Pass.toString) }
+    results.filter { result => result.getCritical && !result.getClassification.equals(Pass.toString) }
   }
 
   def tooManyNodata(results: List[CanaryAnalysisResult]): Boolean = {

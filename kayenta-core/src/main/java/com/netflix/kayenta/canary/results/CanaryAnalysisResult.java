@@ -71,5 +71,5 @@ public class CanaryAnalysisResult {
 
   @Getter
   @Builder.Default
-  private boolean critical = false;
+  private Boolean critical = Boolean.FALSE;
 }
