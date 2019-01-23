@@ -85,7 +85,6 @@ public class SignalFxMetricsService implements MetricsService {
                            CanaryScope canaryScope) {
 
     SignalFxScopeConfiguration scopeConfiguration = signalFxScopeConfigurationMap.get(metricsAccountName);
-
     SignalFxCanaryScope signalFxCanaryScope = (SignalFxCanaryScope) canaryScope;
     SignalFxCanaryMetricSetQueryConfig queryConfig = (SignalFxCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
     String aggregationMethod = Optional.ofNullable(queryConfig.getAggregationMethod()).orElse("mean");

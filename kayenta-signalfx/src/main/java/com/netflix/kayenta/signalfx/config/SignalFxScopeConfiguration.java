@@ -13,5 +13,4 @@ public class SignalFxScopeConfiguration {
 
   private String defaultScopeKey;
   private String defaultLocationKey;
-
 }
