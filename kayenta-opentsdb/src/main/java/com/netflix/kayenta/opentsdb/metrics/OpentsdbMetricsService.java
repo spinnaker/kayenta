@@ -8,7 +8,6 @@ import com.netflix.kayenta.opentsdb.model.OpentsdbResults;
 import com.netflix.kayenta.opentsdb.security.OpentsdbCredentials;
 import com.netflix.kayenta.opentsdb.security.OpentsdbNamedAccountCredentials;
 import com.netflix.kayenta.opentsdb.service.OpentsdbRemoteService;
-import com.netflix.kayenta.opentsdb.service.OpentsdbTimeSeries;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentials;
