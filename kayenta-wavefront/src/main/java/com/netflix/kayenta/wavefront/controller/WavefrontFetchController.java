@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019 Intuit, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.kayenta.wavefront.controller;
 
 import com.netflix.kayenta.canary.CanaryMetricConfig;
@@ -40,6 +55,8 @@ public class WavefrontFetchController {
                             @ApiParam(defaultValue = "system.cpu.user") @RequestParam String metricName,
                             @ApiParam(value = "An aggregate function, e.g.: avg, min, max")
                             @RequestParam(defaultValue = "") String aggregate,
+                            @ApiParam(value = "Summarization strategy to use when bucketing points together")
+                            @RequestParam(defaultValue = "MEAN", value ="[MEAN, MEDIAN, MIN, MAX, SUM, COUNT, FIRST, LAST]") String summarization,
                             @ApiParam(value = "The scope of the Wavefront query. e.g. autoscaling_group=myapp-prd-v002")
                             @RequestParam(defaultValue = "") String scope,
                             @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-15T01:23:45Z")
@@ -60,6 +77,7 @@ public class WavefrontFetchController {
                 .builder()
                 .metricName(metricName)
                 .aggregate(aggregate)
+                .summarization(summarization)
                 .build();
 
         CanaryMetricConfig canaryMetricConfig =

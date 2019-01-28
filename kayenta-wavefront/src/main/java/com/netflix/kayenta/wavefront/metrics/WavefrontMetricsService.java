@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019 Intuit, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.kayenta.wavefront.metrics;
 
 import com.netflix.kayenta.canary.CanaryConfig;
@@ -46,7 +61,7 @@ public class WavefrontMetricsService implements MetricsService {
 
     @Override
     public String getType() {
-        return "wavefront";
+        return WavefrontCanaryMetricSetQueryConfig.SERVICE_TYPE;
     }
 
     @Override
@@ -86,6 +101,7 @@ public class WavefrontMetricsService implements MetricsService {
         WavefrontCredentials credentials = accountCredentials.getCredentials();
         WavefrontRemoteService wavefrontRemoteService = accountCredentials.getWavefrontRemoteService();
 
+        WavefrontCanaryMetricSetQueryConfig queryConfig = (WavefrontCanaryMetricSetQueryConfig)canaryMetricConfig.getQuery();
         String query = buildQuery(accountName,
                 canaryConfig,
                 canaryMetricConfig,
@@ -98,7 +114,7 @@ public class WavefrontMetricsService implements MetricsService {
                 wavefrontCanaryScope.getStart().toEpochMilli(),
                 wavefrontCanaryScope.getEnd().toEpochMilli(),
                 wavefrontCanaryScope.getGranularity(),
-                "MEAN",
+                queryConfig.getSummarization(),
                 true, //listMode
                 true, //strict
                 true);//sorted
@@ -134,6 +150,7 @@ public class WavefrontMetricsService implements MetricsService {
                 metricSetBuilder.tags(tags);
             }
             metricSetBuilder.attribute("query", query);
+            metricSetBuilder.attribute("summarization", queryConfig.getSummarization());
             metricSetList.add(metricSetBuilder.build());
         }
         return metricSetList;
