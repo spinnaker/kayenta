@@ -23,6 +23,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import com.netflix.kayenta.opentsdb.canary.OpentsdbCanaryScope;
+import com.netflix.kayenta.opentsdb.model.OpentsdbMetricDescriptorsResponse;
+import com.netflix.kayenta.opentsdb.model.OpentsdbMetricDescriptor;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import java.util.stream.Collectors;
 @Builder
 @Slf4j
 public class OpentsdbMetricsService implements MetricsService {
+  private static final String DELIMITER = ".";
+
   @NotNull
   @Singular
   @Getter
@@ -62,8 +66,6 @@ public class OpentsdbMetricsService implements MetricsService {
     OpentsdbCanaryMetricSetQueryConfig queryConfig =
             (OpentsdbCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
-    StringBuilder query = new StringBuilder();
-
     String aggregator = Optional.ofNullable(queryConfig.getAggregator()).orElse("sum");
     String downsample = Optional.ofNullable(queryConfig.getDownsample()).orElse("");
     List<TagPair> tagPairs = Optional.ofNullable(queryConfig.getTags()).orElse(new LinkedList<>());
@@ -83,10 +85,6 @@ public class OpentsdbMetricsService implements MetricsService {
               "neglecting to explicitly specify which account to use for a given request.");
     }
 
-    OpentsdbCanaryScope opentsdbCanaryScope = (OpentsdbCanaryScope)canaryScope;
-    OpentsdbCanaryMetricSetQueryConfig queryConfig = (OpentsdbCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
-    List<TagPair> tagPairs = Optional.ofNullable(queryConfig.getTags()).orElse(new LinkedList<>());
-
     OpentsdbNamedAccountCredentials accountCredentials =
             (OpentsdbNamedAccountCredentials) accountCredentialsRepository.getOne(accountName)
                     .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
@@ -98,7 +96,6 @@ public class OpentsdbMetricsService implements MetricsService {
 
     log.info("query = {}", query);
 
-    OpentsdbCredentials credentials = accountCredentials.getCredentials();
     OpentsdbRemoteService remoteService = accountCredentials.getOpentsdbRemoteService();
 
     OpentsdbResults opentsdbResults = remoteService.fetch(
@@ -125,4 +122,29 @@ public class OpentsdbMetricsService implements MetricsService {
 
     return ret;
   }
+
+    //TODO: in case of performance issue when there are lots of users, we could cache last responses
+    @Override
+    public List<Map> getMetadata(String metricsAccountName, String filter) throws IOException {
+        log.info(String.format("Getting metadata for %s with filter %s", metricsAccountName, filter));
+
+        List<Map> result = new LinkedList<>();
+
+            OpentsdbNamedAccountCredentials accountCredentials =
+                    (OpentsdbNamedAccountCredentials) accountCredentialsRepository.getOne(metricsAccountName)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    String.format("Unable to resolve account %s.", metricsAccountName)));
+
+            OpentsdbRemoteService remoteService = accountCredentials.getOpentsdbRemoteService();
+
+            OpentsdbMetricDescriptorsResponse opentsdbMetricDescriptorsResponse = remoteService.findMetrics(filter);
+
+            log.debug(String.format("Getting response for %s with response size %d",
+                    metricsAccountName, opentsdbMetricDescriptorsResponse.getMetrics().size()));
+
+             opentsdbMetricDescriptorsResponse.getMetrics().stream().forEach(
+                     name -> result.add(new OpentsdbMetricDescriptor(name).getMap()));
+
+        return result;
+    }  
 }

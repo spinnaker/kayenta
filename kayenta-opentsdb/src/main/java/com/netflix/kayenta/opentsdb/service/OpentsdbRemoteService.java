@@ -1,5 +1,6 @@
 package com.netflix.kayenta.opentsdb.service;
 
+import com.netflix.kayenta.opentsdb.model.OpentsdbMetricDescriptorsResponse;
 import com.netflix.kayenta.opentsdb.model.OpentsdbResults;
 import retrofit.http.GET;
 import retrofit.http.Query;
@@ -10,4 +11,7 @@ public interface OpentsdbRemoteService {
   OpentsdbResults fetch(@Query("m") String m,
                         @Query("start") Long start,
                         @Query("end") Long end);
+
+  @GET("/suggest?type=metrics")
+  OpentsdbMetricDescriptorsResponse findMetrics(@Query("q") String q);
 }

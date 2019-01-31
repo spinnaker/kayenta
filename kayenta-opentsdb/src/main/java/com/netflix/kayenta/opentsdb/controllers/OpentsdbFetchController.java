@@ -49,7 +49,7 @@ public class OpentsdbFetchController {
     String resolvedStorageAccountName = CredentialsHelper.resolveAccountByNameOrType(storageAccountName,
             AccountCredentials.Type.OBJECT_STORE,
             accountCredentialsRepository);
-
+    log.info("opentsdbFetchController creating opentsdbCanarMetricSetQueryConfig with m={}", m);
     OpentsdbCanaryMetricSetQueryConfig opentsdbCanaryMetricSetQueryConfig =
             OpentsdbCanaryMetricSetQueryConfig
                     .builder()
@@ -72,6 +72,8 @@ public class OpentsdbFetchController {
             CanaryConfig.builder().metric(canaryMetricConfig).build(),
             0,
             opentsdbCanaryScope);
+
+    log.info("opentsdbFetchController: metricSetListId = {}", metricSetListId);
 
     return Collections.singletonMap("metricSetListId", metricSetListId);
   }

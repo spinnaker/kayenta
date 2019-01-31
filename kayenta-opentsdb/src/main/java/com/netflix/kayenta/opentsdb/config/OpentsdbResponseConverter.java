@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.kayenta.opentsdb.model.OpentsdbMetricDescriptorsResponse;
 import com.netflix.kayenta.opentsdb.model.OpentsdbResults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import retrofit.converter.ConversionException;
 import retrofit.converter.Converter;
+import retrofit.converter.JacksonConverter;
 import retrofit.mime.TypedInput;
 import retrofit.mime.TypedOutput;
 
@@ -36,10 +38,18 @@ public class OpentsdbResponseConverter implements Converter {
 
   @Override
   public Object fromBody(TypedInput body, Type type) throws ConversionException {
-
+    // Metric suggest
+    //if (type == OpentsdbMetricDescriptorsResponse.class) {
+     // return new JacksonConverter(kayentaObjectMapper).fromBody(body, type);
+    //}
+    // Metric query
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(body.in()))) {
       String json = reader.readLine();
       log.info("Converting response from opentsdb: {}", json);
+
+      if (type == OpentsdbMetricDescriptorsResponse.class) {
+        return this.getMetadataResultObject(json);
+      }
 
       Map result = getResultObject(json);
 
@@ -61,6 +71,13 @@ public class OpentsdbResponseConverter implements Converter {
     }
 
     return null;
+  }
+
+  private List getMetadataResultObject(String json)
+          throws IOException, JsonParseException, JsonMappingException, ConversionException {
+    List<String> results = kayentaObjectMapper.readValue(json, new TypeReference<List<String>>() {});
+
+    return results;
   }
 
   private Map getResultObject(String json)

@@ -18,7 +18,9 @@
             "value": "400"
           }
         ],
-        "aggregationMethod": "sum"
+        "aggregator": "zimsum",
+        "rate": true,
+        "downsample": "1m-sum"
       },
       "analysisConfigurations": {
         "canary": {

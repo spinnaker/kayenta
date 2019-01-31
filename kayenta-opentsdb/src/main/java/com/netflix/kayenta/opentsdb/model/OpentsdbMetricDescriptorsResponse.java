@@ -19,9 +19,5 @@ public class OpentsdbMetricDescriptorsResponse {
 
   @NotNull
   @Getter
-  private String status;
-
-  @NotNull
-  @Getter
-  private List<String> data;
+  private List<String> metrics;
 }
