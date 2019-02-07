@@ -15,7 +15,6 @@
  */
 package com.netflix.kayenta.wavefront.config;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;

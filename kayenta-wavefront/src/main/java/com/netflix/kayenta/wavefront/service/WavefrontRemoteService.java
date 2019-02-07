@@ -15,7 +15,6 @@
  */
 package com.netflix.kayenta.wavefront.service;
 
-
 import retrofit.http.GET;
 import retrofit.http.Header;
 import retrofit.http.Query;

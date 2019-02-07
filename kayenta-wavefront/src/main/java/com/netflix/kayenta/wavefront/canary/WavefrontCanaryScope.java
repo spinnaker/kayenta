@@ -38,11 +38,10 @@ public class WavefrontCanaryScope extends CanaryScope {
             this.step = WavefrontCanaryScopeFactory.MINUTE;
         }
         if (granularity.equals("h")) {
-            this.step = WavefrontCanaryScopeFactory.HOUR;;
+            this.step = WavefrontCanaryScopeFactory.HOUR;
         }
         if (granularity.equals("d")) {
-            this.step = WavefrontCanaryScopeFactory.DAY;;
-
+            this.step = WavefrontCanaryScopeFactory.DAY;
         }
     }
 

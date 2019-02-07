@@ -42,7 +42,6 @@ public class WavefrontTimeSeries {
         private Map<String, String> tags;
         private List<List<Number>> data;
 
-
         // Wavefront returns an array of timestamp/value pairs; the pairs are
         // ordered, but may not be sequential (ie. may be a sparse result)
         // Since Kayenta's MetricSet is storing a simple array, we need to
@@ -60,8 +59,6 @@ public class WavefrontTimeSeries {
             this.adjustedPointList = new ArrayList<Double>();
             List<Number> firstPoint = data.get(0);
             List<Number> lastPoint = data.get(data.size() - 1);
-
-
             // Start at <start> time and index zero.
             Long startTime = firstPoint.get(0).longValue();
             int idx = 0;
@@ -77,7 +74,6 @@ public class WavefrontTimeSeries {
                         this.adjustedPointList.add(Double.NaN);
                     }
             }
-
             return this.adjustedPointList;
         }
 
@@ -85,6 +81,5 @@ public class WavefrontTimeSeries {
         public Stream<Double> getDataPoints(long step) {
             return this.getAdjustedPointList(step).stream();
         }
-
     }
 }
