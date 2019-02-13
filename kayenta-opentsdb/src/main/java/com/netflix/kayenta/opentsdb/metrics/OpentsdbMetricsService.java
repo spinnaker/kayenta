@@ -137,10 +137,8 @@ public class OpentsdbMetricsService implements MetricsService {
 
             OpentsdbRemoteService remoteService = accountCredentials.getOpentsdbRemoteService();
 
-            OpentsdbMetricDescriptorsResponse opentsdbMetricDescriptorsResponse = remoteService.findMetrics(filter);
-
-            log.debug(String.format("Getting response for %s with response size %d",
-                    metricsAccountName, opentsdbMetricDescriptorsResponse.getMetrics().size()));
+            OpentsdbMetricDescriptorsResponse opentsdbMetricDescriptorsResponse =
+                    OpentsdbMetricDescriptorsResponse.builder().metrics(remoteService.findMetrics(filter)).build();
 
              opentsdbMetricDescriptorsResponse.getMetrics().stream().forEach(
                      name -> result.add(new OpentsdbMetricDescriptor(name).getMap()));

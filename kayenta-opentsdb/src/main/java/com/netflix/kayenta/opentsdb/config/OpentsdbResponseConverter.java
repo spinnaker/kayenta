@@ -47,7 +47,7 @@ public class OpentsdbResponseConverter implements Converter {
       String json = reader.readLine();
       log.info("Converting response from opentsdb: {}", json);
 
-      if (type == OpentsdbMetricDescriptorsResponse.class) {
+      if (type != OpentsdbResults.class) {
         return this.getMetadataResultObject(json);
       }
 
@@ -73,11 +73,9 @@ public class OpentsdbResponseConverter implements Converter {
     return null;
   }
 
-  private List getMetadataResultObject(String json)
+  private List<String> getMetadataResultObject(String json)
           throws IOException, JsonParseException, JsonMappingException, ConversionException {
-    List<String> results = kayentaObjectMapper.readValue(json, new TypeReference<List<String>>() {});
-
-    return results;
+    return kayentaObjectMapper.readValue(json, new TypeReference<List<String>>() {});
   }
 
   private Map getResultObject(String json)
