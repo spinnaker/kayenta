@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static com.netflix.kayenta.signalfx.EndToEndIntegrationTests.CANARY_WINDOW_IN_MINUTES;
+import static com.netflix.kayenta.signalfx.EndToEndCanaryIntegrationTests.CANARY_WINDOW_IN_MINUTES;
 import static io.restassured.RestAssured.given;
 
 /**
@@ -58,6 +58,7 @@ public class SignalFxMockServiceReportingConfig {
   private static final int MOCK_SERVICE_REPORTING_INTERVAL_IN_MILLISECONDS = 1000;
 
   public static final String SIGNAL_FX_SCOPE_IDENTIFYING_DIMENSION_NAME = "canary-scope";
+  public static final String SIGNAL_FX_LOCATION_IDENTIFYING_DIMENSION_NAME = "location";
   public static final String KAYENTA_INTEGRATION_TEST_CPU_AVG_METRIC_NAME = "kayenta.integration-test.cpu.avg";
   public static final String KAYENTA_INTEGRATION_TEST_REQUEST_COUNT_METRIC_NAME = "kayenta.integration-test.request.count";
   public static final String CONTROL_SCOPE_NAME = "control";
@@ -119,14 +120,16 @@ public class SignalFxMockServiceReportingConfig {
 
     metricsReportingStartTime = Instant.now();
 
-    // Wait for the mock services to send data, before allowing the tests to run
-    try {
-      long pause = TimeUnit.MINUTES.toMillis(CANARY_WINDOW_IN_MINUTES) + TimeUnit.SECONDS.toMillis(15);
-      log.info("Waiting for {} milliseconds for mock data to flow through SignalFx, before letting the integration tests run", pause);
-      Thread.sleep(pause);
-    } catch (InterruptedException e) {
-      log.error("Failed to wait to send metrics", e);
-      throw new RuntimeException(e);
+    if (Boolean.valueOf(System.getProperty("block.for.metrics", "true"))) {
+      // Wait for the mock services to send data, before allowing the tests to run
+      try {
+        long pause = TimeUnit.MINUTES.toMillis(CANARY_WINDOW_IN_MINUTES) + TimeUnit.SECONDS.toMillis(15);
+        log.info("Waiting for {} milliseconds for mock data to flow through SignalFx, before letting the integration tests run", pause);
+        Thread.sleep(pause);
+      } catch (InterruptedException e) {
+        log.error("Failed to wait to send metrics", e);
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -146,6 +149,7 @@ public class SignalFxMockServiceReportingConfig {
                   "dimensions", ImmutableMap.builder()
                       .putAll(metric.getDimensions())
                       .put(SIGNAL_FX_SCOPE_IDENTIFYING_DIMENSION_NAME, scopeName)
+                      .put(SIGNAL_FX_LOCATION_IDENTIFYING_DIMENSION_NAME, "us-west-2")
                       .put("env", "integration")
                       .put("test-id", testId)
                       .put("uuid", uuid)

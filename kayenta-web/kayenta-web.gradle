@@ -22,6 +22,7 @@ dependencies {
   compile project(':kayenta-datadog')
   compile project(':kayenta-gcs')
   compile project(':kayenta-google')
+  compile project(':kayenta-graphite')
   compile project(':kayenta-influxdb')
   compile project(':kayenta-judge')
   compile project(':kayenta-newrelic-insights')
@@ -32,6 +33,8 @@ dependencies {
   compile project(':kayenta-s3')
   compile project(':kayenta-signalfx')
   compile project(':kayenta-stackdriver')
+  compile project(':kayenta-standalone-canary-analysis')
+  compile project(':kayenta-wavefront')
 
   compile spinnaker.dependency('bootActuator')
   compile spinnaker.dependency('bootWeb')

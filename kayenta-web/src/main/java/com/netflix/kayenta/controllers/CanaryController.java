@@ -26,6 +26,7 @@ import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.pipeline.model.Execution;
+import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionNotFoundException;
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -127,7 +128,7 @@ public class CanaryController {
     }
 
     return executionMapper.buildExecution(Optional.ofNullable(application).orElse(AD_HOC),
-                                          Optional.ofNullable(parentPipelineExecutionId).orElse(AD_HOC),
+                                          parentPipelineExecutionId,
                                           AD_HOC,
                                           canaryAdhocExecutionRequest.getCanaryConfig(),
                                           null,
@@ -147,9 +148,17 @@ public class CanaryController {
                                                                                      AccountCredentials.Type.OBJECT_STORE,
                                                                                      accountCredentialsRepository);
 
-    Execution pipeline = executionRepository.retrieve(Execution.ExecutionType.PIPELINE, canaryExecutionId);
+    // First look in the online cache.  If nothing is found there, look in our storage for the ID.
+    try {
+      Execution pipeline = executionRepository.retrieve(Execution.ExecutionType.PIPELINE, canaryExecutionId);
+      return executionMapper.fromExecution(resolvedStorageAccountName, pipeline);
+    } catch (ExecutionNotFoundException e) {
+      StorageService storageService = storageServiceRepository
+        .getOne(resolvedStorageAccountName)
+        .orElseThrow(() -> new IllegalArgumentException("No storage service was configured; unable to load archived results."));
 
-    return executionMapper.fromExecution(resolvedStorageAccountName, pipeline);
+      return storageService.loadObject(resolvedStorageAccountName, ObjectType.CANARY_RESULT_ARCHIVE, canaryExecutionId);
+    }
   }
 
   @ApiOperation(value = "Retrieve a list of an application's canary results")
@@ -178,7 +187,7 @@ public class CanaryController {
       .filter(s -> !StringUtils.isEmpty(s))
       .collect(Collectors.toList());
     ExecutionRepository.ExecutionCriteria executionCriteria = new ExecutionRepository.ExecutionCriteria()
-      .setLimit(limit)
+      .setPageSize(limit)
       .setStatuses(statusesList);
 
     // Users of the ad-hoc endpoint can either omit application or pass 'ad-hoc' explicitly.
