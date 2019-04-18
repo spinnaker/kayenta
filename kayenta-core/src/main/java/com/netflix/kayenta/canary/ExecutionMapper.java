@@ -22,11 +22,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.netflix.kayenta.canary.orca.CanaryStageNames;
 import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
+import com.netflix.kayenta.canary.results.CanaryJudgeResult;
+import com.netflix.kayenta.canary.results.CanaryResult;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.CredentialsHelper;
-import com.netflix.kayenta.storage.ObjectType;
-import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
 import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
@@ -43,6 +43,7 @@ import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,6 +52,8 @@ import java.util.stream.IntStream;
 @Component
 @Slf4j
 public class ExecutionMapper {
+
+  public static final String PIPELINE_NAME = "Standard Canary Pipeline";
 
   private final StorageServiceRepository storageServiceRepository;
   private final AccountCredentialsRepository accountCredentialsRepository;
@@ -104,11 +107,6 @@ public class ExecutionMapper {
                                                                              AccountCredentials.Type.OBJECT_STORE,
                                                                              accountCredentialsRepository);
 
-    StorageService storageService =
-      storageServiceRepository
-        .getOne(storageAccountName)
-        .orElseThrow(() -> new IllegalArgumentException("No storage service was configured; unable to retrieve results."));
-
     String canaryExecutionId = pipeline.getId();
 
     Stage judgeStage = pipeline.getStages().stream()
@@ -145,7 +143,8 @@ public class ExecutionMapper {
       canaryExecutionStatusResponseBuilder.configurationAccountName(configurationAccountName);
     }
     canaryExecutionStatusResponseBuilder.config(getCanaryConfig(pipeline));
-    canaryExecutionStatusResponseBuilder.canaryExecutionRequest(getCanaryExecutionRequest(pipeline));
+    CanaryExecutionRequest canaryExecutionRequest = getCanaryExecutionRequest(pipeline);
+    canaryExecutionStatusResponseBuilder.canaryExecutionRequest(canaryExecutionRequest);
 
     if (mixerOutputs.containsKey("metricSetPairListId")) {
       canaryExecutionStatusResponseBuilder.metricSetPairListId((String)mixerOutputs.get("metricSetPairListId"));
@@ -185,9 +184,12 @@ public class ExecutionMapper {
     }
 
     if (isComplete && pipelineStatus.equals("succeeded")) {
-      if (judgeOutputs.containsKey("canaryJudgeResultId")) {
-        String canaryJudgeResultId = (String)judgeOutputs.get("canaryJudgeResultId");
-        canaryExecutionStatusResponseBuilder.result(storageService.loadObject(storageAccountName, ObjectType.CANARY_RESULT, canaryJudgeResultId));
+      if (judgeOutputs.containsKey("result")) {
+        Map<String, Object> resultMap = (Map<String, Object>)judgeOutputs.get("result");
+        CanaryJudgeResult canaryJudgeResult = objectMapper.convertValue(resultMap, CanaryJudgeResult.class);
+        Duration canaryDuration = canaryExecutionRequest != null ? canaryExecutionRequest.calculateDuration() : null;
+        CanaryResult result = CanaryResult.builder().judgeResult(canaryJudgeResult).canaryDuration(canaryDuration).build();
+        canaryExecutionStatusResponseBuilder.result(result);
       }
     }
 
@@ -406,7 +408,7 @@ public class ExecutionMapper {
     String canaryPipelineConfigId = application + "-standard-canary-pipeline";
     PipelineBuilder pipelineBuilder =
       new PipelineBuilder(application)
-        .withName("Standard Canary Pipeline")
+        .withName(PIPELINE_NAME)
         .withPipelineConfigId(canaryPipelineConfigId)
         .withStage("setupCanary", "Setup Canary", setupCanaryContext)
         .withStage("metricSetMixer", "Mix Control and Experiment Results", mixMetricSetsContext)

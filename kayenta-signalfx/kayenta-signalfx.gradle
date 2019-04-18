@@ -1,7 +1,7 @@
 buildscript {
   repositories {
     jcenter()
-    maven { url "http://spinnaker.bintray.com/gradle" }
+    maven { url "https://spinnaker.bintray.com/gradle" }
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
@@ -118,6 +118,8 @@ dependencies {
   compile "com.netflix.spinnaker.orca:orca-core:$orcaVersion"
 
   compile group: 'com.signalfx.public', name: 'signalfx-java', version: '0.0.48'
+
+  testCompile group: 'com.tngtech.java', name: 'junit-dataprovider', version: '1.13.1'
 
   // Integration Test dependencies
   integrationTestCompile sourceSets.main.output

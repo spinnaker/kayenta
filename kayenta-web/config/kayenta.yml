@@ -50,6 +50,15 @@ kayenta:
 #          - METRICS_STORE
 #        endpoint.baseUrl: https://app.datadoghq.com
 
+  graphite:
+    enabled: false
+#    accounts:
+#      - name: my-graphite-account
+#        endpoint:
+#          baseUrl: http://localhost
+#        supportedTypes:
+#          - METRICS_STORE
+
   newrelic:
     enabled: false
 #    accounts:
@@ -76,6 +85,15 @@ kayenta:
 #          baseUrl: http://localhost:8086
 #        supportedTypes:
 #          - METRICS_STORE
+  wavefront:
+   enabled: false
+#   accounts:
+#      - name:
+#        endpoint:
+#          baseUrl:
+#        apiToken:
+#        supportedTypes:
+#          - METRICS_STORE
 
   gcs:
     enabled: false
@@ -91,6 +109,11 @@ kayenta:
 
   configbin:
     enabled: false
+
+  remoteJudge:
+    enabled: false
+#    endpoint:
+#      baseUrl: http://remotejudge.example.com/path/to/service
 
 management.security.enabled: false
 
@@ -124,3 +147,4 @@ swagger:
     - /metricSetPairList.*
     - /metricServices.*
     - /pipeline.*
+    - /standalone.*

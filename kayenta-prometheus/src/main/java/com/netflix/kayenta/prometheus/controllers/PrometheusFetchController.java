@@ -80,7 +80,7 @@ public class PrometheusFetchController {
                             @RequestParam(required = false) String start,
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-08T01:12:22Z")
                             @RequestParam(required = false) String end,
-                          @ApiParam(defaultValue = "60", value = "seconds") @RequestParam Long step,
+                          @ApiParam(example = "60", value = "seconds") @RequestParam Long step,
                           @RequestParam(required = false) final String customFilter,
                           @ApiParam(defaultValue = "false")
                             @RequestParam(required = false) final boolean dryRun) throws IOException {
@@ -111,7 +111,7 @@ public class PrometheusFetchController {
     }
 
     if (!StringUtils.isEmpty(customFilter)) {
-      prometheusCanaryMetricSetQueryConfigBuilder.customFilter(customFilter);
+      prometheusCanaryMetricSetQueryConfigBuilder.customInlineTemplate(customFilter);
     }
 
     CanaryMetricConfig canaryMetricConfig =

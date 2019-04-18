@@ -18,7 +18,7 @@
 buildscript {
   repositories {
     jcenter()
-    maven { url "http://spinnaker.bintray.com/gradle" }
+    maven { url "https://spinnaker.bintray.com/gradle" }
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
@@ -32,9 +32,10 @@ allprojects {
   apply plugin: "spinnaker.base-project"
   apply plugin: "groovy"
   apply plugin: "java"
+  apply plugin: "kotlin"
 
   ext {
-    spinnakerDependenciesVersion = '1.7.0'
+    spinnakerDependenciesVersion = '1.37.0'
     if (project.hasProperty('spinnakerDependenciesVersion')) {
       spinnakerDependenciesVersion = project.property('spinnakerDependenciesVersion')
     }
