@@ -24,11 +24,3 @@ dependencies {
 
   testImplementation "com.netflix.spinnaker.kork:kork-jedis-test"
 }
-
-
-configurations.all {
-  resolutionStrategy {
-    // springfox-swagger-ui:2.9.2, brings in a newer version of this that seems to break the spock spy functionality.
-    force 'net.bytebuddy:byte-buddy:1.6.14'
-  }
-}
