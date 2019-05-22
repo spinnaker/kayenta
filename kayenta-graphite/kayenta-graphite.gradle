@@ -29,7 +29,7 @@ sourceSets {
 }
 
 configurations {
-    integrationTestCompile.extendsFrom testCompile
+    integrationTestCompile.extendsFrom testImplementation
     integrationTestRuntime.extendsFrom testRuntime
 }
 
@@ -168,19 +168,15 @@ integrationTest {
 }
 
 dependencies {
-    compile project(":kayenta-core")
+    implementation project(":kayenta-core")
 
-    compile spinnaker.dependency('bootWeb')
-    compile spinnaker.dependency("korkSwagger")
-    compile spinnaker.dependency('lombok')
+    implementation "org.apache.commons:commons-io:1.3.2"
 
-    compile "org.apache.commons:commons-io:1.3.2"
-
-    compile "com.netflix.spinnaker.orca:orca-core:$orcaVersion"
+ //   testImplementation "com.fasterxml.jackson.core:jackson-databind"
 
     // Integration Test dependencies
     integrationTestCompile sourceSets.main.output
-    integrationTestCompile configurations.testCompile
+    integrationTestCompile configurations.testImplementation
     integrationTestCompile sourceSets.test.output
     integrationTestRuntime configurations.testRuntime
     integrationTestCompile project(':kayenta-web')

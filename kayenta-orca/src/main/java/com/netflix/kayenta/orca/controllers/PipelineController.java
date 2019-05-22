@@ -26,8 +26,9 @@ import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -56,26 +57,25 @@ public class PipelineController {
   private final ExecutionRepository executionRepository;
   private final ObjectMapper kayentaObjectMapper;
   private final ConfigurableApplicationContext context;
-  private final HealthEndpoint healthEndpoint;
+  private final HealthIndicator healthIndicator;
   private final ScheduledAnnotationBeanPostProcessor postProcessor;
   private Boolean upAtLeastOnce = false;
 
   @Autowired
-  public PipelineController(ExecutionLauncher executionLauncher, ExecutionRepository executionRepository, ObjectMapper kayentaObjectMapper, ConfigurableApplicationContext context, HealthEndpoint healthEndpoint, ScheduledAnnotationBeanPostProcessor postProcessor) {
+  public PipelineController(ExecutionLauncher executionLauncher, ExecutionRepository executionRepository, ObjectMapper kayentaObjectMapper, ConfigurableApplicationContext context, HealthIndicator healthIndicator, ScheduledAnnotationBeanPostProcessor postProcessor) {
     this.executionLauncher = executionLauncher;
     this.executionRepository = executionRepository;
     this.kayentaObjectMapper = kayentaObjectMapper;
     this.context = context;
-    this.healthEndpoint = healthEndpoint;
+    this.healthIndicator = healthIndicator;
     this.postProcessor = postProcessor;
   }
 
   // TODO(duftler): Expose /inservice and /outofservice endpoints.
   @Scheduled(initialDelay = 10000, fixedDelay = 5000)
   void startOrcaQueueProcessing() {
-    Health health = healthEndpoint.invoke();
-
     if (!upAtLeastOnce) {
+      Health health = healthIndicator.health();
       if (health.getStatus() == Status.UP) {
         upAtLeastOnce = true;
         context.publishEvent(new RemoteStatusChangedEvent(new StatusChangeEvent(STARTING, UP)));
