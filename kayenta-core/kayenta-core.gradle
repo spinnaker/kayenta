@@ -1,6 +1,7 @@
 dependencies {
   implementation "redis.clients:jedis"
   implementation "com.netflix.spinnaker.kork:kork-core"
+  implementation "com.netflix.spinnaker.kork:kork-web"
   implementation "com.netflix.spectator:spectator-api"
 
   // TODO update korkSwagger?

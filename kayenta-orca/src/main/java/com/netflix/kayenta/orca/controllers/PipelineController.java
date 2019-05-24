@@ -26,10 +26,7 @@ import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthEndpoint;
-import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.actuate.health.*;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,12 +59,18 @@ public class PipelineController {
   private Boolean upAtLeastOnce = false;
 
   @Autowired
-  public PipelineController(ExecutionLauncher executionLauncher, ExecutionRepository executionRepository, ObjectMapper kayentaObjectMapper, ConfigurableApplicationContext context, HealthIndicator healthIndicator, ScheduledAnnotationBeanPostProcessor postProcessor) {
+  public PipelineController(ExecutionLauncher executionLauncher,
+                            ExecutionRepository executionRepository,
+                            ObjectMapper kayentaObjectMapper,
+                            ConfigurableApplicationContext context,
+                            HealthIndicatorRegistry healthIndicators,
+                            HealthAggregator healthAggregator,
+                            ScheduledAnnotationBeanPostProcessor postProcessor) {
     this.executionLauncher = executionLauncher;
     this.executionRepository = executionRepository;
     this.kayentaObjectMapper = kayentaObjectMapper;
     this.context = context;
-    this.healthIndicator = healthIndicator;
+    this.healthIndicator = new CompositeHealthIndicator(healthAggregator, healthIndicators);
     this.postProcessor = postProcessor;
   }
 
