@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":kayenta-core")
+
+    compile spinnaker.dependency('bootWeb')
+    compile spinnaker.dependency('lombok')
+    compile group: 'com.microsoft.azure', name: 'azure-storage', version: '8.3.0'
+}
