@@ -94,6 +94,8 @@ public class PrometheusMetricsService implements MetricsService {
     String scope = prometheusCanaryScope.getScope();
     String projectId = prometheusCanaryScope.getProject();
     String location = prometheusCanaryScope.getLocation();
+    String queryScopeLabel = queryConfig.getScopeLabel();
+    String queryLocationLabel = queryConfig.getLocationLabel();
     List<String> filters = queryConfig.getLabelBindings();
     if (filters == null) {
       filters = new ArrayList<>();
@@ -116,6 +118,10 @@ public class PrometheusMetricsService implements MetricsService {
 
       filters = new ArrayList(filters);
       filters.addAll(0, customFilterTokens);
+
+      if (!StringUtils.isEmpty(queryScopeLabel) || !StringUtils.isEmpty(queryLocationLabel)) {
+        addCustomFilters(queryScopeLabel, queryLocationLabel, scope, location, filters);
+      }
     }
 
     if (!filters.isEmpty()) {
@@ -165,8 +171,43 @@ public class PrometheusMetricsService implements MetricsService {
     filters.add("zone=~\"" + location + ".{1}\"");
   }
 
+  private static void addCustomFilters(String scopeLabel, String locationLabel, String scope, String location, List<String> filters) {
+    if (!StringUtils.isEmpty(scopeLabel) && !StringUtils.isEmpty(scope)) {
+      filters.add(scopeLabel + "\"" + scope + "\"");
+    }
+
+    if (!StringUtils.isEmpty(locationLabel) && !StringUtils.isEmpty(location)) {
+      filters.add(locationLabel + "\"" + location + "\"");
+    }
+  }
+
   private static StringBuilder addAvgQuery(StringBuilder queryBuilder) {
     return queryBuilder.insert(0, "avg(").append(")");
+  }
+
+  private static StringBuilder addFunctionsQuery(StringBuilder queryBuilder, PrometheusCanaryMetricSetQueryConfig queryConfig) {
+    List<String> functions = queryConfig.getFunctions();
+
+    // default to add avg if nothing provided
+    if (functions == null || functions.isEmpty()) {
+      return addAvgQuery(queryBuilder);
+    }
+
+    for (String function : functions) {
+      String[] funcOpts = function.split(":");
+      String func = funcOpts[0];
+      String funcPrefix = "";
+      String funcSuffix = "";
+      if (funcOpts.length > 1) {
+        funcPrefix = funcOpts[1];
+      }
+      if (funcOpts.length > 2) {
+        funcSuffix = funcOpts[2];
+      }
+
+      queryBuilder.insert(0, func + "(" + funcPrefix).append(funcSuffix + ")");
+    }
+    return queryBuilder;
   }
 
   private static StringBuilder addGroupByQuery(StringBuilder queryBuilder, PrometheusCanaryMetricSetQueryConfig queryConfig) {
@@ -214,7 +255,8 @@ public class PrometheusMetricsService implements MetricsService {
       StringBuilder queryBuilder = new StringBuilder(queryConfig.getMetricName());
 
       queryBuilder = addScopeFilter(queryBuilder, prometheusCanaryScope, resourceType, queryConfig, customFilter);
-      queryBuilder = addAvgQuery(queryBuilder);
+      // queryBuilder = addAvgQuery(queryBuilder);
+      queryBuilder = addFunctionsQuery(queryBuilder, queryConfig);
       queryBuilder = addGroupByQuery(queryBuilder, queryConfig);
 
       log.debug("query={}", queryBuilder);

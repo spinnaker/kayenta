@@ -63,6 +63,7 @@ public class PrometheusFetchController {
                           @RequestParam(required = false) final String storageAccountName,
                           @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
                           @ApiParam(defaultValue = "node_cpu") @RequestParam String metricName,
+                          @RequestParam(required = false) List<String> functions,
                           @RequestParam(required = false) List<String> groupByFields,
                           @RequestParam(required = false) String project,
                           @ApiParam(value = "Used to identify the type of the resource being queried, " +
@@ -74,6 +75,10 @@ public class PrometheusFetchController {
                           @ApiParam(value = "The name of the resource to use when scoping the query. " +
                                             "The most common use-case is to provide a server group name.")
                             @RequestParam(required = false) String scope,
+                          @ApiParam(value = "The prom key to set to the location.")
+                            @RequestParam(required = false) String locationLabel,
+                          @ApiParam(value = "The prom key to set to the scope.")
+                            @RequestParam(required = false) String scopeLabel,
                           @ApiParam(defaultValue = "mode=~\"user|system\"")
                             @RequestParam(required = false) List<String> labelBindings,
                           @ApiParam(value = "An ISO format timestamp, e.g.: 2018-03-08T01:02:53Z")
@@ -104,7 +109,10 @@ public class PrometheusFetchController {
         .builder()
         .metricName(metricName)
         .labelBindings(labelBindings)
-        .groupByFields(groupByFields);
+        .groupByFields(groupByFields)
+        .functions(functions)
+        .scopeLabel(scopeLabel)
+        .locationLabel(locationLabel);
 
     if (!StringUtils.isEmpty(resourceType)) {
       prometheusCanaryMetricSetQueryConfigBuilder.resourceType(resourceType);

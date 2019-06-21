@@ -45,6 +45,15 @@ public class PrometheusCanaryMetricSetQueryConfig implements CanaryMetricSetQuer
   @Getter
   private List<String> groupByFields;
 
+  @Getter
+  private List<String> functions;
+
+  @Getter
+  private String scopeLabel;
+
+  @Getter
+  private String locationLabel;
+
   /**
    * @deprecated Use customInlineTemplate instead.
    */
