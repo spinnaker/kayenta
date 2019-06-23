@@ -18,15 +18,15 @@ package com.netflix.kayenta;
 
 import com.netflix.kayenta.atlas.config.AtlasConfiguration;
 import com.netflix.kayenta.aws.config.AwsConfiguration;
-import com.netflix.kayenta.azure.config.AzureConfiguration;
 import com.netflix.kayenta.canaryanalysis.config.StandaloneCanaryAnalysisModuleConfiguration;
 import com.netflix.kayenta.config.KayentaConfiguration;
 import com.netflix.kayenta.config.WebConfiguration;
 import com.netflix.kayenta.configbin.config.ConfigBinConfiguration;
 import com.netflix.kayenta.datadog.config.DatadogConfiguration;
 import com.netflix.kayenta.gcs.config.GcsConfiguration;
-import com.netflix.kayenta.blobs.config.BlobsConfiguration;
 import com.netflix.kayenta.google.config.GoogleConfiguration;
+import com.netflix.kayenta.blobs.config.BlobsConfiguration;
+import com.netflix.kayenta.azure.config.AzureConfiguration;
 import com.netflix.kayenta.graphite.config.GraphiteConfiguration;
 import com.netflix.kayenta.influxdb.config.InfluxDbConfiguration;
 import com.netflix.kayenta.judge.config.NetflixJudgeConfiguration;
@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -56,9 +55,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
   ConfigBinConfiguration.class,
   DatadogConfiguration.class,
   GcsConfiguration.class,
-  GoogleConfiguration.class,
   BlobsConfiguration.class,
   AzureConfiguration.class,
+  GoogleConfiguration.class,
   GraphiteConfiguration.class,
   InfluxDbConfiguration.class,
   KayentaConfiguration.class,
@@ -79,7 +78,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAutoConfiguration
 @EnableAsync
 @EnableScheduling
-public class Main extends SpringBootServletInitializer {
+public class Main {
   private static final Map<String, Object> DEFAULT_PROPS = buildDefaults();
 
   private static Map<String, Object> buildDefaults() {
@@ -98,10 +97,5 @@ public class Main extends SpringBootServletInitializer {
 
   public static void main(String... args) {
     new SpringApplicationBuilder().properties(DEFAULT_PROPS).sources(Main.class).run(args);
-  }
-
-  @Override
-  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-    return application.properties(DEFAULT_PROPS).sources(Main.class);
   }
 }
