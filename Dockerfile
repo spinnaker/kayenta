@@ -5,11 +5,14 @@ FROM gradle:5.4-jdk8 AS builder
 
 # Prep build environment
 ENV GRADLE_USER_HOME=cache
-COPY . /opt/workdir
-WORKDIR /opt/workdir
+COPY . /tmp/workdir
+WORKDIR /tmp/workdir
 
 # Build kayenta
 RUN gradle build
+
+# Unpack so release image can copy folder and be smaller
+RUN tar -xf /tmp/workdir/kayenta-web/build/distributions/kayenta.tar -C /opt
 
 #
 # Release Image
@@ -21,8 +24,7 @@ MAINTAINER delivery-engineering@netflix.com
 # Set where to look for config from
 ENV KAYENTA_OPTS=-Dspring.config.location=file:/opt/kayenta/config/kayenta.yml
 
-# Copy/unpack from builder image
-COPY --from=builder /opt/workdir/kayenta-web/build/distributions/kayenta.tar /tmp/kayenta.tar
-RUN tar -xf /tmp/kayenta.tar -C /opt && rm -f /tmp/kayenta.tar
+# Copy from builder image
+COPY --from=builder /opt/kayenta /opt/kayenta
 
 CMD ["/opt/kayenta/bin/kayenta"]
