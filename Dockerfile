@@ -23,6 +23,6 @@ ENV KAYENTA_OPTS=-Dspring.config.location=file:/opt/kayenta/config/kayenta.yml
 
 # Copy/unpack from builder image
 COPY --from=builder /opt/workdir/kayenta-web/build/distributions/kayenta.tar /tmp/kayenta.tar
-RUN tar -xf /tmp/kayenta.tar -C /opt
+RUN tar -xf /tmp/kayenta.tar -C /opt && rm -f /tmp/kayenta.tar
 
 CMD ["/opt/kayenta/bin/kayenta"]
