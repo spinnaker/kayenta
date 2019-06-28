@@ -150,6 +150,10 @@ public class QueryConfigUtils {
 
   @VisibleForTesting
   public static CanaryConfig escapeTemplates(CanaryConfig canaryConfig) {
+    if (canaryConfig == null) {
+      return null;
+    }
+
     Map<String, String> escapedTemplates;
 
     if (!CollectionUtils.isEmpty(canaryConfig.getTemplates())) {
