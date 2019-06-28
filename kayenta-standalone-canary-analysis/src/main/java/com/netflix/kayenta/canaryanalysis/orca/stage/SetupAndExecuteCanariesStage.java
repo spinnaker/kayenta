@@ -18,8 +18,10 @@ package com.netflix.kayenta.canaryanalysis.orca.stage;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.CanaryScopePair;
+import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
 import com.netflix.kayenta.canaryanalysis.domain.CanaryAnalysisConfig;
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder;
 import com.netflix.spinnaker.orca.pipeline.TaskNode;
@@ -112,6 +114,7 @@ public class SetupAndExecuteCanariesStage implements StageDefinitionBuilder {
         });
       }
 
+      CanaryConfig canaryConfig = QueryConfigUtils.escapeTemplates(canaryAnalysisConfig.getCanaryConfig());
       RunCanaryContext runCanaryContext = RunCanaryContext.builder()
           .application(canaryAnalysisConfig.getApplication())
           .user(canaryAnalysisConfig.getUser())
@@ -119,7 +122,7 @@ public class SetupAndExecuteCanariesStage implements StageDefinitionBuilder {
           .canaryConfigId(canaryAnalysisConfig.getCanaryConfigId())
           .metricsAccountName(canaryAnalysisConfig.getMetricsAccountName())
           .storageAccountName(canaryAnalysisConfig.getStorageAccountName())
-          .canaryConfig(canaryAnalysisConfig.getCanaryConfig())
+          .canaryConfig(canaryConfig)
           .scopes(buildRequestScopes(canaryAnalysisExecutionRequest, i, analysisInterval))
           .scoreThresholds(canaryAnalysisExecutionRequest.getThresholds())
           .siteLocal(canaryAnalysisExecutionRequest.getSiteLocal())
