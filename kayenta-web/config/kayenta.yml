@@ -43,19 +43,6 @@ kayenta:
 #          - OBJECT_STORE
 #          - CONFIGURATION_STORE
 
-  azure:
-    enabled: false
-#    accounts:
-#      - name:
-#        storageAccountName:
-#        accountAccessKey:
-#        container:
-#        rootFolder:
-#        endpointSuffix:
-#        supportedTypes:
-#          - OBJECT_STORE
-#          - CONFIGURATION_STORE
-
   aws:
     enabled: false
 #    accounts:
@@ -133,9 +120,6 @@ kayenta:
     enabled: false
 
   s3:
-    enabled: false
-   
-  blobs:
     enabled: false
 
   stackdriver:
