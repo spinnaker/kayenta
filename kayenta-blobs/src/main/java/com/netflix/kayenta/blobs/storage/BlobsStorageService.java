@@ -65,7 +65,7 @@ public class BlobsStorageService implements StorageService {
         }
         try {
             return deserialize(blobItem, objectType.getTypeReference());
-            }
+        }
         catch (IOException | StorageException e) {
             throw new IllegalStateException("Unable to deserialize object (key: " + objectKey + ")", e);
         }
@@ -289,12 +289,12 @@ public class BlobsStorageService implements StorageService {
             String rootFolder = daoRoot(credentials, objectType.getGroup());
 
             try {
-                  createIfNotExists(azureContainer);
-                }
+                createIfNotExists(azureContainer);
+            }
             catch (StorageException e)
-                {
-                 log.error("Unable to create cloud container",e.getStackTrace());
-                }
+            {
+                log.error("Unable to create cloud container",e.getStackTrace());
+            }
 
             int skipToOffset = rootFolder.length() + 1;  // + Trailing slash
             List<Map<String, Object>> result = new ArrayList<>();
@@ -337,6 +337,11 @@ public class BlobsStorageService implements StorageService {
         return credentials.getRootFolder() + '/' + daoTypeName;
     }
     private <T> T deserialize(CloudBlockBlob blob, TypeReference typeReference) throws IOException, StorageException {
+        String json = downloadText(blob);
+        return kayentaObjectMapper.readValue(json, typeReference);
+    }
+
+    private String keyToPath(AzureNamedAccountCredentials credentials, ObjectType objectType, String objectKey, String filename) {
         if (filename == null) {
             filename = objectType.getDefaultFilename();
         }

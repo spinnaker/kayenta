@@ -20,7 +20,6 @@ import org.junit.Before;
 import java.util.*;
 import org.junit.runner.*;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import static org.mockito.Mockito.*;
 
@@ -100,7 +99,7 @@ public class TestableBlobsStorageServiceTest {
     @Test
     @UseDataProvider("loadObjectDataset")
     public void loadObject(String accountName, ObjectType objectType, String testItemKey, List<String> applications, String exceptionKey) {
-        AccountCredentialsRepository mockCredentialsRepository = PowerMockito.mock(AccountCredentialsRepository.class);
+        AccountCredentialsRepository mockCredentialsRepository = mock(AccountCredentialsRepository.class);
             doReturn(credentialsRepository.getOne(accountName)).when(mockCredentialsRepository).getOne(anyString());
        try {
            log.info(String.format("Running loadObjectTest with accountName(%s) and itemKey(%s) for application(%s)",accountName,testItemKey,applications));
