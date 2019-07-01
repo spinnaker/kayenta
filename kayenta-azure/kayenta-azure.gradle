@@ -1,5 +1,5 @@
 dependencies {
     implementation project(":kayenta-core")
 
-    implementation 'com.microsoft.azure:azure-storage:8.3.0'
+    api 'com.microsoft.azure:azure-storage:8.3.0'
 }

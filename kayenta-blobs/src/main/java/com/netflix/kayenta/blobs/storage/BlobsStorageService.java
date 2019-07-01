@@ -1,19 +1,3 @@
-/*
- * Copyright 2017 Netflix, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.netflix.kayenta.blobs.storage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -67,7 +51,6 @@ public class BlobsStorageService implements StorageService {
         return accountNames.contains(accountName);
     }
 
-
     @Override
     public <T> T loadObject(String accountName, ObjectType objectType, String objectKey) throws IllegalArgumentException, NotFoundException {
         AzureNamedAccountCredentials credentials = (AzureNamedAccountCredentials)accountCredentialsRepository
@@ -80,14 +63,45 @@ public class BlobsStorageService implements StorageService {
         } catch (IllegalArgumentException e) {
             throw new NotFoundException(e.getMessage());
         }
-
         try {
-
             return deserialize(blobItem, objectType.getTypeReference());
-        } catch (IOException | StorageException e) {
+            }
+        catch (IOException | StorageException e) {
             throw new IllegalStateException("Unable to deserialize object (key: " + objectKey + ")", e);
         }
+    }
 
+    private CloudBlockBlob resolveSingularBlob(ObjectType objectType, String objectKey, AzureNamedAccountCredentials credentials, CloudBlobContainer
+            azureContainer) {
+        String rootFolder = daoRoot(credentials, objectType.getGroup()) + "/" + objectKey;
+
+        try {
+            Iterable<ListBlobItem> blobItems = listBlobs(azureContainer,rootFolder,true,false);
+            CloudBlockBlob foundBlockItem = null;
+
+            int size=0;
+            for (ListBlobItem blobItem : blobItems) {
+                if(size>1)
+                {
+                    throw new IllegalArgumentException("Unable to resolve singular " + objectType + " at " + daoRoot(credentials, objectType.getGroup()) + '/' + objectKey + ".");
+                }
+                if (blobItem instanceof CloudBlockBlob) {
+                    CloudBlockBlob blob = (CloudBlockBlob) blobItem;
+                    foundBlockItem = blob;
+                    size++;
+                }
+            }
+            if ((foundBlockItem!=null)&&size==1) {
+                return foundBlockItem;
+            }
+            else
+            {
+                throw new IllegalArgumentException("No " + objectType + " found at " + daoRoot(credentials, objectType.getGroup()) + '/' + objectKey + ".{Null value}");
+            }
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException("Could not fetch items from Azure Cloud Storage: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -97,6 +111,11 @@ public class BlobsStorageService implements StorageService {
                 .orElseThrow(() -> new IllegalArgumentException("Unable to resolve account " + accountName + "."));
         CloudBlobContainer azureContainer = credentials.getAzureContainer();
         String path = keyToPath(credentials, objectType, objectKey, filename);
+        try {
+            createIfNotExists(azureContainer);
+        } catch (StorageException e) {
+            log.error("Unable to create cloud container",e.getStackTrace());
+        }
 
         long updatedTimestamp = -1;
         String correlationId = null;
@@ -107,7 +126,6 @@ public class BlobsStorageService implements StorageService {
             updatedTimestamp = canaryConfigIndex.getRedisTime();
 
             CanaryConfig canaryConfig = (CanaryConfig)obj;
-
             checkForDuplicateCanaryConfig(canaryConfig, objectKey, credentials);
 
             if (isAnUpdate) {
@@ -142,19 +160,19 @@ public class BlobsStorageService implements StorageService {
 
         try {
             byte[] bytes = kayentaObjectMapper.writeValueAsBytes(obj);
-            CloudBlockBlob blob = azureContainer.getBlockBlobReference(path);
+            CloudBlockBlob blob = getBlockBlobReference(azureContainer,path);
             blob.getProperties().setContentType("application/json");
-            blob.uploadFromByteArray(bytes,0,bytes.length);
+            uploadFromByteArray(blob, bytes,0,bytes.length);
 
             if (objectType == ObjectType.CANARY_CONFIG) {
                 // This will be true if the canary config is renamed.
                 if (originalItem != null && !originalItem.getName().equals(path)) {
-                    originalItem.deleteIfExists();
+                    deleteIfExists(originalItem);
                 }
 
                 canaryConfigIndex.finishPendingUpdate(credentials, CanaryConfigIndexAction.UPDATE, correlationId);
             }
-        } catch (IOException | URISyntaxException | StorageException e) {
+        } catch (IOException e) {
             log.error("Update failed on path {}: {}", path, e);
 
             if (objectType == ObjectType.CANARY_CONFIG) {
@@ -166,11 +184,17 @@ public class BlobsStorageService implements StorageService {
                         canaryConfigSummaryJson
                 );
             }
-
             throw new IllegalArgumentException(e);
         }
+        catch(URISyntaxException e)
+        {
+            log.error("URI Syntax Exception on path {}: {}", path, e);
+        }
+        catch(StorageException e)
+        {
+            log.error("Storage Exception on path {}: {}", path, e);
+        }
     }
-
 
     private void checkForDuplicateCanaryConfig(CanaryConfig canaryConfig, String canaryConfigId, AzureNamedAccountCredentials credentials) {
         String canaryConfigName = canaryConfig.getName();
@@ -180,42 +204,6 @@ public class BlobsStorageService implements StorageService {
         // We want to avoid creating a naming collision due to the renaming of an existing canary config.
         if (!StringUtils.isEmpty(existingCanaryConfigId) && !existingCanaryConfigId.equals(canaryConfigId)) {
             throw new IllegalArgumentException("Canary config with name '" + canaryConfigName + "' already exists in the scope of applications " + applications + ".");
-        }
-    }
-
-
-
-    private CloudBlockBlob resolveSingularBlob(ObjectType objectType, String objectKey, AzureNamedAccountCredentials credentials, CloudBlobContainer
-            azureContainer) {
-        String rootFolder = daoRoot(credentials, objectType.getGroup()) + "/" + objectKey;
-
-        try {
-            Iterable<ListBlobItem> blobItems = azureContainer.listBlobs(rootFolder,true);
-
-            CloudBlockBlob foundBlockItem = null;
-
-            int size=0;
-            for (ListBlobItem blobItem : blobItems) {
-                if(size>1)
-                {
-                    throw new IllegalArgumentException("Unable to resolve singular " + objectType + " at " + daoRoot(credentials, objectType.getGroup()) + '/' + objectKey + ".");
-                }
-                if (blobItem instanceof CloudBlockBlob) {
-                    CloudBlockBlob blob = (CloudBlockBlob) blobItem;
-                    foundBlockItem = blob;
-                    size++;
-                }
-            }
-            if ((foundBlockItem!=null)&&size==1) {
-                return foundBlockItem;
-            }
-            else
-            {
-                throw new IllegalArgumentException("No " + objectType + " found at " + daoRoot(credentials, objectType.getGroup()) + '/' + objectKey + ".{Null value}");
-            }
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException("Could not fetch items from Azure Cloud Storage: " + e.getMessage(), e);
         }
     }
 
@@ -267,12 +255,11 @@ public class BlobsStorageService implements StorageService {
         }
 
         try {
-            item.deleteIfExists();
-
+            deleteIfExists(item);
             if (correlationId != null) {
                 canaryConfigIndex.finishPendingUpdate(credentials, CanaryConfigIndexAction.DELETE, correlationId);
             }
-        } catch (Exception e) {
+        } catch (StorageException e) {
             log.error("Failed to delete path {}: {}", item.getName(), e);
 
             if (correlationId != null) {
@@ -284,8 +271,6 @@ public class BlobsStorageService implements StorageService {
                         canaryConfigSummaryJson
                 );
             }
-
-            throw new IllegalArgumentException(e);
         }
     }
 
@@ -297,21 +282,26 @@ public class BlobsStorageService implements StorageService {
 
         if (!skipIndex && objectType == ObjectType.CANARY_CONFIG) {
             Set<Map<String, Object>> canaryConfigSet = canaryConfigIndex.getCanaryConfigSummarySet(credentials, applications);
-
             return Lists.newArrayList(canaryConfigSet);
-        } else {
+        }
+        else {
             CloudBlobContainer azureContainer = credentials.getAzureContainer();
-            String containerName = credentials.getContainer();
             String rootFolder = daoRoot(credentials, objectType.getGroup());
 
-            //ensureBucketExists(accountName);
+            try {
+                  createIfNotExists(azureContainer);
+                }
+            catch (StorageException e)
+                {
+                 log.error("Unable to create cloud container",e.getStackTrace());
+                }
 
             int skipToOffset = rootFolder.length() + 1;  // + Trailing slash
             List<Map<String, Object>> result = new ArrayList<>();
 
             log.debug("Listing {}", objectType.getGroup());
 
-            Iterable<ListBlobItem> blobItems = azureContainer.listBlobs(rootFolder,true);  //prefix=kayenta/metrics
+            Iterable<ListBlobItem> blobItems = listBlobs(azureContainer,rootFolder,true,true);
 
             if (blobItems != null) {
                 for (ListBlobItem blobItem : blobItems) {
@@ -321,7 +311,7 @@ public class BlobsStorageService implements StorageService {
                         int indexOfLastSlash = itemName.lastIndexOf("/");
                         Map<String, Object> objectMetadataMap = new HashMap<>();
                         BlobProperties properties = blob.getProperties();
-                        long updatedTimestamp = (properties.getLastModified()).getTime();
+                        long updatedTimestamp = (getLastModified(properties)).getTime();
                         objectMetadataMap.put("id", itemName.substring(skipToOffset, indexOfLastSlash));
                         objectMetadataMap.put("updatedTimestamp", updatedTimestamp);
                         objectMetadataMap.put("updatedTimestampIso", Instant.ofEpochMilli(updatedTimestamp).toString());
@@ -339,7 +329,6 @@ public class BlobsStorageService implements StorageService {
                     }
                 }
             }
-
             return result;
         }
     }
@@ -348,14 +337,38 @@ public class BlobsStorageService implements StorageService {
         return credentials.getRootFolder() + '/' + daoTypeName;
     }
     private <T> T deserialize(CloudBlockBlob blob, TypeReference typeReference) throws IOException, StorageException {
-        String json = blob.downloadText();
-        return kayentaObjectMapper.readValue(json, typeReference);
-    }
-
-    private String keyToPath(AzureNamedAccountCredentials credentials, ObjectType objectType, String objectKey, String filename) {
         if (filename == null) {
             filename = objectType.getDefaultFilename();
         }
         return daoRoot(credentials, objectType.getGroup()) + '/' + objectKey + '/' + filename;
+    }
+
+    protected Iterable<ListBlobItem> listBlobs(CloudBlobContainer container, String prefix, boolean useFlatBlobListing, boolean isFolder) {
+        return container.listBlobs(prefix,useFlatBlobListing);
+    }
+
+    public CloudBlockBlob getBlockBlobReference(CloudBlobContainer container, final String blobName) throws URISyntaxException, StorageException {
+        return container.getBlockBlobReference(blobName);
+    }
+
+    protected String downloadText(CloudBlockBlob blob) throws StorageException, IOException {
+        return blob.downloadText();
+    }
+
+    public Date getLastModified(BlobProperties properties) {
+        return properties.getLastModified();
+    }
+
+    public boolean createIfNotExists(CloudBlobContainer container) throws StorageException {
+        return container.createIfNotExists();
+    }
+
+    public boolean deleteIfExists(CloudBlockBlob blob) throws StorageException {
+        return blob.deleteIfExists();
+    }
+
+    public void uploadFromByteArray(CloudBlockBlob blob, final byte[] bytes, final int offset, final int length) throws StorageException,
+            IOException {
+        blob.uploadFromByteArray(bytes,offset,length);
     }
 }
