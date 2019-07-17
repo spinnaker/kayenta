@@ -18,6 +18,10 @@ package com.netflix.kayenta.aws.config;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
@@ -29,7 +33,6 @@ import com.netflix.kayenta.security.AccountCredentialsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +44,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Configuration
-@EnableConfigurationProperties
 @ConditionalOnProperty("kayenta.aws.enabled")
 @ComponentScan({"com.netflix.kayenta.aws"})
 @Slf4j
@@ -82,6 +84,15 @@ public class AwsConfiguration {
 
       if (!StringUtils.isEmpty(profileName)) {
         amazonS3ClientBuilder.withCredentials(new ProfileCredentialsProvider(profileName));
+      }
+
+      AwsManagedAccount.ExplicitAwsCredentials explicitCredentials = awsManagedAccount.getExplicitCredentials();
+      if (explicitCredentials != null) {
+        String sessionToken = explicitCredentials.getSessionToken();
+        AWSCredentials awsCreds = (sessionToken == null) ?
+                new BasicAWSCredentials(explicitCredentials.getAccessKey(), explicitCredentials.getSecretKey()) :
+                new BasicSessionCredentials(explicitCredentials.getAccessKey(), explicitCredentials.getSecretKey(), sessionToken);
+        amazonS3ClientBuilder.withCredentials(new AWSStaticCredentialsProvider(awsCreds));
       }
 
       String endpoint = awsManagedAccount.getEndpoint();

@@ -25,6 +25,9 @@ buildscript {
     classpath "com.netflix.spinnaker.gradle:spinnaker-dev-plugin:$spinnakerGradleVersion"
     if (Boolean.valueOf(enablePublishing)) {
       classpath "com.netflix.spinnaker.gradle:spinnaker-gradle-project:$spinnakerGradleVersion"
+// TODO: nebula-publishing-plugin version override should be removed as soon as spinnaker-gradle-project is updated
+// this override is needed to omit compileOnly dependencies from generated pom.xml
+      classpath "com.netflix.nebula:nebula-publishing-plugin:12.0.1"
     }
 
     classpath "com.netflix.nebula:nebula-kotlin-plugin:$kotlinVersion"
@@ -98,17 +101,16 @@ subprojects { project ->
       testCompileOnly "org.projectlombok:lombok"
 
 
-      implementation "org.slf4j:slf4j-api"
-      implementation "org.springframework.boot:spring-boot-starter-web"
-      implementation "com.netflix.spinnaker.kork:kork-swagger"
-      implementation "org.springframework.boot:spring-boot-properties-migrator"
-      implementation "com.netflix.spinnaker.orca:orca-core"
+      api "org.slf4j:slf4j-api"
+      api "org.springframework.boot:spring-boot-starter-web"
+      api "com.netflix.spinnaker.kork:kork-swagger"
+      api "com.netflix.spinnaker.orca:orca-core"
 
-      implementation "com.squareup.retrofit:retrofit"
-      implementation "com.squareup.retrofit:converter-jackson"
-      implementation "com.squareup.okhttp:okhttp"
-      implementation "com.squareup.okhttp:okhttp-urlconnection"
-      implementation "com.squareup.okhttp:okhttp-apache"
+      api "com.squareup.retrofit:retrofit"
+      api "com.squareup.retrofit:converter-jackson"
+      api "com.squareup.okhttp:okhttp"
+      api "com.squareup.okhttp:okhttp-urlconnection"
+      api "com.squareup.okhttp:okhttp-apache"
 
       testImplementation "org.springframework.boot:spring-boot-starter-test"
       testImplementation "org.spockframework:spock-core"
