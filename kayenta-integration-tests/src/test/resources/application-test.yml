@@ -1,0 +1,41 @@
+
+redis.connection: redis://${embedded.redis.user}:${embedded.redis.password}@localhost:${embedded.redis.port}
+
+kayenta:
+  standaloneCanaryAnalysis.enabled: true
+
+  aws:
+    enabled: true
+    accounts:
+      - name: minio-store-account
+        bucket: kayenta-bucket
+        rootFolder: kayenta
+        endpoint: http://${embedded.minio.host}:${embedded.minio.port}
+        explicitCredentials:
+          accessKey: ${embedded.minio.accessKey}
+          secretKey: ${embedded.minio.secretKey}
+        supportedTypes:
+          - OBJECT_STORE
+          - CONFIGURATION_STORE
+
+  s3:
+    enabled: true
+
+  prometheus:
+    enabled: true
+    accounts:
+      - name: prometheus-account
+        endpoint:
+          baseUrl: http://localhost:${embedded.prometheus.port}
+        supportedTypes:
+          - METRICS_STORE
+server:
+  port: 8080
+
+management:
+  endpoints.web:
+    base-path: /
+    exposure.include: '*'
+  endpoint.health.show-details: always
+  server:
+    port: 8081
