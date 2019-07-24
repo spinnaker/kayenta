@@ -49,6 +49,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,7 +75,8 @@ public class PrometheusMetricsService implements MetricsService {
   private final Registry registry;
 
   @Builder.Default
-  private List<PrometheusMetricDescriptor> metricDescriptorsCache = Collections.emptyList();
+  private Map<String, List<PrometheusMetricDescriptor>> metricDescriptorsCache =
+      Collections.emptyMap();
 
   @Override
   public String getType() {
@@ -312,45 +314,62 @@ public class PrometheusMetricsService implements MetricsService {
 
   @Override
   public List<Map> getMetadata(String metricsAccountName, String filter) {
-    if (!StringUtils.isEmpty(filter)) {
+    List<PrometheusMetricDescriptor> accountSpecificMetricDescriptorsCache =
+        metricDescriptorsCache.get(metricsAccountName);
+
+    if (CollectionUtils.isEmpty(accountSpecificMetricDescriptorsCache)) {
+      return Collections.emptyList();
+    }
+
+    if (StringUtils.isEmpty(filter)) {
+      return accountSpecificMetricDescriptorsCache.stream()
+          .map(metricDescriptor -> metricDescriptor.getMap())
+          .collect(Collectors.toList());
+    } else {
       String lowerCaseFilter = filter.toLowerCase();
 
-      return metricDescriptorsCache
-        .stream()
-        .filter(metricDescriptor -> metricDescriptor.getName().toLowerCase().contains(lowerCaseFilter))
-        .map(metricDescriptor -> metricDescriptor.getMap())
-        .collect(Collectors.toList());
-    } else {
-      return metricDescriptorsCache
-        .stream()
-        .map(metricDescriptor -> metricDescriptor.getMap())
-        .collect(Collectors.toList());
+      return accountSpecificMetricDescriptorsCache.stream()
+          .filter(
+              metricDescriptor ->
+                  metricDescriptor.getName().toLowerCase().contains(lowerCaseFilter))
+          .map(metricDescriptor -> metricDescriptor.getMap())
+          .collect(Collectors.toList());
     }
   }
 
   @Scheduled(fixedDelayString = "#{@prometheusConfigurationProperties.metadataCachingIntervalMS}")
   public void updateMetricDescriptorsCache() {
     Set<AccountCredentials> accountCredentialsSet =
-      CredentialsHelper.getAllAccountsOfType(AccountCredentials.Type.METRICS_STORE, accountCredentialsRepository);
+        CredentialsHelper.getAllAccountsOfType(
+            AccountCredentials.Type.METRICS_STORE, accountCredentialsRepository);
+    Map<String, List<PrometheusMetricDescriptor>> updatedMetricDescriptorsCache = new HashMap<>();
 
     for (AccountCredentials credentials : accountCredentialsSet) {
       if (credentials instanceof PrometheusNamedAccountCredentials) {
-        PrometheusNamedAccountCredentials prometheusCredentials = (PrometheusNamedAccountCredentials)credentials;
-        PrometheusRemoteService prometheusRemoteService = prometheusCredentials.getPrometheusRemoteService();
-        PrometheusMetricDescriptorsResponse prometheusMetricDescriptorsResponse = prometheusRemoteService.listMetricDescriptors();
+        PrometheusNamedAccountCredentials prometheusCredentials =
+            (PrometheusNamedAccountCredentials) credentials;
+        PrometheusRemoteService prometheusRemoteService =
+            prometheusCredentials.getPrometheusRemoteService();
+        PrometheusMetricDescriptorsResponse prometheusMetricDescriptorsResponse =
+            prometheusRemoteService.listMetricDescriptors();
 
-        if (prometheusMetricDescriptorsResponse != null && prometheusMetricDescriptorsResponse.getStatus().equals("success")) {
+        if (prometheusMetricDescriptorsResponse != null
+            && prometheusMetricDescriptorsResponse.getStatus().equals("success")) {
           List<String> data = prometheusMetricDescriptorsResponse.getData();
 
           if (!CollectionUtils.isEmpty(data)) {
-            // TODO(duftler): Should we instead be building the union across all accounts? This doesn't seem quite right yet.
-            metricDescriptorsCache =
-              data
-                .stream()
-                .map(metricName -> new PrometheusMetricDescriptor(metricName))
-                .collect(Collectors.toList());
+            List<PrometheusMetricDescriptor> accountSpecificMetricDescriptorsCache =
+                data.stream()
+                    .map(metricName -> new PrometheusMetricDescriptor(metricName))
+                    .collect(Collectors.toList());
 
-            log.debug("Updated cache with {} metric descriptors via account {}.", metricDescriptorsCache.size(), prometheusCredentials.getName());
+            updatedMetricDescriptorsCache.put(
+                prometheusCredentials.getName(), accountSpecificMetricDescriptorsCache);
+
+            log.debug(
+                "Updated cache with {} metric descriptors via account {}.",
+                accountSpecificMetricDescriptorsCache.size(),
+                prometheusCredentials.getName());
           } else {
             log.debug("While updating cache, found no metric descriptors via account {}.", prometheusCredentials.getName());
           }
@@ -359,5 +378,7 @@ public class PrometheusMetricsService implements MetricsService {
         }
       }
     }
+
+    metricDescriptorsCache = updatedMetricDescriptorsCache;
   }
 }
