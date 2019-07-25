@@ -39,18 +39,22 @@ public class StandaloneCanaryAnalysisSteps {
   private final int serverPort;
   private final CanaryAnalysisCasesConfigurationProperties cases;
 
-  public String createCanaryAnalysis(String caseName) {
+  public String createCanaryAnalysis(
+      String caseName,
+      String metricsAccountName,
+      String storageAccountName,
+      String configFileName) {
     CanaryAnalysisCasesConfigurationProperties.AnalysisConfiguration caseConfig =
         cases.get(caseName);
-    CanaryAnalysisAdhocExecutionRequest request = prepareRequest(caseConfig);
+    CanaryAnalysisAdhocExecutionRequest request = prepareRequest(configFileName, caseConfig);
 
     ValidatableResponse createAnalysisResponse =
         given()
             .port(serverPort)
             .header("Content-Type", "application/json")
-            .queryParam("metricsAccountName", "prometheus-account")
-            .queryParam("storageAccountName", "minio-store-account")
-            .queryParam("application", "kayenta-poc-preview")
+            .queryParam("metricsAccountName", metricsAccountName)
+            .queryParam("storageAccountName", storageAccountName)
+            .queryParam("application", "kayenta-integration-tests")
             .queryParam("user", "asmirnova@playtika.com")
             .body(request)
             .when()
@@ -87,16 +91,17 @@ public class StandaloneCanaryAnalysisSteps {
   }
 
   private CanaryAnalysisAdhocExecutionRequest prepareRequest(
+      String canaryConfigFileName,
       CanaryAnalysisCasesConfigurationProperties.AnalysisConfiguration caseConfig) {
-    CanaryConfig canaryConfig = CanaryConfigReader.getCanaryConfig(caseConfig.getConfigFileName());
+    CanaryConfig canaryConfig = CanaryConfigReader.getCanaryConfig(canaryConfigFileName);
 
     CanaryAnalysisExecutionRequest executionRequest =
         CanaryAnalysisExecutionRequest.builder()
             .scopes(
                 Arrays.asList(
                     CanaryAnalysisExecutionRequestScope.builder()
-                        .controlScope(caseConfig.getControl().getPodName())
-                        .experimentScope(caseConfig.getExperiment().getPodName())
+                        .controlScope(caseConfig.getControl().getScope())
+                        .experimentScope(caseConfig.getExperiment().getScope())
                         .extendedScopeParams(
                             ImmutableMap.of("namespace", caseConfig.getNamespace()))
                         .step(1L) // step for prometheus metrics query

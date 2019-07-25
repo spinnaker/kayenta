@@ -26,7 +26,7 @@
     }
   ],
   "templates": {
-    "standard-template": "namespace='${namespace}', pod_name='${scope}'"
+    "standard-template": "namespace='${namespace}', scope='${scope}'"
   },
   "classifier": {
     "groupWeights": {

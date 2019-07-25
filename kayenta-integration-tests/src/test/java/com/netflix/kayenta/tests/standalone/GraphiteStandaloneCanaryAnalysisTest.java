@@ -13,18 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.kayenta;
+package com.netflix.kayenta.tests.standalone;
 
 import static org.hamcrest.CoreMatchers.is;
 
+import com.netflix.kayenta.steps.StandaloneCanaryAnalysisSteps;
+import com.netflix.kayenta.tests.BaseIntegrationTest;
 import io.restassured.response.ValidatableResponse;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-public class StandaloneCanaryAnalysisTest extends BaseIntegrationTest {
+public class GraphiteStandaloneCanaryAnalysisTest extends BaseIntegrationTest {
+
+  @Autowired protected StandaloneCanaryAnalysisSteps steps;
 
   @Test
   public void canaryAnalysisIsSuccessful() {
-    String canaryAnalysisExecutionId = steps.createCanaryAnalysis("cpu-successful-analysis-case");
+    String canaryAnalysisExecutionId =
+        steps.createCanaryAnalysis(
+            "cpu-successful-analysis-case",
+            "graphite-account",
+            "in-memory-store-account",
+            "canary-configs/graphite/integration-test-cpu.json");
 
     ValidatableResponse response =
         steps.waitUntilCanaryAnalysisCompleted(canaryAnalysisExecutionId);
@@ -40,7 +50,12 @@ public class StandaloneCanaryAnalysisTest extends BaseIntegrationTest {
 
   @Test
   public void canaryAnalysisIsFailed() {
-    String canaryAnalysisExecutionId = steps.createCanaryAnalysis("cpu-marginal-analysis-case");
+    String canaryAnalysisExecutionId =
+        steps.createCanaryAnalysis(
+            "cpu-marginal-analysis-case",
+            "graphite-account",
+            "in-memory-store-account",
+            "canary-configs/graphite/integration-test-cpu.json");
 
     ValidatableResponse response =
         steps.waitUntilCanaryAnalysisCompleted(canaryAnalysisExecutionId);

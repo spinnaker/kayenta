@@ -50,8 +50,8 @@ public class MetricsGenerator {
   }
 
   private void createMetricsForScope(String namespace, ScopeMetricsConfiguration scopeConfig) {
-    String podName = scopeConfig.getPodName();
-    Tags tags = Tags.of(Tag.of("pod_name", podName), Tag.of("namespace", namespace));
+    String scope = scopeConfig.getScope();
+    Tags tags = Tags.of(Tag.of("scope", scope), Tag.of("namespace", namespace));
 
     scopeConfig
         .getMetrics()

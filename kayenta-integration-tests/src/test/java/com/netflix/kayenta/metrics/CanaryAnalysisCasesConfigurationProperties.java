@@ -44,7 +44,6 @@ public class CanaryAnalysisCasesConfigurationProperties {
 
     @NotNull private Long lifetimeDurationMinutes;
     @NotNull private Long analysisIntervalMinutes;
-    @NotNull private String configFileName;
     @NotNull private String namespace;
     @NotNull private ScopeMetricsConfiguration control;
     @NotNull private ScopeMetricsConfiguration experiment;
@@ -53,7 +52,7 @@ public class CanaryAnalysisCasesConfigurationProperties {
   @Data
   public static class ScopeMetricsConfiguration {
 
-    @NotNull private String podName;
+    @NotNull private String scope;
     @Valid @NotNull private List<MetricConfiguration> metrics;
   }
 

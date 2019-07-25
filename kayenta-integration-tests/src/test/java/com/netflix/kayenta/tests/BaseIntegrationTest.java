@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.kayenta;
+package com.netflix.kayenta.tests;
 
+import com.netflix.kayenta.Main;
 import com.netflix.kayenta.configuration.MetricsReportingConfiguration;
-import com.netflix.kayenta.steps.StandaloneCanaryAnalysisSteps;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,7 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
     classes = {MetricsReportingConfiguration.class, Main.class},
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @RunWith(SpringRunner.class)
-@ActiveProfiles({"test", "cases"})
+@ActiveProfiles({"base", "prometheus", "graphite", "cases"})
 public abstract class BaseIntegrationTest {
 
   @Value("${management.server.port}")
@@ -36,6 +35,4 @@ public abstract class BaseIntegrationTest {
 
   @Value("${server.port}")
   protected int serverPort;
-
-  @Autowired protected StandaloneCanaryAnalysisSteps steps;
 }

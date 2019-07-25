@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.kayenta;
+package com.netflix.kayenta.utils;
 
-import io.restassured.RestAssured;
-import org.junit.Test;
-import org.springframework.http.HttpStatus;
+import java.util.Map;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
 
-public class SwaggerTest extends BaseIntegrationTest {
+public class EnvironmentUtils {
 
-  @Test
-  public void swaggerUiIsPresent() {
-    RestAssured.given()
-        .port(serverPort)
-        .get("/swagger-ui.html")
-        .prettyPeek()
-        .then()
-        .assertThat()
-        .statusCode(HttpStatus.OK.value());
+  public static void registerPropertySource(
+      String name, ConfigurableEnvironment environment, Map<String, Object> map) {
+    MapPropertySource propertySource = new MapPropertySource(name, map);
+    environment.getPropertySources().addFirst(propertySource);
   }
 }
