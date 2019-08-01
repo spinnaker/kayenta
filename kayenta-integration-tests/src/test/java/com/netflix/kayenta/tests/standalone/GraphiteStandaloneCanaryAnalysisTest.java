@@ -29,32 +29,23 @@ public class GraphiteStandaloneCanaryAnalysisTest extends BaseIntegrationTest {
 
   @Test
   public void canaryAnalysisIsSuccessful() {
+    String canaryAnalysisExecutionId =
+        steps.createCanaryAnalysis(
+            "cpu-successful-analysis-case",
+            "graphite-account",
+            "in-memory-store-account",
+            "canary-configs/graphite/integration-test-cpu.json");
 
-    while (true) {
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
+    ValidatableResponse response =
+        steps.waitUntilCanaryAnalysisCompleted(canaryAnalysisExecutionId);
 
-    //    String canaryAnalysisExecutionId =
-    //        steps.createCanaryAnalysis(
-    //            "cpu-successful-analysis-case",
-    //            "graphite-account",
-    //            "in-memory-store-account",
-    //            "canary-configs/graphite/integration-test-cpu.json");
-    //
-    //    ValidatableResponse response =
-    //        steps.waitUntilCanaryAnalysisCompleted(canaryAnalysisExecutionId);
-    //
-    //    response
-    //        .body("executionStatus", is("SUCCEEDED"))
-    //        .body("canaryAnalysisExecutionResult.hasWarnings", is(false))
-    //        .body("canaryAnalysisExecutionResult.didPassThresholds", is(true))
-    //        .body(
-    //            "canaryAnalysisExecutionResult.canaryScoreMessage",
-    //            is("Final canary score 100.0 met or exceeded the pass score threshold."));
+    response
+        .body("executionStatus", is("SUCCEEDED"))
+        .body("canaryAnalysisExecutionResult.hasWarnings", is(false))
+        .body("canaryAnalysisExecutionResult.didPassThresholds", is(true))
+        .body(
+            "canaryAnalysisExecutionResult.canaryScoreMessage",
+            is("Final canary score 100.0 met or exceeded the pass score threshold."));
   }
 
   @Test
