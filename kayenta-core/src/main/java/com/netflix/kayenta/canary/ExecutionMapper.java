@@ -112,14 +112,9 @@ public class ExecutionMapper {
                 .parentPipelineExecutionId((String) contextContext.get("parentPipelineExecutionId"))
                 .pipelineId(pipeline.getId());
 
-    pipeline.getStages().stream()
-        .filter(stage -> stage.getName().startsWith("fetch"))
-        .findAny()
-        .ifPresent(
-            fetchStage ->
-                ofNullable(fetchStage.getContext().get("metricsAccountName"))
-                    .map(String::valueOf)
-                    .ifPresent(canaryExecutionStatusResponseBuilder::metricsAccountName));
+    ofNullable(contextContext.get("metricsAccountName"))
+        .map(String::valueOf)
+        .ifPresent(canaryExecutionStatusResponseBuilder::metricsAccountName);
 
     ofNullable(contextContext.get("storageAccountName"))
         .map(String::valueOf)
@@ -393,6 +388,7 @@ public class ExecutionMapper {
             .put("user", "[anonymous]")
             .put("application", application)
             .put("storageAccountName", resolvedStorageAccountName)
+            .put("metricsAccountName", resolvedMetricsAccountName)
             .put("canaryConfig", canaryConfig);
     if (parentPipelineExecutionId != null) {
       mapBuilder.put("parentPipelineExecutionId", parentPipelineExecutionId);
