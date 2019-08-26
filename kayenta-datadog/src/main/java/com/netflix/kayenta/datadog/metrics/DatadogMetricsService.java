@@ -20,6 +20,7 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.DatadogCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.canary.providers.metrics.DatadogCanaryMetricSetQueryConfig.MetricType;
 import com.netflix.kayenta.datadog.security.DatadogCredentials;
 import com.netflix.kayenta.datadog.security.DatadogNamedAccountCredentials;
 import com.netflix.kayenta.datadog.service.DatadogRemoteService;
@@ -79,8 +80,27 @@ public class DatadogMetricsService implements MetricsService {
       CanaryScope canaryScope) {
     DatadogCanaryMetricSetQueryConfig queryConfig =
         (DatadogCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
+    String metricName = queryConfig.getMetricName();
+    String scope = canaryScope.getScope();
+    List<String> tags = queryConfig.getTags();
+    if (queryConfig.getMetricType() == MetricType.COUNT) {
+      return composeCountQuery(metricName, scope, tags);
+    }
+    // Currently, treat Rate and Gauge the same.
+    return composeGuageQuery(metricName, scope, tags);
+  }
 
-    return queryConfig.getMetricName() + "{" + canaryScope.getScope() + "}";
+  private String composeCountQuery(String metricName, String scope, List<String> tags) {
+    String guageQuery = composeGuageQuery(metricName, scope, tags);
+    return "sum:" + guageQuery + ".as_count()";
+  }
+
+  private String composeGuageQuery(String metricName, String scope, List<String> tags) {
+    String tagString = scope;
+    if (!tags.isEmpty()) {
+      tagString += "," + tags.stream().collect(Collectors.joining(","));
+    }
+    return metricName + "{" + tagString + "}";
   }
 
   @Override

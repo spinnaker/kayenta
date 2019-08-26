@@ -16,8 +16,12 @@
 
 package com.netflix.kayenta.canary.providers.metrics;
 
+import static java.util.Collections.emptyList;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.netflix.kayenta.canary.CanaryMetricSetQueryConfig;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +36,22 @@ import lombok.ToString;
 @JsonTypeName("datadog")
 public class DatadogCanaryMetricSetQueryConfig implements CanaryMetricSetQueryConfig {
 
+  public enum MetricType {
+    @JsonProperty("count")
+    COUNT,
+    @JsonProperty("gauge")
+    GAUGE,
+    @JsonProperty("rate")
+    RATE,
+  }
+
   public static final String SERVICE_TYPE = "datadog";
 
   @NotNull @Getter private String metricName;
+
+  @Builder.Default @NotNull @Getter private MetricType metricType = MetricType.GAUGE;
+
+  @Builder.Default @NotNull @Getter private List<String> tags = emptyList();
 
   @Override
   public String getServiceType() {
