@@ -62,7 +62,7 @@ public class DatadogMetricsServiceTest {
   }
 
   @Test
-  public void buildGuageQuery() {
+  public void buildGaugeQuery() {
     when(mockDatadogCanaryMetricSetQueryConfig.getMetricType()).thenReturn(MetricType.GAUGE);
     String query = buildQuery();
     assertEquals(

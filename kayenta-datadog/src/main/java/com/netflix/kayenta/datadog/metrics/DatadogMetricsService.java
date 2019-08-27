@@ -87,15 +87,15 @@ public class DatadogMetricsService implements MetricsService {
       return composeCountQuery(metricName, scope, tags);
     }
     // Currently, treat Rate and Gauge the same.
-    return composeGuageQuery(metricName, scope, tags);
+    return composeGaugeQuery(metricName, scope, tags);
   }
 
   private String composeCountQuery(String metricName, String scope, List<String> tags) {
-    String guageQuery = composeGuageQuery(metricName, scope, tags);
-    return "sum:" + guageQuery + ".as_count()";
+    String gaugeQuery = composeGaugeQuery(metricName, scope, tags);
+    return "sum:" + gaugeQuery + ".as_count()";
   }
 
-  private String composeGuageQuery(String metricName, String scope, List<String> tags) {
+  private String composeGaugeQuery(String metricName, String scope, List<String> tags) {
     String tagString = scope;
     if (!tags.isEmpty()) {
       tagString += "," + tags.stream().collect(Collectors.joining(","));
