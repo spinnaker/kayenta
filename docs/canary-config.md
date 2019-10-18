@@ -3,6 +3,7 @@ Objects in this document are documented using [Markdown Syntax for Object Notati
 ### Canary Config Object model (object)
 
 #### Properties
+- `id` **some-custom-id** (string, optional) - If not supplied a GUID will be generated for you. However you can supply a custom string here. The id is used when you call Kayenta to trigger canary execution, if you do not want to supply the config as part of the request.
 - `name` **my-app golden signals canary config** (string, required) - Name for canary configuration.
 - `description` **Canary config for my-app** (string, required) - Description for the canary configuration.
 - `applications` (array[string], required) - A list of applications that the canary is for. You can just have a list with single item `ad-hoc` as the entry, unless you are storing the configuration in Kayenta and sharing it. 
@@ -38,7 +39,7 @@ Metric source interface for describing how to query for a given metric / metric 
     - DatadogCanaryMetricSetQueryConfig
     - GraphiteCanaryMetricSetQueryConfig
     - InfluxdbCanaryMetricSetQueryConfig
-    - NewRelicInsightsCanaryMetricSetQueryConfig
+    - [NewRelicInsightsCanaryMetricSetQueryConfig](../kayenta-newrelic-insights/docs/metric-set-query-config.md)
     - PrometheusCanaryMetricSetQueryConfig
     - [SignalFxCanaryMetricSetQueryConfig](../kayenta-signalfx/docs/metric-set-query-config.md)
     - StackdriverCanaryMetricSetQueryConfig
@@ -54,11 +55,11 @@ Wrapper object that includes the Canary Analysis Configuration and describes how
 ### CanaryAnalysisConfiguration (object)
 Describes how to judge a metric, see the [Netflix Automated Canary Analysis Judge] for more information.
 #### Properties
-- `direction` (enum[string], required) Which direction of statistical change triggers the metric to fail.
+- `direction` (enum[string], required) - Which direction of statistical change triggers the metric to fail.
     - `increase` - Use when you want the canary to fail only if it is significantly higher than the baseline (error counts, memory usage, etc, where a decrease is not a failure).
     - `decrease` - Use when you want the canary to fail only if it is significantly lower than the baseline (success counts, etc, where a larger number is not a failure).
     - `either` - Use when you want the canary to fail if it is significantly higher or lower than the baseline.
-- `nanStrategy` (enum[string], required) How to handle NaN values which can occur if the metric does not return data for a particular time interval.
+- `nanStrategy` (enum[string], required) - How to handle NaN values which can occur if the metric does not return data for a particular time interval.
     - `remove` - Use when you expect a metric to always have data and you want the NaNs removed from your data set (usage metrics).
     - `replace` - Use when you expect a metric to return no data in certain use cases and you want the NaNs replaced with zeros (for example: count metrics, if no errors happened, then metric will return no data for that time interval).
 - `critical` **true** (boolean, optional) - Use to fail the entire canary if this metric fails (recommended for important metrics that signal service outages or severe problems).
@@ -81,7 +82,7 @@ See the [Netflix Automated Canary Analysis Judge] and [Mann Whitney Classifier] 
 ### CanaryClassifierConfig
 #### Properties
 - `groupWeights` (enum[string], required)
-  - `groups` **"Latency" : 33** (object, required) List of each metrics group along with its corresponding weight. Weights must total 100.
+  - `groups` **"Latency" : 33** (object, required) - List of each metrics group along with its corresponding weight. Weights must total 100.
   
 <a name="links"></a>
 ## Links
