@@ -93,7 +93,7 @@ See the [Netflix Automated Canary Analysis Judge] and [Mann Whitney Classifier] 
   
 [Spinnaker Canary Best Practices]: https://www.spinnaker.io/guides/user/canary/best-practices/
 [Armory Kayenta Documentation]: https://docs.armory.io/spinnaker/configure_kayenta/
-[Example Signalfx canary config]: https//github.com/spinnaker/kayenta/blob/master/kayenta-signalfx/metric-query-config.md
+[Example Signalfx canary config]: https://github.com/spinnaker/kayenta/blob/master/kayenta-signalfx/metric-query-config.md
 [Markdown Syntax for Object Notation (MSON)]: https://github.com/apiaryio/mson
 [Canary analysis: Lessons learned and best practices from Google and Waze]: https://cloud.google.com/blog/products/devops-sre/canary-analysis-lessons-learned-and-best-practices-from-google-and-waze
 [Netflix Automated Canary Analysis Judge]: https://github.com/spinnaker/kayenta/blob/master/kayenta-judge/src/main/scala/com/netflix/kayenta/judge/NetflixACAJudge.scala
