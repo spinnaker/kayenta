@@ -24,7 +24,7 @@ Currently there is one judge and this object should be static across all the con
 Describes a metric that will be used in determining the health of a canary.
 #### Properties
 - `name` **http errors** (string, required) - Human readable name of the metric under test.
-- `query` (enum[[CanaryMetricSetQueryConfig](canary-metrics-set-query-config)], required) - Query config object for your metric source type.
+- `query` (enum[[CanaryMetricSetQueryConfig](#canary-metrics-set-query-config)], required) - Query config object for your metric source type.
 - `groups` (array[string], required) - List of metrics groups that this metric will belong to.
 - `analysisConfigurations` ([AnalysisConfiguration](#analysis-configuration), required) - Analysis configuration, describes how to judge a given metric.
 - `scopeName` (enum[string], required)
