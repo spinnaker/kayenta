@@ -12,6 +12,9 @@ The quality of the canary version is assessed by comparing key metrics that desc
 Canaries are usually run against deployments containing changes to code, but they
 can also be used for operational changes, including changes to configuration.
 
+### Frequently Asked Questions
+Checkout the [FAQ](docs/faq.md)
+
 ### Creating Canary Config
 Checkout the [Canary Config Object model](docs/canary-config.md) for how a canary config is defined in [Markdown Syntax for Object Notation (MSON)](https://github.com/apiaryio/mson)
 
