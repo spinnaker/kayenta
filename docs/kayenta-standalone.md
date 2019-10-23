@@ -32,3 +32,46 @@ If you want a UI for users that is designed for the Kayenta API but doesn't requ
 
 Assuming you have worked through the [prerequisites](#prerequisites-to-using-kayentas-api-to-do-canary-analysis) then you should have a Kayenta environment up an running and ready to do canary analysis.
 
+### A Brief overview of Kayenta's endpoints that are relevant to canary analysis
+
+See the [full API docs](./faq.md#where-are-the-api-docs) and or the code for more detailed information.
+
+#### /config
+
+This endpoint allows users to store created canary config to be referenced by name and or id later when interacting with the canary or standalone canary endpoints
+
+#### /canary
+
+This is the main endpoint for canary analysis, this is the endpoint that Deck/Orca uses to [implement what you see in the deck UI as the canary analysis stage](https://github.com/spinnaker/orca/tree/master/orca-kayenta/src/main/kotlin/com/netflix/spinnaker/orca/kayenta).
+A high level overview of the way this endpoint works is as follows:
+
+1. You trigger a canary analysis execution via a POST call to `/canary` with the following
+ - canary config (can be an id reference to a saved config or the actual config just embedded in the call)
+ - [scope / location data for your control and experiment](./instrumenting-application-metrics-for-kayenta.md)
+ - Timestamps for the start and end times for the control and experiment that you are trying to analyze.
+2. Kayenta starts the execution and returns an id
+3. You can now poll GET `/canary/${id}` and wait for status to be complete.
+4. Once complete you can parse the results from the JSON.
+
+See the [SignalFx End to End test for the /canary endpoint for a programmatic example](../kayenta-signalfx/src/integration-test/java/com/netflix/kayenta/signalfx/EndToEndCanaryIntegrationTests.java)
+
+#### /standalone_canary_analysis
+
+This endpoint is an abstraction on top of the `/canary` endpoint.
+It is a port of the [Deck/Orca canary stage user experiance in API form]((https://github.com/spinnaker/orca/tree/master/orca-kayenta/src/main/kotlin/com/netflix/spinnaker/orca/kayenta)).
+
+Basically it allows for a user to define a lifetime and interval length and do real time canary analysis in multiple intervals and get an aggregated result.
+
+A high level overview of the way this endpoint works is as follows:
+1. You trigger a canary analysis execution via a POST call to `/standalone_canary_analysis` with the following
+    - canary config (can be an id reference to a saved config or the actual config just embedded in the call)
+    - [scope / location data for your control and experiment](./instrumenting-application-metrics-for-kayenta.md)
+    - a lifetime for the aggregated canary analysis
+    - how often you want a `/canary` judgement to occur
+    - fail fast score threshold
+    - final pass score threshold
+2. Kayenta starts the execution and returns an id
+3. You can now poll GET `/standalone_canary_analysis/${id}` and wait for status to be complete.
+4. Once complete you can parse the results from the JSON.
+
+See the [SignalFx End to End test for the /standalone_canary_analysis endpoint for a programmatic example](../kayenta-signalfx/src/integration-test/java/com/netflix/kayenta/signalfx/EndToEndStandaloneCanaryAnalysisIntegrationTests.java)
