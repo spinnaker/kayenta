@@ -5,6 +5,7 @@ Below are some of the frequently asked questions
 - [Where are the API docs?](#where-are-the-api-docs)
 - [What metric sources does Kayenta support?](#what-metric-sources-does-kayenta-support)
 - [How does Kayenta decide if a metric passes or fails?](#how-does-kayenta-decide-if-a-metric-passes-or-fails)
+- [How do I report metrics in a way that is compatible with Kayenta and canary analysis](#how-do-i-report-metrics-in-a-way-that-is-compatible-with-kayenta-and-canary-analysis)
 - [My metric failed and I don't agree with the results, can I change how sensitive Kayenta is to change?](#my-metric-failed-and-i-dont-agree-with-the-results-can-i-change-how-sensitive-kayenta-is-to-change)
 
 ## Can you use Kayenta as a standalone service with out the rest of Spinnaker?
