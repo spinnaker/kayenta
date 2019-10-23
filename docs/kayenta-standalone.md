@@ -60,6 +60,8 @@ See the [SignalFx End to End test for the /canary endpoint for a programmatic ex
 This endpoint is an abstraction on top of the `/canary` endpoint.
 It is a port of the [Deck/Orca canary stage user experiance in API form]((https://github.com/spinnaker/orca/tree/master/orca-kayenta/src/main/kotlin/com/netflix/spinnaker/orca/kayenta)).
 
+Note: this endpoint is disabled by default you need to explicitly enable it via your [config](./configuring-kayenta.md)
+
 Basically it allows for a user to define a lifetime and interval length and do real time canary analysis in multiple intervals and get an aggregated result.
 
 A high level overview of the way this endpoint works is as follows:

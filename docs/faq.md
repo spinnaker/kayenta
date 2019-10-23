@@ -39,10 +39,9 @@ This judge takes in metrics from a control group and an experiment group uses yo
 
 See [the Spinnaker Judge Docs](https://www.spinnaker.io/guides/user/canary/judge/) for additional information.
 
-<!-- 
 ## How do I report metrics in a way that is compatible with Kayenta and canary analysis?
-TODO explain server_groups and dimensional data, etc.
--->
+
+See [Instrumenting Application Metrics For Kayenta](./instrumenting-application-metrics-for-kayenta.md)
 
 ## My metric failed and I don't agree with the results, can I change how sensitive Kayenta is to change?
 Yes (**Warning, this is a beta feature and my be removed**), but there are a couple dials available for you.
