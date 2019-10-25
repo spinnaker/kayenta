@@ -14,13 +14,15 @@ Now that you have [defined what makes your app healthy](#define-what-makes-your-
 
 Kayenta must be able to query the control, experiment and current production [server groups] separately.
 
-Here is a high-level overview of the canary process:
+### High-level overview of the canary process
 
 ![Canary High-Level Overview](./assets/canary-high-level-overview.png)
 <sub> This image was manipulated from <a href="https://cloud.google.com/blog/products/gcp/introducing-kayenta-an-open-automated-canary-analysis-tool-from-google-and-netflix" target="_blank">"Introducing Kayenta: An open automated canary analysis tool from Google and Netflix".</a> </sub>
 
 You detect the [server group] of the current production and deploy it in a new [server group] as the baseline.
 You simultaneously deploy the new change as the canary [server group].
+
+### Traffic routing
 
 ![Canary Routing Drill Down](./assets/canary-traffic-drill-down.png)
 
@@ -31,6 +33,8 @@ The baseline and experiment should be receiving equal amounts of traffic so that
 However, if those two server groups are receiving different amounts of traffic, error counts cannot be directly compared because a server group could have more errors simply because it is receiving more traffic. 
 Error counts would have to be converted to proportions based on the percentage of traffic each server group received. 
 With other metrics like CPU Usage, conversions to proportions can quickly become unwieldly, so server groups should receive equal traffic to begin with.
+
+### Reporting metrics for Kayenta
 
 ![Canary Dimensional Metadata](./assets/canary-dimensional-metadata.png)
 
