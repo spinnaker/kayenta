@@ -1,17 +1,17 @@
 # Canary Config
 
-The purpose of this doc is to describe the schema using [Markdown Syntax for Object Notation (MSON)] for Canary Configurations.
+The purpose of this doc is to describe the schema for Canary Configurations using [Markdown Syntax for Object Notation (MSON)]. 
 
 ## Canary Config Object model (object)
 
-The canary config object, is how users of the Kayenta API describe how they want Kayenta to compare there canary metrics against there baseline metrics for their applications.
+The canary config object is how users of the Kayenta API describe how they want Kayenta to compare the canary metrics against the baseline metrics for their applications.
 
 ### Properties
 
-- `id` **some-custom-id** (string, optional) - If not supplied a GUID will be generated for you. However you can supply a custom string here. The id is used when you call Kayenta to trigger canary execution, if you do not want to supply the config as part of the request.
+- `id` **some-custom-id** (string, optional) - You can supply a custom string here. If not supplied, a GUID will be generated for you. The id is used when you call Kayenta to trigger a canary execution, if you do not want to supply the config as part of the request.
 - `name` **my-app golden signals canary config** (string, required) - Name for canary configuration.
 - `description` **Canary config for my-app** (string, required) - Description for the canary configuration.
-- `applications` (array[string], required) - A list of applications that the canary is for. You can just have a list with single item `ad-hoc` as the entry, unless you are storing the configuration in Kayenta and sharing it.
+- `applications` (array[string], required) - A list of applications that the canary is for. You can have a list with single item `ad-hoc` as the entry, unless you are storing the configuration in Kayenta and sharing it.
 - `judge` ([CanaryJudgeConfig](#CanaryJudgeConfig-object), required) - Judge configuration.
 - `metrics` (array([CanaryMetricConfig](#CanaryMetricConfig-object))) - List of metrics to analyze.
 - `templates` (map<string, string>, optional) - Templates allow you to compose and parameterize advanced queries against your telemetry provider. Parameterized queries are hydrated by values provided in the canary stage. The **project**, **resourceType**, **scope**, and **location** variable bindings are implicitly available. For example, you can interpolate **project** using the following syntax: **\${project}**.
@@ -19,12 +19,12 @@ The canary config object, is how users of the Kayenta API describe how they want
 
 ## CanaryJudgeConfig (object)
 
-Currently there is one judge and this object should be static across all the configuration (see the above examples).
+Currently there is one judge ([NetflixACAJudge-v1.0](https://github.com/spinnaker/kayenta/blob/master/kayenta-judge/src/main/scala/com/netflix/kayenta/judge/NetflixACAJudge.scala)) and this object should be static across the configuration (see the above examples).
 
 ### Properties
 
 - `name` **NetflixACAJudge-v1.0** (string, required) - Judge to use, as of right now there is only `NetflixACAJudge-v1.0`.
-- `judgeConfigurations` **{}** (object, required) - Map<string, object> of judgement configuration, this should always be an empty object as of right now.
+- `judgeConfigurations` **{}** (object, required) - Map<string, object> of judgement configuration. As of right now, this should always be an empty object.
 
 ## CanaryMetricConfig (object)
 
@@ -41,7 +41,7 @@ Describes a metric that will be used in determining the health of a canary.
 
 ## CanaryMetricSetQueryConfig (object)
 
-Metric source interface for describing how to query for a given metric / metric source.
+Metric source interface for describing how to query for a given metric or metric source.
 
 ### Properties
 
@@ -106,11 +106,10 @@ See the [Netflix Automated Canary Analysis Judge] and [Mann Whitney Classifier] 
 - [Spinnaker Canary Best Practices]
 - [Canary analysis: Lessons learned and best practices from Google and Waze]
 - [Armory Kayenta Documentation]
-- [Example Signalfx canary config]
+- [Example Signalfx canary config](../kayenta-signalfx/docs/metric-set-query-config.md)
   
 [Spinnaker Canary Best Practices]: https://www.spinnaker.io/guides/user/canary/best-practices/
 [Armory Kayenta Documentation]: https://docs.armory.io/spinnaker/configure_kayenta/
-[Example Signalfx canary config]: https://github.com/spinnaker/kayenta/blob/master/kayenta-signalfx/metric-query-config.md
 [Markdown Syntax for Object Notation (MSON)]: https://github.com/apiaryio/mson
 [Canary analysis: Lessons learned and best practices from Google and Waze]: https://cloud.google.com/blog/products/devops-sre/canary-analysis-lessons-learned-and-best-practices-from-google-and-waze
 [Netflix Automated Canary Analysis Judge]: https://github.com/spinnaker/kayenta/blob/master/kayenta-judge/src/main/scala/com/netflix/kayenta/judge/NetflixACAJudge.scala

@@ -1,15 +1,16 @@
 # Building and Running Kayenta
 
-This guide is for people who want to know how to build a deployable artifact of the Kayenta microservice.
+This guide is for building a deployable artifact of the Kayenta microservice.
 
-While there are probably multiple ways of doing this, this guide is going to build a fatJar via the SpringBoot Gradle plugin.
+While there are several approaches, this guide will build a fat jar via the SpringBoot Gradle plugin.
 
 ## Building the Artifact
 
-First things first, we need to make an init script to pull in the SpringBoot Gradle plugin that has the logic we want to assemble a usable fat jar.
+First, we need to make an init script to pull in the SpringBoot Gradle plugin that has the logic we need in order to assemble a usable fat jar.
 
-Create a file like the following, please note that the version of the below code snippet is not guaranteed to be accurate.
+Create the following file. 
 
+Please note that the version of the below code snippet is not guaranteed to be accurate.
 Use `./gradlew kayenta-web:dependencyInsight --dependency spring-boot-starter-web` to see what version the project is using.
 
 ```groovy
@@ -30,13 +31,13 @@ allprojects {
 }
 ```
 
-Now that you have a init script you can run the following command to build the artifact
+Now that you have a init script you can run the following command to build the artifact.
 
 ```bash
 ./gradlew --init-script /path/to/init.gradle kayenta-web:bootJar
 ```
 
-This should build a jar called `kayenta-web.jar` in `kayenta-web/build/libs/`. You can sanity check that the jar is good by launching it with java.
+This should build a jar called `kayenta-web.jar` in `kayenta-web/build/libs/`. You can confirm that the jar is ready launching it with java.
 
 ```bash
 $ java -jar kayenta-web/build/libs/kayenta-web.jar 
@@ -47,19 +48,19 @@ $ java -jar kayenta-web/build/libs/kayenta-web.jar
    \/_/\/_/   \/_/\/_/   \/_____/   \/_____/   \/_/ \/_/     \/_/   \/_/\/_/ 
 ```
 
-If you see the Kayenta ASCII banner then the jar is good to go.
+If you see the Kayenta ASCII banner, then the jar is good to go.
 
 ## Running Kayenta
 
 ### Configure Kayenta
 
-See [Configuring Kayenta](./configuring-kayenta.md)
+See [Configuring Kayenta](./configuring-kayenta.md).
 
 ### Launching Kayenta
 
-Kayenta configures itself via a YAML, depending on your configuration Kayenta's configuration might have secrets in it (API keys).
+Kayenta configures itself via a YAML. Depending on your configuration, Kayenta's configuration might have secrets in it (API keys).
 
-Here is an example script that fetches the config securely using [Cerberus](http://engineering.nike.com/cerberus/) and launches the application.
+Here is an example script that fetches the config securely using [Cerberus](http://engineering.nike.com/cerberus/), a secure property store, and launches the application.
 
 ```bash
 #!/usr/bin/env bash
@@ -68,7 +69,7 @@ LOG_DIR=/var/log/kayenta
 LOG_OUT=${LOG_DIR}/stdout.log
 LOG_ERR=${LOG_DIR}/stderr.log
 
-# configure the jvm as you see fit export JVM_BEHAVIOR_ARGS
+# configure the jvm by using export JVM_BEHAVIOR_ARGS
 . /path/to/some/file/that/does/advanced/jvm/config/
 
 # Fetch the url for the latest linux version
@@ -97,7 +98,7 @@ java -jar \
     /opt/kayenta/kayenta-web.jar > ${LOG_OUT} 2> ${LOG_ERR}
 ```
 
-The TL;DR of the above script is
+The TL;DR of the above script is:
 
 ```bash
 java -jar -Dspring.application.name=kayenta -Dspring.config.name=kayenta -Dspring.config.location=file:/path/to/dir/with/config kayenta-web.jar
