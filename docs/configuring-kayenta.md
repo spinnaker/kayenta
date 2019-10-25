@@ -1,6 +1,7 @@
 # Configuring Kayenta
 
-<!-- This doc can be way better, stub it out for now and will at least link the big kayenta.yml that has examples in it -->
+The best way to configure Kayenta if your not using [Halyard](https://github.com/spinnaker/halyard) is to copy [kayenta.yml](../kayenta-web/config/kayenta.yml) and edit it.
+Please note that you need a minimum of the following.
 
 ## At least one Configured Object Store
 
@@ -16,5 +17,5 @@ Configuration stores are where Kayenta will save canary configuration it is told
 
 ## Examples
 
-See the reference [kayenta.yml](../kayenta-web/config/kayenta.yml) for the available config options.
-See the [SignalFx Integration Test Config](../kayenta-signalfx/src/integration-test/resources/config/kayenta.yml) for a working example
+- See the reference [kayenta.yml](../kayenta-web/config/kayenta.yml) for the available config options.
+- See the [SignalFx Integration Test Config](../kayenta-signalfx/src/integration-test/resources/config/kayenta.yml) for a working example

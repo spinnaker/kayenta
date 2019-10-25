@@ -2,7 +2,7 @@
 
 The purpose of this doc is to describe how applications have to be configured for their metrics to be usable by Kayenta.
 
-## Define what makes your application healthy then measure and report it.
+## Define what makes your application healthy then measure and report it
 
 Metrics are a crucial part of canary analysis, they are the indicators of the health of your system that are sent as input to the judge to decide the health of the canary.
 
