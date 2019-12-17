@@ -1,0 +1,5 @@
+dependencies {
+  implementation project(":kayenta-core")
+  implementation project(":kayenta-alicloud")
+  compile group: 'com.aliyun.oss', name: 'aliyun-sdk-oss', version: '3.5.0'
+}

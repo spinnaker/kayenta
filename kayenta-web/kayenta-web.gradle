@@ -15,6 +15,7 @@ configurations.all {
 }
 
 dependencies {
+  api project(':kayenta-alicloud')
   api project(':kayenta-atlas')
   api project(':kayenta-aws')
   api project(':kayenta-core')
@@ -30,6 +31,7 @@ dependencies {
   api project(':kayenta-objectstore-configbin')
   api project(':kayenta-objectstore-memory')
   api project(':kayenta-orca')
+  api project(':kayenta-alicloud-oss')
   api project(':kayenta-prometheus')
   api project(':kayenta-s3')
   api project(':kayenta-signalfx')
