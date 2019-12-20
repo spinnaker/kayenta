@@ -54,3 +54,7 @@ _Warning: This is a beta feature and may be removed._
 
 Yes, there are a couple of settings available for you.
 See [EffectSize](./canary-config.md#effect-size) for more information.
+
+## My GCS account does not have access to get bucket metadata.
+
+Before writing results to a GCS bucket, Kayenta checks for the existence of the bucket by making a GET request to the `storage/v1/b/{bucket}` API. This API receives metadata about the bucket, if it exists. In order to interact with this API you'll need the `storage.buckets.get` permission, which used to be included in Google's [Standard Roles](https://cloud.google.com/storage/docs/access-control/iam-roles). This permission has been removed from those roles and put into [Legacy Roles](https://cloud.google.com/storage/docs/access-control/iam-roles#legacy-roles). In order to get that permission, you can either create a custom role and apply `storage.buckets.get`, or you can add the `roles/storage.legacyBucketReader` as explained in the Legacy Roles section.
