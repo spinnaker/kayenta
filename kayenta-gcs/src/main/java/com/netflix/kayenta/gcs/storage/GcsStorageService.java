@@ -102,7 +102,7 @@ public class GcsStorageService implements StorageService {
         }
       } else if (e.getStatusCode() == 403) {
         log.error(
-            "Account does not have permissions to get bucket metadata {}. Please see the FAQ for details: https://github.com/spinnaker/kayenta/blob/master/docs/faq.md: {}",
+            "Account does not have permissions to get bucket metadata {}. Please see the FAQ for details: https://github.com/spinnaker/kayenta/blob/master/docs/faq.md#why-doesnt-my-google-account-have-access-to-get-bucket-metadata: {}",
             bucketName,
             e);
         throw new IllegalArgumentException(e);
