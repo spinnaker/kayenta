@@ -1,5 +1,6 @@
 package com.netflix.kayenta.signalfx.metrics;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
@@ -37,13 +38,28 @@ public class SignalFxQueryBuilderService {
       return Optional.ofNullable(customFilter)
           .orElseGet(
               () ->
-                  SimpleSignalFlowProgramBuilder.create(
-                          queryConfig.getMetricName(), aggregationMethod, scopeConfiguration)
-                      .withQueryPairs(queryPairs)
-                      .withScope(signalFxCanaryScope)
-                      .build());
+                  getSimpleProgram(
+                      queryConfig,
+                      scopeConfiguration,
+                      signalFxCanaryScope,
+                      aggregationMethod,
+                      queryPairs));
     } catch (Exception e) {
       throw new RuntimeException("Failed to generate SignalFx SignalFlow program", e);
     }
+  }
+
+  @VisibleForTesting
+  protected String getSimpleProgram(
+      SignalFxCanaryMetricSetQueryConfig queryConfig,
+      SignalFxScopeConfiguration scopeConfiguration,
+      SignalFxCanaryScope signalFxCanaryScope,
+      String aggregationMethod,
+      List<QueryPair> queryPairs) {
+    return SimpleSignalFlowProgramBuilder.create(
+            queryConfig.getMetricName(), aggregationMethod, scopeConfiguration)
+        .withQueryPairs(queryPairs)
+        .withScope(signalFxCanaryScope)
+        .build();
   }
 }
