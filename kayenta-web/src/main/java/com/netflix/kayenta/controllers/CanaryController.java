@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.netflix.kayenta.canary.*;
 import com.netflix.kayenta.security.AccountCredentials;
@@ -67,10 +69,7 @@ public class CanaryController {
   //
   // TODO(duftler): Allow for user to be passed in.
   @ApiOperation(value = "Initiate a canary pipeline")
-  @RequestMapping(
-      value = "/{canaryConfigId:.+}",
-      consumes = "application/json",
-      method = RequestMethod.POST)
+  @PostMapping(value = "/{canaryConfigId:.+}", consumes = APPLICATION_JSON_VALUE)
   public CanaryExecutionResponse initiateCanary(
       @RequestParam(required = false) final String application,
       @RequestParam(required = false) final String parentPipelineExecutionId,
@@ -119,7 +118,7 @@ public class CanaryController {
   //
   // TODO(duftler): Allow for user to be passed in.
   @ApiOperation(value = "Initiate a canary pipeline with CanaryConfig provided")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public CanaryExecutionResponse initiateCanaryWithConfig(
       @RequestParam(required = false) final String application,
       @RequestParam(required = false) final String parentPipelineExecutionId,
@@ -159,7 +158,7 @@ public class CanaryController {
   // Get the results of a canary run by ID
   //
   @ApiOperation(value = "Retrieve status and results for a canary run")
-  @RequestMapping(value = "/{canaryExecutionId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{canaryExecutionId:.+}")
   public CanaryExecutionStatusResponse getCanaryResults(
       @RequestParam(required = false) final String storageAccountName,
       @PathVariable String canaryExecutionId) {
@@ -187,7 +186,7 @@ public class CanaryController {
   }
 
   @ApiOperation(value = "Retrieve a list of an application's canary results")
-  @RequestMapping(value = "/executions", method = RequestMethod.GET)
+  @GetMapping(value = "/executions")
   List<CanaryExecutionStatusResponse> getCanaryResultsByApplication(
       @RequestParam(required = false) String application,
       @RequestParam(value = "limit", defaultValue = "20") int limit,

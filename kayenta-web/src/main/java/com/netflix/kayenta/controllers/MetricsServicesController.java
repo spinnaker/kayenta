@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -42,7 +42,7 @@ public class MetricsServicesController {
   }
 
   @ApiOperation(value = "Retrieve a list of all configured metrics services")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   List<MetricsServiceDetail> list() {
     Set<AccountCredentials> metricAccountCredentials =
         CredentialsHelper.getAllAccountsOfType(METRICS_STORE, accountCredentialsRepository);

@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -52,7 +54,7 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Retrieve a metric set list from object storage")
-  @RequestMapping(value = "/{metricSetListId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{metricSetListId:.+}")
   public List<MetricSet> loadMetricSetList(
       @RequestParam(required = false) final String accountName,
       @PathVariable String metricSetListId) {
@@ -72,7 +74,7 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Write a metric set list to object storage")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public Map storeMetricSetList(
       @RequestParam(required = false) final String accountName,
       @RequestBody List<MetricSet> metricSetList)
@@ -96,7 +98,7 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Delete a metric set list")
-  @RequestMapping(value = "/{metricSetListId:.+}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "/{metricSetListId:.+}")
   public void deleteMetricSetList(
       @RequestParam(required = false) final String accountName,
       @PathVariable String metricSetListId,
@@ -118,7 +120,7 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Retrieve a list of metric set list ids and timestamps")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map<String, Object>> listAllMetricSetLists(
       @RequestParam(required = false) final String accountName) {
     String resolvedAccountName =

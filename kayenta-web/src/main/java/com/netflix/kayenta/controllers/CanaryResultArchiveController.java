@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.kayenta.canary.CanaryArchiveResultUpdateResponse;
 import com.netflix.kayenta.canary.CanaryExecutionStatusResponse;
 import com.netflix.kayenta.security.AccountCredentials;
@@ -58,7 +60,7 @@ public class CanaryResultArchiveController {
   }
 
   @ApiOperation(value = "Retrieve an archived canary result from object storage")
-  @RequestMapping(value = "/{pipelineId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{pipelineId:.+}")
   public CanaryExecutionStatusResponse loadArchivedCanaryResult(
       @RequestParam(required = false) final String storageAccountName,
       @PathVariable String pipelineId) {
@@ -71,7 +73,7 @@ public class CanaryResultArchiveController {
   }
 
   @ApiOperation(value = "Create an archived canary result to object storage")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public CanaryArchiveResultUpdateResponse storeArchivedCanaryResult(
       @RequestParam(required = false) final String storageAccountName,
       @RequestParam(required = false) String pipelineId,
@@ -105,10 +107,7 @@ public class CanaryResultArchiveController {
   }
 
   @ApiOperation(value = "Update an archived canary result in object storage")
-  @RequestMapping(
-      value = "/{pipelineId:.+}",
-      consumes = "application/json",
-      method = RequestMethod.PUT)
+  @PutMapping(value = "/{pipelineId:.+}", consumes = APPLICATION_JSON_VALUE)
   public CanaryArchiveResultUpdateResponse updateArchivedCanaryResult(
       @RequestParam(required = false) final String storageAccountName,
       @PathVariable String pipelineId,
@@ -138,7 +137,7 @@ public class CanaryResultArchiveController {
   }
 
   @ApiOperation(value = "Delete an archived canary result from object storage")
-  @RequestMapping(value = "/{pipelineId:.+}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "/{pipelineId:.+}")
   public void deleteArchivedCanaryResult(
       @RequestParam(required = false) final String storageAccountName,
       @PathVariable String pipelineId,
@@ -154,7 +153,7 @@ public class CanaryResultArchiveController {
   }
 
   @ApiOperation(value = "Retrieve a list of archived canary result ids in object storage")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map<String, Object>> listAllCanaryArchivedResults(
       @RequestParam(required = false) final String storageAccountName) {
     String resolvedConfigurationAccountName = resolveStorageAccountName(storageAccountName);

@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryConfigUpdateResponse;
 import com.netflix.kayenta.security.AccountCredentials;
@@ -26,13 +28,11 @@ import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
 import io.swagger.annotations.ApiOperation;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -58,7 +58,7 @@ public class CanaryConfigController {
   }
 
   @ApiOperation(value = "Retrieve a canary config from object storage")
-  @RequestMapping(value = "/{canaryConfigId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{canaryConfigId:.+}")
   public CanaryConfig loadCanaryConfig(
       @RequestParam(required = false) final String configurationAccountName,
       @PathVariable String canaryConfigId) {
@@ -80,11 +80,10 @@ public class CanaryConfigController {
   }
 
   @ApiOperation(value = "Write a canary config to object storage")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public CanaryConfigUpdateResponse storeCanaryConfig(
       @RequestParam(required = false) final String configurationAccountName,
-      @RequestBody CanaryConfig canaryConfig)
-      throws IOException {
+      @RequestBody CanaryConfig canaryConfig) {
     String resolvedConfigurationAccountName =
         CredentialsHelper.resolveAccountByNameOrType(
             configurationAccountName,
@@ -139,15 +138,11 @@ public class CanaryConfigController {
   }
 
   @ApiOperation(value = "Update a canary config")
-  @RequestMapping(
-      value = "/{canaryConfigId:.+}",
-      consumes = "application/json",
-      method = RequestMethod.PUT)
+  @PutMapping(value = "/{canaryConfigId:.+}", consumes = APPLICATION_JSON_VALUE)
   public CanaryConfigUpdateResponse updateCanaryConfig(
       @RequestParam(required = false) final String configurationAccountName,
       @PathVariable String canaryConfigId,
-      @RequestBody CanaryConfig canaryConfig)
-      throws IOException {
+      @RequestBody CanaryConfig canaryConfig) {
     String resolvedConfigurationAccountName =
         CredentialsHelper.resolveAccountByNameOrType(
             configurationAccountName,
@@ -209,11 +204,11 @@ public class CanaryConfigController {
   }
 
   @ApiOperation(value = "Delete a canary config")
-  @RequestMapping(value = "/{canaryConfigId:.+}", method = RequestMethod.DELETE)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @DeleteMapping(value = "/{canaryConfigId:.+}")
   public void deleteCanaryConfig(
       @RequestParam(required = false) final String configurationAccountName,
-      @PathVariable String canaryConfigId,
-      HttpServletResponse response) {
+      @PathVariable String canaryConfigId) {
     String resolvedConfigurationAccountName =
         CredentialsHelper.resolveAccountByNameOrType(
             configurationAccountName,
@@ -229,12 +224,10 @@ public class CanaryConfigController {
 
     configurationService.deleteObject(
         resolvedConfigurationAccountName, ObjectType.CANARY_CONFIG, canaryConfigId);
-
-    response.setStatus(HttpStatus.NO_CONTENT.value());
   }
 
   @ApiOperation(value = "Retrieve a list of canary config ids and timestamps")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map<String, Object>> listAllCanaryConfigs(
       @RequestParam(required = false) final String configurationAccountName,
       @RequestParam(required = false, value = "application") final List<String> applications) {

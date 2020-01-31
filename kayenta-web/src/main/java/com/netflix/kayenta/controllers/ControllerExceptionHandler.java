@@ -19,13 +19,17 @@ package com.netflix.kayenta.controllers;
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
 import java.util.Collections;
 import java.util.Map;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @RestControllerAdvice
-public class ControllerExceptionHandler {
+public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ExceptionHandler(IllegalArgumentException.class)
@@ -37,6 +41,12 @@ public class ControllerExceptionHandler {
   @ExceptionHandler(NotFoundException.class)
   public Map handleException(NotFoundException e) {
     return toErrorResponse(e);
+  }
+
+  @Override
+  protected ResponseEntity<Object> handleExceptionInternal(
+      Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
+    return super.handleExceptionInternal(ex, toErrorResponse(ex), headers, status, request);
   }
 
   private Map toErrorResponse(Exception e) {

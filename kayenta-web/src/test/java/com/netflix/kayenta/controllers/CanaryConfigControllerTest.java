@@ -4,8 +4,10 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.netflix.kayenta.canary.CanaryConfig;
@@ -24,10 +26,8 @@ public class CanaryConfigControllerTest extends BaseControllerTest {
   private static final AccountCredentials CREDENTIALS = getCredentials(CONFIGS_ACCOUNT);
   private StorageService storageService = mock(StorageService.class);
 
-  @Override
   @Before
   public void setUp() {
-    super.setUp();
     when(accountCredentialsRepository.getOne(CONFIGS_ACCOUNT)).thenReturn(Optional.of(CREDENTIALS));
     when(storageServiceRepository.getOne(CONFIGS_ACCOUNT)).thenReturn(Optional.of(storageService));
   }
@@ -44,9 +44,8 @@ public class CanaryConfigControllerTest extends BaseControllerTest {
                 "/canaryConfig/{configId}?configurationAccountName={account}",
                 CONFIG_ID,
                 CONFIGS_ACCOUNT))
-        .andDo(print())
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.applications.length()").value(is(1)))
         .andExpect(jsonPath("$.applications[0]").value(is("test-app")));
   }
@@ -63,9 +62,8 @@ public class CanaryConfigControllerTest extends BaseControllerTest {
                 "/canaryConfig/{configId}?configurationAccountName={account}",
                 CONFIG_ID,
                 CONFIGS_ACCOUNT))
-        .andDo(print())
         .andExpect(status().isNotFound())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(jsonPath("$.message").value(is("dummy message")));
   }
 
@@ -79,12 +77,34 @@ public class CanaryConfigControllerTest extends BaseControllerTest {
                 "/canaryConfig/{configId}?configurationAccountName={account}",
                 CONFIG_ID,
                 CONFIGS_ACCOUNT))
-        .andDo(print())
         .andExpect(status().isBadRequest())
-        .andExpect(content().contentType("application/json"))
+        .andExpect(content().contentType(APPLICATION_JSON))
         .andExpect(
             jsonPath("$.message")
                 .value(containsString("Unable to resolve account " + CONFIGS_ACCOUNT)));
+  }
+
+  @Test
+  public void storeCanaryConfig_returnsBadRequestResponseForMissingRequestBody() throws Exception {
+    this.mockMvc
+        .perform(
+            post("/canaryConfig?configurationAccountName={account}", CONFIGS_ACCOUNT)
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(APPLICATION_JSON))
+        .andExpect(jsonPath("$.message").value(containsString("Required request body is missing")));
+  }
+
+  @Test
+  public void deleteConfig_returnsNotContent() throws Exception {
+    this.mockMvc
+        .perform(
+            delete(
+                    "/canaryConfig/{configId}?configurationAccountName={account}",
+                    CONFIG_ID,
+                    CONFIGS_ACCOUNT)
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isNoContent());
   }
 
   private static AccountCredentials getCredentials(String accountName) {

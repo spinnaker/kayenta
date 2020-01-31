@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.kayenta.metrics.MetricSetPair;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -50,7 +52,7 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Retrieve a metric set pair list from object storage")
-  @RequestMapping(value = "/{metricSetPairListId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{metricSetPairListId:.+}")
   public List<MetricSetPair> loadMetricSetPairList(
       @RequestParam(required = false) final String accountName,
       @PathVariable final String metricSetPairListId) {
@@ -71,9 +73,7 @@ public class MetricSetPairListController {
 
   @ApiOperation(
       value = "Retrieve a single metric set pair from a metricSetPairList from object storage")
-  @RequestMapping(
-      value = "/{metricSetPairListId:.+}/{metricSetPairId:.+}",
-      method = RequestMethod.GET)
+  @GetMapping(value = "/{metricSetPairListId:.+}/{metricSetPairId:.+}")
   public ResponseEntity<MetricSetPair> loadMetricSetPair(
       @RequestParam(required = false) final String accountName,
       @PathVariable final String metricSetPairListId,
@@ -102,7 +102,7 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Write a metric set pair list to object storage")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public Map storeMetricSetPairList(
       @RequestParam(required = false) final String accountName,
       @RequestBody final List<MetricSetPair> metricSetPairList)
@@ -129,7 +129,7 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Delete a metric set pair list")
-  @RequestMapping(value = "/{metricSetPairListId:.+}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "/{metricSetPairListId:.+}")
   public void deleteMetricSetPairList(
       @RequestParam(required = false) final String accountName,
       @PathVariable final String metricSetPairListId,
@@ -152,7 +152,7 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Retrieve a list of metric set pair list ids and timestamps")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map<String, Object>> listAllMetricSetPairLists(
       @RequestParam(required = false) final String accountName) {
     String resolvedAccountName =
