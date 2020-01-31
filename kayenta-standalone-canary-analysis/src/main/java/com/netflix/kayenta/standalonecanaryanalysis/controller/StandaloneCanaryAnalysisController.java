@@ -16,8 +16,7 @@
 
 package com.netflix.kayenta.standalonecanaryanalysis.controller;
 
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
@@ -37,7 +36,9 @@ import io.swagger.annotations.ApiParam;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -89,7 +90,7 @@ public class StandaloneCanaryAnalysisController {
   @ApiOperation(
       value =
           "Initiate a canary analysis execution with multiple canary judgements using a stored canary config")
-  @RequestMapping(value = "/{canaryConfigId:.+}", consumes = "application/json", method = POST)
+  @PostMapping(value = "/{canaryConfigId:.+}", consumes = APPLICATION_JSON_VALUE)
   public CanaryAnalysisExecutionResponse initiateCanaryAnalysis(
       @ApiParam(
               value = "The initiating user",
@@ -176,7 +177,7 @@ public class StandaloneCanaryAnalysisController {
   @ApiOperation(
       value =
           "Initiate an canary analysis execution with multiple canary judgements with the CanaryConfig provided in the request body")
-  @RequestMapping(consumes = "application/json", method = POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public CanaryAnalysisExecutionResponse initiateCanaryAnalysisExecutionWithConfig(
       @ApiParam(
               value = "The initiating user",
@@ -243,7 +244,7 @@ public class StandaloneCanaryAnalysisController {
    * @return The canary analysis execution object that will have the results and status.
    */
   @ApiOperation(value = "Retrieve status and results for a canary analysis execution")
-  @RequestMapping(value = "/{canaryAnalysisExecutionId:.+}", method = GET)
+  @GetMapping(value = "/{canaryAnalysisExecutionId:.+}")
   public CanaryAnalysisExecutionStatusResponse getCanaryAnalysisExecution(
       @ApiParam(value = "The id for the Canary Analysis Execution") @PathVariable
           final String canaryAnalysisExecutionId,

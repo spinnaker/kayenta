@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.kayenta.metrics.MetricSetPair;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -25,7 +27,6 @@ import com.netflix.kayenta.storage.StorageServiceRepository;
 import io.swagger.annotations.ApiOperation;
 import java.io.IOException;
 import java.util.*;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,7 +50,7 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Retrieve a metric set pair list from object storage")
-  @RequestMapping(value = "/{metricSetPairListId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{metricSetPairListId:.+}")
   public List<MetricSetPair> loadMetricSetPairList(
       @RequestParam(required = false) final String accountName,
       @PathVariable final String metricSetPairListId) {
@@ -65,9 +66,7 @@ public class MetricSetPairListController {
 
   @ApiOperation(
       value = "Retrieve a single metric set pair from a metricSetPairList from object storage")
-  @RequestMapping(
-      value = "/{metricSetPairListId:.+}/{metricSetPairId:.+}",
-      method = RequestMethod.GET)
+  @GetMapping(value = "/{metricSetPairListId:.+}/{metricSetPairId:.+}")
   public ResponseEntity<MetricSetPair> loadMetricSetPair(
       @RequestParam(required = false) final String accountName,
       @PathVariable final String metricSetPairListId,
@@ -91,7 +90,7 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Write a metric set pair list to object storage")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public Map storeMetricSetPairList(
       @RequestParam(required = false) final String accountName,
       @RequestBody final List<MetricSetPair> metricSetPairList)
@@ -113,11 +112,11 @@ public class MetricSetPairListController {
   }
 
   @ApiOperation(value = "Delete a metric set pair list")
-  @RequestMapping(value = "/{metricSetPairListId:.+}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "/{metricSetPairListId:.+}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteMetricSetPairList(
       @RequestParam(required = false) final String accountName,
-      @PathVariable final String metricSetPairListId,
-      HttpServletResponse response) {
+      @PathVariable final String metricSetPairListId) {
     String resolvedAccountName =
         accountCredentialsRepository
             .getRequiredOneBy(accountName, AccountCredentials.Type.OBJECT_STORE)
@@ -126,12 +125,10 @@ public class MetricSetPairListController {
 
     storageService.deleteObject(
         resolvedAccountName, ObjectType.METRIC_SET_PAIR_LIST, metricSetPairListId);
-
-    response.setStatus(HttpStatus.NO_CONTENT.value());
   }
 
   @ApiOperation(value = "Retrieve a list of metric set pair list ids and timestamps")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map<String, Object>> listAllMetricSetPairLists(
       @RequestParam(required = false) final String accountName) {
     String resolvedAccountName =

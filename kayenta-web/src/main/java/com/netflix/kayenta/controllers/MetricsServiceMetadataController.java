@@ -27,8 +27,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -49,7 +49,7 @@ public class MetricsServiceMetadataController {
   }
 
   @ApiOperation(value = "Retrieve a list of descriptors for use in populating the canary config ui")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map> listMetadata(
       @RequestParam(required = false) final String metricsAccountName,
       @RequestParam(required = false) final String filter)

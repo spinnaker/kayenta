@@ -37,10 +37,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -95,19 +98,19 @@ public class PipelineController {
   }
 
   @ApiOperation(value = "Initiate a pipeline execution")
-  @RequestMapping(value = "/start", method = RequestMethod.POST)
+  @PostMapping("/start")
   String start(@RequestBody Map map) throws Exception {
     return startPipeline(map);
   }
 
   @ApiOperation(value = "Retrieve a pipeline execution")
-  @RequestMapping(value = "/{executionId}", method = RequestMethod.GET)
+  @GetMapping("/{executionId}")
   Execution getPipeline(@PathVariable String executionId) {
     return executionRepository.retrieve(Execution.ExecutionType.PIPELINE, executionId);
   }
 
   @ApiOperation(value = "Cancel a pipeline execution")
-  @RequestMapping(value = "/{executionId}/cancel", method = RequestMethod.PUT)
+  @PutMapping("/{executionId}/cancel")
   @ResponseStatus(HttpStatus.ACCEPTED)
   void cancel(@PathVariable String executionId) {
     log.info("Cancelling pipeline execution {}...", executionId);
@@ -129,7 +132,7 @@ public class PipelineController {
   }
 
   @ApiOperation(value = "Delete a pipeline execution")
-  @RequestMapping(value = "/{executionId}", method = RequestMethod.DELETE)
+  @DeleteMapping("/{executionId}")
   ResponseEntity delete(@PathVariable String executionId) {
     log.info("Deleting pipeline execution {}...", executionId);
 
@@ -145,7 +148,7 @@ public class PipelineController {
   }
 
   @ApiOperation(value = "List all pipeline IDs")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   List<String> list() {
     return executionRepository.retrieveAllExecutionIds(Execution.ExecutionType.PIPELINE);
   }

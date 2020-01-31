@@ -82,7 +82,7 @@ public class CanaryJudgesController {
   @ApiOperation(
       value =
           "Exercise a judge directly, without any orchestration or querying of metrics services")
-  @PostMapping(value = "/judge")
+  @PostMapping("/judge")
   public CanaryJudgeResult judge(
       @RequestParam(required = false) final String configurationAccountName,
       @RequestParam(required = false) final String storageAccountName,
@@ -141,7 +141,7 @@ public class CanaryJudgesController {
   }
 
   @ApiOperation(value = "Apply a pair of judges to a canned set of data")
-  @PostMapping(value = "/comparison")
+  @PostMapping("/comparison")
   public CanaryExecutionResponse initiateJudgeComparison(
       @RequestParam(required = false) final String configurationAccountName,
       @RequestParam(required = false) final String storageAccountName,
@@ -188,7 +188,7 @@ public class CanaryJudgesController {
   }
 
   @ApiOperation(value = "Retrieve the results of a judge comparison")
-  @GetMapping(value = "/comparison/{executionId:.+}")
+  @GetMapping("/comparison/{executionId:.+}")
   public Map getJudgeComparisonResults(@PathVariable String executionId) {
     Execution pipeline =
         executionRepository.retrieve(Execution.ExecutionType.PIPELINE, executionId);

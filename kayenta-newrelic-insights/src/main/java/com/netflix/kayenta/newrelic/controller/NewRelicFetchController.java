@@ -58,7 +58,7 @@ public class NewRelicFetchController {
         newrelicConfigurationTestControllerDefaultProperties;
   }
 
-  @RequestMapping(value = "/query", method = RequestMethod.POST)
+  @PostMapping("/query")
   public Map queryMetrics(
       @RequestParam(required = false) final String metricsAccountName,
       @RequestParam(required = false) final String storageAccountName,

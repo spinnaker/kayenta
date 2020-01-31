@@ -27,8 +27,8 @@ import java.time.Instant;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -48,7 +48,7 @@ public class WavefrontFetchController {
     this.synchronousQueryProcessor = synchronousQueryProcessor;
   }
 
-  @RequestMapping(value = "/query", method = RequestMethod.POST)
+  @PostMapping("/query")
   public Map queryMetrics(
       @RequestParam(required = false) final String metricsAccountName,
       @RequestParam(required = false) final String storageAccountName,

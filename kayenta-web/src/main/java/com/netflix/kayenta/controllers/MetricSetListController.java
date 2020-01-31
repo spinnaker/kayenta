@@ -16,6 +16,8 @@
 
 package com.netflix.kayenta.controllers;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -28,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -51,7 +52,7 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Retrieve a metric set list from object storage")
-  @RequestMapping(value = "/{metricSetListId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/{metricSetListId:.+}")
   public List<MetricSet> loadMetricSetList(
       @RequestParam(required = false) final String accountName,
       @PathVariable String metricSetListId) {
@@ -66,7 +67,7 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Write a metric set list to object storage")
-  @RequestMapping(consumes = "application/json", method = RequestMethod.POST)
+  @PostMapping(consumes = APPLICATION_JSON_VALUE)
   public Map storeMetricSetList(
       @RequestParam(required = false) final String accountName,
       @RequestBody List<MetricSet> metricSetList)
@@ -85,11 +86,11 @@ public class MetricSetListController {
   }
 
   @ApiOperation(value = "Delete a metric set list")
-  @RequestMapping(value = "/{metricSetListId:.+}", method = RequestMethod.DELETE)
+  @DeleteMapping(value = "/{metricSetListId:.+}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteMetricSetList(
       @RequestParam(required = false) final String accountName,
-      @PathVariable String metricSetListId,
-      HttpServletResponse response) {
+      @PathVariable String metricSetListId) {
     String resolvedAccountName =
         accountCredentialsRepository
             .getRequiredOneBy(accountName, AccountCredentials.Type.OBJECT_STORE)
@@ -97,12 +98,10 @@ public class MetricSetListController {
     StorageService storageService = storageServiceRepository.getRequiredOne(resolvedAccountName);
 
     storageService.deleteObject(resolvedAccountName, ObjectType.METRIC_SET_LIST, metricSetListId);
-
-    response.setStatus(HttpStatus.NO_CONTENT.value());
   }
 
   @ApiOperation(value = "Retrieve a list of metric set list ids and timestamps")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   public List<Map<String, Object>> listAllMetricSetLists(
       @RequestParam(required = false) final String accountName) {
     String resolvedAccountName =
