@@ -103,13 +103,7 @@ public class DatadogMetricsService implements MetricsService {
       CanaryScope canaryScope)
       throws IOException {
     DatadogNamedAccountCredentials accountCredentials =
-        (DatadogNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
 
     DatadogCredentials credentials = accountCredentials.getCredentials();
     DatadogRemoteService remoteService = accountCredentials.getDatadogRemoteService();
