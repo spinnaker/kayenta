@@ -195,8 +195,7 @@ public class PrometheusMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
     PrometheusCanaryMetricSetQueryConfig queryConfig =
         (PrometheusCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
     PrometheusCanaryScope prometheusCanaryScope = (PrometheusCanaryScope) canaryScope;
@@ -249,13 +248,7 @@ public class PrometheusMetricsService implements MetricsService {
     }
 
     PrometheusNamedAccountCredentials credentials =
-        (PrometheusNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
     PrometheusRemoteService prometheusRemoteService = credentials.getPrometheusRemoteService();
 
     if (StringUtils.isEmpty(canaryScope.getStart())) {
