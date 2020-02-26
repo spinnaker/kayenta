@@ -88,8 +88,7 @@ public class StackdriverMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
     StackdriverCanaryMetricSetQueryConfig queryConfig =
         (StackdriverCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
     StackdriverCanaryScope stackdriverCanaryScope = (StackdriverCanaryScope) canaryScope;

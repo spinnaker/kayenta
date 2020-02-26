@@ -77,8 +77,7 @@ public class DatadogMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
 
     DatadogCanaryMetricSetQueryConfig queryConfig =
         (DatadogCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();

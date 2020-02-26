@@ -194,8 +194,7 @@ public class PrometheusMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
     PrometheusCanaryMetricSetQueryConfig queryConfig =
         (PrometheusCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
     PrometheusCanaryScope prometheusCanaryScope = (PrometheusCanaryScope) canaryScope;
