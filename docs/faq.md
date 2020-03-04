@@ -74,7 +74,7 @@ The tl;dr of it is that you can create a file called `~/.hal/default/profiles/ka
 
 This config will be left merged into the configuration that halyard auto generates (`kayenta.yml`) 
 
-So if I wanted to add a new relic account to my config and hal didn't support new relic. I would add the following to `~/.hal/default/profiles/kayenta-local.yml`
+So if I wanted to add a New Relic account to my config and Halyard didn't have explicit support for New Relic, I would add the following to `~/.hal/default/profiles/kayenta-local.yml`
 
 ```yaml
 kayenta:
