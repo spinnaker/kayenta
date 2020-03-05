@@ -1,7 +1,7 @@
 /*
  * Copyright 2017 Google, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License")
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -28,7 +28,6 @@ import com.netflix.kayenta.canary.results.CanaryJudgeResult;
 import com.netflix.kayenta.metrics.MetricSetPair;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
@@ -43,9 +42,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -74,7 +74,7 @@ public class CanaryJudgesController {
   }
 
   @ApiOperation(value = "Retrieve a list of all configured canary judges")
-  @RequestMapping(method = RequestMethod.GET)
+  @GetMapping
   List<CanaryJudge> list() {
     return canaryJudges;
   }
@@ -82,7 +82,7 @@ public class CanaryJudgesController {
   @ApiOperation(
       value =
           "Exercise a judge directly, without any orchestration or querying of metrics services")
-  @RequestMapping(value = "/judge", method = RequestMethod.POST)
+  @PostMapping(value = "/judge")
   public CanaryJudgeResult judge(
       @RequestParam(required = false) final String configurationAccountName,
       @RequestParam(required = false) final String storageAccountName,
@@ -91,27 +91,17 @@ public class CanaryJudgesController {
       @RequestParam final Double passThreshold,
       @RequestParam final Double marginalThreshold) {
     String resolvedConfigurationAccountName =
-        CredentialsHelper.resolveAccountByNameOrType(
-            configurationAccountName,
-            AccountCredentials.Type.CONFIGURATION_STORE,
-            accountCredentialsRepository);
+        accountCredentialsRepository
+            .getRequiredOneBy(configurationAccountName, AccountCredentials.Type.CONFIGURATION_STORE)
+            .getName();
     String resolvedStorageAccountName =
-        CredentialsHelper.resolveAccountByNameOrType(
-            storageAccountName, AccountCredentials.Type.OBJECT_STORE, accountCredentialsRepository);
+        accountCredentialsRepository
+            .getRequiredOneBy(storageAccountName, AccountCredentials.Type.OBJECT_STORE)
+            .getName();
     StorageService configurationService =
-        storageServiceRepository
-            .getOne(resolvedConfigurationAccountName)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "No configuration service was configured; unable to read canary config from bucket."));
+        storageServiceRepository.getRequiredOne(resolvedConfigurationAccountName);
     StorageService storageService =
-        storageServiceRepository
-            .getOne(resolvedStorageAccountName)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "No storage service was configured; unable to read metric set pair list from bucket."));
+        storageServiceRepository.getRequiredOne(resolvedStorageAccountName);
 
     CanaryConfig canaryConfig =
         configurationService.loadObject(
@@ -151,7 +141,7 @@ public class CanaryJudgesController {
   }
 
   @ApiOperation(value = "Apply a pair of judges to a canned set of data")
-  @RequestMapping(value = "/comparison", method = RequestMethod.POST)
+  @PostMapping(value = "/comparison")
   public CanaryExecutionResponse initiateJudgeComparison(
       @RequestParam(required = false) final String configurationAccountName,
       @RequestParam(required = false) final String storageAccountName,
@@ -169,19 +159,16 @@ public class CanaryJudgesController {
       @RequestParam final Double marginalThreshold)
       throws JsonProcessingException {
     String resolvedStorageAccountName =
-        CredentialsHelper.resolveAccountByNameOrType(
-            storageAccountName, AccountCredentials.Type.OBJECT_STORE, accountCredentialsRepository);
+        accountCredentialsRepository
+            .getRequiredOneBy(storageAccountName, AccountCredentials.Type.OBJECT_STORE)
+            .getName();
     String resolvedConfigurationAccountName =
-        CredentialsHelper.resolveAccountByNameOrType(
-            configurationAccountName,
-            AccountCredentials.Type.CONFIGURATION_STORE,
-            accountCredentialsRepository);
+        accountCredentialsRepository
+            .getRequiredOneBy(configurationAccountName, AccountCredentials.Type.CONFIGURATION_STORE)
+            .getName();
 
     StorageService configurationService =
-        storageServiceRepository
-            .getOne(resolvedConfigurationAccountName)
-            .orElseThrow(
-                () -> new IllegalArgumentException("No configuration service was configured."));
+        storageServiceRepository.getRequiredOne(resolvedConfigurationAccountName);
     CanaryConfig canaryConfig =
         configurationService.loadObject(
             resolvedConfigurationAccountName, ObjectType.CANARY_CONFIG, canaryConfigId);
@@ -201,7 +188,7 @@ public class CanaryJudgesController {
   }
 
   @ApiOperation(value = "Retrieve the results of a judge comparison")
-  @RequestMapping(value = "/comparison/{executionId:.+}", method = RequestMethod.GET)
+  @GetMapping(value = "/comparison/{executionId:.+}")
   public Map getJudgeComparisonResults(@PathVariable String executionId) {
     Execution pipeline =
         executionRepository.retrieve(Execution.ExecutionType.PIPELINE, executionId);

@@ -67,13 +67,7 @@ public class GcsStorageService implements StorageService {
   /** Check to see if the bucket exists, creating it if it is not there. */
   public void ensureBucketExists(String accountName) {
     GoogleNamedAccountCredentials credentials =
-        (GoogleNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String projectName = credentials.getProject();
     String bucketName = credentials.getBucket();
@@ -100,6 +94,12 @@ public class GcsStorageService implements StorageService {
           log.error("Could not create bucket {} in project {}: {}", bucketName, projectName, e2);
           throw new IllegalArgumentException(e2);
         }
+      } else if (e.getStatusCode() == 403) {
+        log.error(
+            "Account does not have permissions to get bucket metadata {}. Please see the FAQ for details: https://github.com/spinnaker/kayenta/blob/master/docs/faq.md#why-doesnt-my-google-account-have-access-to-get-bucket-metadata: {}",
+            bucketName,
+            e);
+        throw new IllegalArgumentException(e);
       } else {
         log.error("Could not get bucket {}: {}", bucketName, e);
         throw new IllegalArgumentException(e);
@@ -114,13 +114,7 @@ public class GcsStorageService implements StorageService {
   public <T> T loadObject(String accountName, ObjectType objectType, String objectKey)
       throws IllegalArgumentException, NotFoundException {
     GoogleNamedAccountCredentials credentials =
-        (GoogleNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String bucketName = credentials.getBucket();
     StorageObject item;
@@ -201,13 +195,7 @@ public class GcsStorageService implements StorageService {
       String filename,
       boolean isAnUpdate) {
     GoogleNamedAccountCredentials credentials =
-        (GoogleNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String bucketName = credentials.getBucket();
     String path = keyToPath(credentials, objectType, objectKey, filename);
@@ -313,13 +301,7 @@ public class GcsStorageService implements StorageService {
   @Override
   public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
     GoogleNamedAccountCredentials credentials =
-        (GoogleNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String bucketName = credentials.getBucket();
     StorageObject item =
@@ -413,13 +395,7 @@ public class GcsStorageService implements StorageService {
   public List<Map<String, Object>> listObjectKeys(
       String accountName, ObjectType objectType, List<String> applications, boolean skipIndex) {
     GoogleNamedAccountCredentials credentials =
-        (GoogleNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
 
     if (!skipIndex && objectType == ObjectType.CANARY_CONFIG) {
       Set<Map<String, Object>> canaryConfigSet =

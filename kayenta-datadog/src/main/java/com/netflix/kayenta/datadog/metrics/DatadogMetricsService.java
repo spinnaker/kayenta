@@ -20,6 +20,7 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.DatadogCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
 import com.netflix.kayenta.datadog.security.DatadogCredentials;
 import com.netflix.kayenta.datadog.security.DatadogNamedAccountCredentials;
 import com.netflix.kayenta.datadog.service.DatadogRemoteService;
@@ -30,8 +31,8 @@ import com.netflix.kayenta.model.DatadogMetricDescriptor;
 import com.netflix.kayenta.model.DatadogMetricDescriptorsResponse;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.spectator.api.Registry;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,10 +78,20 @@ public class DatadogMetricsService implements MetricsService {
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
       CanaryScope canaryScope) {
+
     DatadogCanaryMetricSetQueryConfig queryConfig =
         (DatadogCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
+    String[] baseScopeAttributes = new String[] {"scope", "location"};
 
-    return queryConfig.getMetricName() + "{" + canaryScope.getScope() + "}";
+    String customFilter =
+        QueryConfigUtils.expandCustomFilter(
+            canaryConfig, queryConfig, canaryScope, baseScopeAttributes);
+
+    if (StringUtils.isEmpty(customFilter)) {
+      return queryConfig.getMetricName() + "{" + canaryScope.getScope() + "}";
+    } else {
+      return customFilter;
+    }
   }
 
   @Override
@@ -88,15 +99,10 @@ public class DatadogMetricsService implements MetricsService {
       String accountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope) {
+      CanaryScope canaryScope)
+      throws IOException {
     DatadogNamedAccountCredentials accountCredentials =
-        (DatadogNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
 
     DatadogCredentials credentials = accountCredentials.getCredentials();
     DatadogRemoteService remoteService = accountCredentials.getDatadogRemoteService();
@@ -173,8 +179,7 @@ public class DatadogMetricsService implements MetricsService {
   @Scheduled(fixedDelayString = "#{@datadogConfigurationProperties.metadataCachingIntervalMS}")
   public void updateMetricDescriptorsCache() {
     Set<AccountCredentials> accountCredentialsSet =
-        CredentialsHelper.getAllAccountsOfType(
-            AccountCredentials.Type.METRICS_STORE, accountCredentialsRepository);
+        accountCredentialsRepository.getAllOf(AccountCredentials.Type.METRICS_STORE);
 
     for (AccountCredentials credentials : accountCredentialsSet) {
       if (credentials instanceof DatadogNamedAccountCredentials) {

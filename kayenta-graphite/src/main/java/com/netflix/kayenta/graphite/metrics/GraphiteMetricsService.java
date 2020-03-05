@@ -82,8 +82,7 @@ public class GraphiteMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
     GraphiteCanaryMetricSetQueryConfig queryConfig =
         (GraphiteCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
 
@@ -108,13 +107,7 @@ public class GraphiteMetricsService implements MetricsService {
       CanaryScope canaryScope)
       throws IOException {
     GraphiteNamedAccountCredentials accountCredentials =
-        (GraphiteNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(metricsAccountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            String.format("Unable to resolve account %s.", metricsAccountName)));
+        accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
     GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
 
@@ -163,13 +156,7 @@ public class GraphiteMetricsService implements MetricsService {
       result.addAll(getSpecialMetricDescriptors(baseFilter));
     } else {
       GraphiteNamedAccountCredentials accountCredentials =
-          (GraphiteNamedAccountCredentials)
-              accountCredentialsRepository
-                  .getOne(metricsAccountName)
-                  .orElseThrow(
-                      () ->
-                          new IllegalArgumentException(
-                              String.format("Unable to resolve account %s.", metricsAccountName)));
+          accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
       GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
 

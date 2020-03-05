@@ -34,7 +34,6 @@ import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.kayenta.stackdriver.canary.StackdriverCanaryScope;
 import com.netflix.kayenta.stackdriver.config.StackdriverConfigurationProperties;
 import com.netflix.spectator.api.Id;
@@ -89,8 +88,7 @@ public class StackdriverMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
     StackdriverCanaryMetricSetQueryConfig queryConfig =
         (StackdriverCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
     StackdriverCanaryScope stackdriverCanaryScope = (StackdriverCanaryScope) canaryScope;
@@ -279,13 +277,7 @@ public class StackdriverMetricsService implements MetricsService {
 
     StackdriverCanaryScope stackdriverCanaryScope = (StackdriverCanaryScope) canaryScope;
     GoogleNamedAccountCredentials stackdriverCredentials =
-        (GoogleNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(metricsAccountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + metricsAccountName + "."));
+        accountCredentialsRepository.getRequiredOne(metricsAccountName);
     Monitoring monitoring = stackdriverCredentials.getMonitoring();
     StackdriverCanaryMetricSetQueryConfig stackdriverMetricSetQuery =
         (StackdriverCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
@@ -452,13 +444,7 @@ public class StackdriverMetricsService implements MetricsService {
 
     if (StringUtils.isEmpty(projectId)) {
       GoogleNamedAccountCredentials stackdriverCredentials =
-          (GoogleNamedAccountCredentials)
-              accountCredentialsRepository
-                  .getOne(metricsAccountName)
-                  .orElseThrow(
-                      () ->
-                          new IllegalArgumentException(
-                              "Unable to resolve account " + metricsAccountName + "."));
+          accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
       projectId = stackdriverCredentials.getProject();
     }
@@ -484,8 +470,7 @@ public class StackdriverMetricsService implements MetricsService {
   @Scheduled(fixedDelayString = "#{@stackdriverConfigurationProperties.metadataCachingIntervalMS}")
   public void updateMetricDescriptorsCache() throws IOException {
     Set<AccountCredentials> accountCredentialsSet =
-        CredentialsHelper.getAllAccountsOfType(
-            AccountCredentials.Type.METRICS_STORE, accountCredentialsRepository);
+        accountCredentialsRepository.getAllOf(AccountCredentials.Type.METRICS_STORE);
 
     for (AccountCredentials credentials : accountCredentialsSet) {
       if (credentials instanceof GoogleNamedAccountCredentials) {

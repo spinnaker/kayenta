@@ -31,7 +31,6 @@ import com.netflix.kayenta.prometheus.security.PrometheusNamedAccountCredentials
 import com.netflix.kayenta.prometheus.service.PrometheusRemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
 import java.io.IOException;
@@ -195,8 +194,7 @@ public class PrometheusMetricsService implements MetricsService {
       String metricsAccountName,
       CanaryConfig canaryConfig,
       CanaryMetricConfig canaryMetricConfig,
-      CanaryScope canaryScope)
-      throws IOException {
+      CanaryScope canaryScope) {
     PrometheusCanaryMetricSetQueryConfig queryConfig =
         (PrometheusCanaryMetricSetQueryConfig) canaryMetricConfig.getQuery();
     PrometheusCanaryScope prometheusCanaryScope = (PrometheusCanaryScope) canaryScope;
@@ -249,13 +247,7 @@ public class PrometheusMetricsService implements MetricsService {
     }
 
     PrometheusNamedAccountCredentials credentials =
-        (PrometheusNamedAccountCredentials)
-            accountCredentialsRepository
-                .getOne(accountName)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Unable to resolve account " + accountName + "."));
+        accountCredentialsRepository.getRequiredOne(accountName);
     PrometheusRemoteService prometheusRemoteService = credentials.getPrometheusRemoteService();
 
     if (StringUtils.isEmpty(canaryScope.getStart())) {
@@ -361,8 +353,7 @@ public class PrometheusMetricsService implements MetricsService {
   @Scheduled(fixedDelayString = "#{@prometheusConfigurationProperties.metadataCachingIntervalMS}")
   public void updateMetricDescriptorsCache() {
     Set<AccountCredentials> accountCredentialsSet =
-        CredentialsHelper.getAllAccountsOfType(
-            AccountCredentials.Type.METRICS_STORE, accountCredentialsRepository);
+        accountCredentialsRepository.getAllOf(AccountCredentials.Type.METRICS_STORE);
     Map<String, List<PrometheusMetricDescriptor>> updatedMetricDescriptorsCache = new HashMap<>();
 
     for (AccountCredentials credentials : accountCredentialsSet) {

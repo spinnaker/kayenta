@@ -23,7 +23,6 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.index.config.IndexConfigurationProperties;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import com.netflix.kayenta.security.CredentialsHelper;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
@@ -38,6 +37,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisException;
+import redis.clients.jedis.params.SetParams;
 
 @Slf4j
 public class CanaryConfigIndexingAgent extends AbstractHealthIndicator {
@@ -97,7 +97,10 @@ public class CanaryConfigIndexingAgent extends AbstractHealthIndicator {
     try (Jedis jedis = jedisPool.getResource()) {
       long startTime = System.currentTimeMillis();
       String acquiredIndexingLock =
-          jedis.set(INDEXING_INSTANCE_KEY, currentInstanceId, "NX", "EX", indexingLockTTLSec);
+          jedis.set(
+              INDEXING_INSTANCE_KEY,
+              currentInstanceId,
+              SetParams.setParams().nx().ex(indexingLockTTLSec));
 
       if (!"OK".equals(acquiredIndexingLock)) {
         String lockHolderInstanceId = jedis.get(INDEXING_INSTANCE_KEY);
@@ -119,8 +122,7 @@ public class CanaryConfigIndexingAgent extends AbstractHealthIndicator {
 
       if ("OK".equals(acquiredIndexingLock)) {
         Set<AccountCredentials> accountCredentialsSet =
-            CredentialsHelper.getAllAccountsOfType(
-                AccountCredentials.Type.CONFIGURATION_STORE, accountCredentialsRepository);
+            accountCredentialsRepository.getAllOf(AccountCredentials.Type.CONFIGURATION_STORE);
 
         for (AccountCredentials credentials : accountCredentialsSet) {
           String accountName = credentials.getName();
@@ -140,12 +142,7 @@ public class CanaryConfigIndexingAgent extends AbstractHealthIndicator {
             // an open start entry by recording the matching finish entry).
             List<String> updatesThroughCheckpoint = jedis.lrange(pendingUpdatesKey, 0, -1);
             StorageService configurationService =
-                storageServiceRepository
-                    .getOne(accountName)
-                    .orElseThrow(
-                        () ->
-                            new IllegalArgumentException(
-                                "No storage service was configured; unable to index configurations."));
+                storageServiceRepository.getRequiredOne(accountName);
 
             List<Map<String, Object>> canaryConfigObjectKeys =
                 configurationService.listObjectKeys(
@@ -305,8 +302,7 @@ public class CanaryConfigIndexingAgent extends AbstractHealthIndicator {
   @Override
   protected void doHealthCheck(Health.Builder builder) throws Exception {
     Set<AccountCredentials> configurationStoreAccountCredentialsSet =
-        CredentialsHelper.getAllAccountsOfType(
-            AccountCredentials.Type.CONFIGURATION_STORE, accountCredentialsRepository);
+        accountCredentialsRepository.getAllOf(AccountCredentials.Type.CONFIGURATION_STORE);
     int existingByApplicationIndexCount = 0;
 
     try (Jedis jedis = jedisPool.getResource()) {
