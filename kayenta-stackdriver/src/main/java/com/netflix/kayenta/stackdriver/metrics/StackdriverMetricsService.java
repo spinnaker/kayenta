@@ -423,7 +423,7 @@ public class StackdriverMetricsService implements MetricsService {
         if (labels != null) {
           filteredLabels.putAll(
               labels.entrySet().stream()
-                  .filter(x -> x.getKey() != "project_id")
+                  .filter(entry -> entry.getKey() != "project_id")
                   .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
       }
