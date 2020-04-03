@@ -73,6 +73,15 @@ allprojects {
       exclude group: 'javax.servlet', module: 'servlet-api'
       exclude group: 'org.slf4j', module: 'slf4j-log4j12'
       exclude group: 'org.slf4j', module: 'slf4j-simple'
+
+      resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+          // Temp force kork 7.25.13 for release 1.19.x, so that plugins work properly
+          if (details.requested.group == 'com.netflix.spinnaker.kork') {
+            details.useVersion "7.25.13"
+          }
+        }
+      }
     }
   }
 }
