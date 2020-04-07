@@ -28,14 +28,16 @@ import com.netflix.kayenta.domain.standalonecanaryanalysis.StageMetadata;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.standalonecanaryanalysis.CanaryAnalysisConfig;
+import com.netflix.kayenta.standalonecanaryanalysis.orca.MonitorKayentaCanaryContext;
 import com.netflix.kayenta.standalonecanaryanalysis.orca.stage.GenerateCanaryAnalysisResultStage;
 import com.netflix.kayenta.standalonecanaryanalysis.orca.stage.SetupAndExecuteCanariesStage;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
-import com.netflix.spinnaker.orca.ExecutionStatus;
+import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus;
+import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionType;
+import com.netflix.spinnaker.orca.api.pipeline.models.PipelineExecution;
 import com.netflix.spinnaker.orca.pipeline.ExecutionLauncher;
-import com.netflix.spinnaker.orca.pipeline.model.Execution;
 import com.netflix.spinnaker.orca.pipeline.model.PipelineBuilder;
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionNotFoundException;
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
@@ -46,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/** Service that handles starting and mapping Canary Analysis Stage pipelines. */
+/** Service that handles starting and mapping Canary Analysis StageExecution pipelines. */
 @Slf4j
 @Component
 public class CanaryAnalysisService {
@@ -96,7 +98,7 @@ public class CanaryAnalysisService {
                 Maps.newHashMap(
                     ImmutableMap.of(CANARY_ANALYSIS_CONFIG_CONTEXT_KEY, canaryAnalysisConfig)));
 
-    Execution pipeline = pipelineBuilder.withLimitConcurrent(false).build();
+    PipelineExecution pipeline = pipelineBuilder.withLimitConcurrent(false).build();
     executionRepository.store(pipeline);
 
     try {
@@ -115,8 +117,8 @@ public class CanaryAnalysisService {
       String canaryAnalysisExecutionId, String nullableStorageAccountName) {
 
     try {
-      Execution execution =
-          executionRepository.retrieve(Execution.ExecutionType.PIPELINE, canaryAnalysisExecutionId);
+      PipelineExecution execution =
+          executionRepository.retrieve(ExecutionType.PIPELINE, canaryAnalysisExecutionId);
       return fromExecution(execution);
     } catch (ExecutionNotFoundException e) {
       return Optional.ofNullable(nullableStorageAccountName)
@@ -140,7 +142,7 @@ public class CanaryAnalysisService {
     }
   }
 
-  private void handleStartupFailure(Execution execution, Throwable failure) {
+  private void handleStartupFailure(PipelineExecution execution, Throwable failure) {
     final String canceledBy = "system";
     final String reason = "Failed on startup: " + failure.getMessage();
     final ExecutionStatus status = ExecutionStatus.TERMINAL;
@@ -156,7 +158,7 @@ public class CanaryAnalysisService {
    * @param pipeline The execution
    * @return The status response
    */
-  protected CanaryAnalysisExecutionStatusResponse fromExecution(Execution pipeline) {
+  protected CanaryAnalysisExecutionStatusResponse fromExecution(PipelineExecution pipeline) {
 
     boolean isComplete = pipeline.getStatus().isComplete();
     ExecutionStatus pipelineStatus = pipeline.getStatus();
@@ -170,7 +172,12 @@ public class CanaryAnalysisService {
                         .map(
                             stage ->
                                 new StageMetadata(
-                                    stage.getType(), stage.getName(), stage.getStatus()))
+                                    stage.getType(),
+                                    stage.getName(),
+                                    stage.getStatus(),
+                                    stage
+                                        .mapTo(MonitorKayentaCanaryContext.class)
+                                        .getCanaryPipelineExecutionId()))
                         .collect(Collectors.toList()))
                 .complete(isComplete)
                 .executionStatus(pipelineStatus);
