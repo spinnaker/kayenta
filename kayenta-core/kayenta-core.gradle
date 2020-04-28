@@ -2,6 +2,7 @@ dependencies {
   api "redis.clients:jedis"
   api "com.netflix.spinnaker.kork:kork-core"
   api "com.netflix.spinnaker.kork:kork-web"
+  api "com.netflix.spinnaker.kork:kork-plugins"
   api "com.netflix.spectator:spectator-api"
 
   // TODO update korkSwagger?
