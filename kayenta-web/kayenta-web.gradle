@@ -1,4 +1,4 @@
-apply plugin: 'spinnaker.application'
+apply plugin: 'io.spinnaker.package'
 
 ext {
   springConfigLocation = System.getProperty('spring.config.additional-location', "${System.getProperty('user.home')}/.spinnaker/")
@@ -39,6 +39,7 @@ dependencies {
 
   api "org.springframework.boot:spring-boot-starter-actuator"
   api "com.netflix.spinnaker.kork:kork-web"
+  implementation "com.netflix.spinnaker.kork:kork-plugins"
   runtimeOnly "com.netflix.spinnaker.kork:kork-secrets-aws"
   runtimeOnly "com.netflix.spinnaker.kork:kork-secrets-gcp"
 }
