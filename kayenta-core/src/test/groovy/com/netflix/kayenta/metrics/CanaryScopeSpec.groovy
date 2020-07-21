@@ -57,9 +57,7 @@ class CanaryScopeSpec extends Specification {
 
   private ObjectMapper myObjectMapper() {
     ObjectMapper objectMapper = new ObjectMapper();
-    KayentaSerializationConfigurationProperties kayentaSerializationConfigurationProperties = new KayentaSerializationConfigurationProperties();
-    kayentaSerializationConfigurationProperties.setWriteDatesAsTimestamps(false);
-    KayentaConfiguration.configureObjectMapperFeatures(objectMapper, kayentaSerializationConfigurationProperties);
+    KayentaConfiguration.configureObjectMapperFeatures(objectMapper, new KayentaSerializationConfigurationProperties());
     return objectMapper;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Google, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package com.netflix.kayenta.atlas.config;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+@Data
 public class KayentaSerializationConfigurationProperties {
 
-  @Getter @Setter private boolean writeDatesAsTimestamps = false;
+  private boolean writeDatesAsTimestamps = false;
 
-  @Getter @Setter private boolean writeDurationsAsTimestamps = false;
+  private boolean writeDurationsAsTimestamps = false;
 }
