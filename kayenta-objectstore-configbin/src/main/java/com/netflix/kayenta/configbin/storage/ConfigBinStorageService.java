@@ -165,7 +165,7 @@ public class ConfigBinStorageService implements StorageService {
             credentials, CanaryConfigIndexAction.UPDATE, correlationId);
       }
     } catch (Exception e) {
-      log.error("Update failed on path {}: {}", objectKey, e);
+      log.error("Update failed on path {}", objectKey, e);
 
       if (objectType == ObjectType.CANARY_CONFIG) {
         canaryConfigIndex.removeFailedPendingUpdate(
@@ -305,16 +305,11 @@ public class ConfigBinStorageService implements StorageService {
           ids.addAll(
               response.nameVersions.stream().map(nv -> nv.configName).collect(Collectors.toList()));
         } catch (IOException e) {
-          log.error("List failed on path {}: {}", ownerApp, e);
+          log.error("List failed on path {}", ownerApp, e);
           return Collections.emptyList();
         }
       }
-
-      if (ids.size() > 0) {
-        return ids.stream().map(i -> metadataFor(credentials, i)).collect(Collectors.toList());
-      }
-
-      return Collections.emptyList();
+      return ids.stream().map(i -> metadataFor(credentials, i)).collect(Collectors.toList());
     }
   }
 
@@ -350,7 +345,7 @@ public class ConfigBinStorageService implements StorageService {
     try {
       config = kayentaObjectMapper.readValue(json, CanaryConfig.class);
     } catch (Throwable e) {
-      log.error("Read failed on path {}: {}", id, e);
+      log.error("Read failed on path {}", id, e);
       throw new IllegalStateException(e);
     }
     return new ImmutableMap.Builder<String, Object>()
