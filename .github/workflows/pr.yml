@@ -7,8 +7,8 @@ env:
   GRADLE_ARGS: -x :kayenta-integration-tests:test
 jobs:
   build:
+    name: Build and Functional tests
     runs-on: ubuntu-latest
-    needs: [integration-tests, provider-integration-tests]
     steps:
     - uses: actions/checkout@v2
     - name: Gradle validation step
@@ -33,7 +33,7 @@ jobs:
   integration-tests:
     env:
       GRADLE_OPTS: -Dorg.gradle.daemon=false -Xmx2g -Xms2g
-    name: Functional-tests
+    name: Integration-tests
     runs-on: ubuntu-latest
 
     strategy:
