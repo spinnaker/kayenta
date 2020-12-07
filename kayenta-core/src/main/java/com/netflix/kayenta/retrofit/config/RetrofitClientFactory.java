@@ -45,7 +45,7 @@ import retrofit.converter.JacksonConverter;
 @Component
 public class RetrofitClientFactory {
 
-  @Value("${retrofit.log-level:FULL}")
+  @Value("${retrofit.log-level:BASIC}")
   @VisibleForTesting
   public String retrofitLogLevel;
 
