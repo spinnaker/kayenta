@@ -58,6 +58,14 @@ public class CanaryAnalysisExecutionRequestScope {
 
   @ApiModelProperty(
       value =
+          "The time offset (in minutes) to apply to the control scope. If none is provided, the control is "
+              + "evaluated at the same time as the experiment.",
+      example = "10")
+  @Builder.Default
+  Long controlOffset = 0L;
+
+  @ApiModelProperty(
+      value =
           "This value is used to fetch the data for the experiment from the metrics service. "
               + "It is often a server group name (e.g. ASG on EC2 or MIG on GCE).",
       example = "examplemicroservice--experiment-v001")
