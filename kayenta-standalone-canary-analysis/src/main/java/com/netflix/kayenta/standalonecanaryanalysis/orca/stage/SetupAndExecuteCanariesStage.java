@@ -227,7 +227,7 @@ public class SetupAndExecuteCanariesStage implements StageDefinitionBuilder {
                       scope.getControlScope(),
                       scope.getControlLocation(),
                       scopeTimeConfig.start.minus(Duration.ofMinutes(scope.getControlOffset())),
-                      scopeTimeConfig.end,
+                      scopeTimeConfig.end.minus(Duration.ofMinutes(scope.getControlOffset())),
                       config.getStep().getSeconds(),
                       scope.getExtendedScopeParams());
 
