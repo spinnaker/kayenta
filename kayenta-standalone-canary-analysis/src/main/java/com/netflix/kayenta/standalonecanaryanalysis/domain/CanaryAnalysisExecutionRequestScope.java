@@ -58,11 +58,11 @@ public class CanaryAnalysisExecutionRequestScope {
 
   @ApiModelProperty(
       value =
-          "The time offset (in minutes) to apply to the control scope. If none is provided, the control is "
+          "The time offset in minutes to be subtracted from the control start and end time. If none is provided, the control is "
               + "evaluated at the same time as the experiment.",
       example = "10")
   @Builder.Default
-  Long controlOffset = 0L;
+  Long controlOffsetInMinutes = 0L;
 
   @ApiModelProperty(
       value =
