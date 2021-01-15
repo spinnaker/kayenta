@@ -16,7 +16,6 @@
 
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
-apply plugin: "io.gitlab.arturbosch.detekt"
 
 compileKotlin {
   kotlinOptions {
@@ -39,21 +38,6 @@ configurations.all {
       if (details.requested.group == "org.jetbrains.kotlin") {
         details.useVersion kotlinVersion
       }
-    }
-  }
-}
-
-detekt {
-  parallel = false
-  config = files("$rootDir/.detekt.yml")
-  buildUponDefaultConfig = true
-  ignoreFailures = true
-  reports {
-    xml {
-      enabled = false
-    }
-    txt {
-      enabled = false
     }
   }
 }
