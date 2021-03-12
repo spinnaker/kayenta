@@ -25,6 +25,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
 import com.netflix.kayenta.atlas.config.KayentaSerializationConfigurationProperties;
 import com.netflix.kayenta.canary.CanaryMetricSetQueryConfig;
+import com.netflix.kayenta.canary.CanaryScopeFactory;
+import com.netflix.kayenta.canary.ExecutionMapper;
 import com.netflix.kayenta.metrics.MapBackedMetricsServiceRepository;
 import com.netflix.kayenta.metrics.MetricSetMixerService;
 import com.netflix.kayenta.metrics.MetricsRetryConfigurationProperties;
@@ -35,12 +37,16 @@ import com.netflix.kayenta.service.MetricSetPairListService;
 import com.netflix.kayenta.storage.MapBackedStorageServiceRepository;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
+import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.jackson.ObjectMapperSubtypeConfigurer;
+import com.netflix.spinnaker.orca.pipeline.ExecutionLauncher;
+import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -151,5 +157,25 @@ public class KayentaConfiguration {
   @ConfigurationProperties(prefix = "kayenta.serialization")
   KayentaSerializationConfigurationProperties kayentaSerializationConfigurationProperties() {
     return new KayentaSerializationConfigurationProperties();
+  }
+
+  @Bean
+  @Qualifier("canary-execution-mapper")
+  @ConditionalOnMissingBean
+  ExecutionMapper executionMapper(
+      ObjectMapper objectMapper,
+      Registry registry,
+      String currentInstanceId,
+      Optional<List<CanaryScopeFactory>> canaryScopeFactories,
+      ExecutionLauncher executionLauncher,
+      ExecutionRepository executionRepository) {
+
+    return new ExecutionMapper(
+        objectMapper,
+        registry,
+        currentInstanceId,
+        canaryScopeFactories,
+        executionLauncher,
+        executionRepository);
   }
 }
