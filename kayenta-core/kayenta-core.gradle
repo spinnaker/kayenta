@@ -9,8 +9,8 @@ dependencies {
   api "io.springfox:springfox-swagger-ui:2.9.2"
   api "io.springfox:springfox-swagger2:2.9.2"
 
-  api "com.netflix.spinnaker.orca:orca-core"
-  api "com.netflix.spinnaker.orca:orca-retrofit"
+  api "io.spinnaker.orca:orca-core"
+  api "io.spinnaker.orca:orca-retrofit"
   api "net.lariverosc:jesque-spring:1.0.1"
   api "net.greghaines:jesque:1.3.1"
 
