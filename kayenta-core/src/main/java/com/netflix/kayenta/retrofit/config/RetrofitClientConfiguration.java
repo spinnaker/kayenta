@@ -29,7 +29,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.*;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class RetrofitClientConfiguration {
