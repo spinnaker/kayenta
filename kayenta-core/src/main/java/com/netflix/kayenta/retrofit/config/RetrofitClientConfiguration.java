@@ -23,23 +23,23 @@ import com.netflix.spinnaker.config.OkHttpClientConfiguration;
 import com.netflix.spinnaker.orca.retrofit.exceptions.RetrofitExceptionHandler;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.OkHttpClient;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.*;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class RetrofitClientConfiguration {
-  
+
   @Value("${ok-http-client.connection-pool.read-timeout-ms:30000}")
   long readTimeoutMs;
 
   @Value("${ok-http-client.connection-pool.connect-timeout-ms:5000}")
   long connectTimeoutMs;
-    
+
   @Value("${ok-http-client.connection-pool.max-idle-connections:5}")
   int maxIdleConnections;
 
