@@ -29,10 +29,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.*;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import java.util.concurrent.TimeUnit
 
 @Configuration
 public class RetrofitClientConfiguration {
+  
+  @Value("${ok-http-client.connection-pool.read-timeout-ms:30000}")
+  long readTimeoutMs;
 
+  @Value("${ok-http-client.connection-pool.connect-timeout-ms:5000}")
+  long connectTimeoutMs;
+    
   @Value("${ok-http-client.connection-pool.max-idle-connections:5}")
   int maxIdleConnections;
 
@@ -48,6 +55,8 @@ public class RetrofitClientConfiguration {
     OkHttpClient okHttpClient = okHttpClientConfig.create();
     okHttpClient.setConnectionPool(new ConnectionPool(maxIdleConnections, keepAliveDurationMs));
     okHttpClient.setRetryOnConnectionFailure(retryOnConnectionFailure);
+    okHttpClient.setConnectTimeout(connectTimeoutMs, TimeUnit.MILLISECONDS);
+    okHttpClient.setReadTimeout(readTimeoutMs, TimeUnit.MILLISECONDS);
     return okHttpClient;
   }
 
