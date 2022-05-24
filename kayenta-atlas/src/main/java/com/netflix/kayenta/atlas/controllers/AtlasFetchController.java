@@ -23,7 +23,8 @@ import com.netflix.kayenta.canary.providers.metrics.AtlasCanaryMetricSetQueryCon
 import com.netflix.kayenta.metrics.SynchronousQueryProcessor;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
@@ -55,14 +56,14 @@ public class AtlasFetchController {
   public Map queryMetrics(
       @RequestParam(required = false) final String metricsAccountName,
       @RequestParam(required = false) final String storageAccountName,
-      @ApiParam(defaultValue = "name,CpuRawUser,:eq,:sum") @RequestParam String q,
-      @ApiParam(defaultValue = "cpu") @RequestParam String metricSetName,
-      @ApiParam(defaultValue = "cluster") @RequestParam String type,
+      @Parameter(schema = @Schema(defaultValue = "name,CpuRawUser,:eq,:sum")) @RequestParam String q,
+      @Parameter(schema = @Schema(defaultValue = "cpu")) @RequestParam String metricSetName,
+      @Parameter(schema = @Schema(defaultValue = "cluster")) @RequestParam String type,
       @RequestParam String scope,
-      @ApiParam(defaultValue = "us-east-1") @RequestParam String location,
-      @ApiParam(defaultValue = "2000-01-01T00:00:00Z") @RequestParam Instant start,
-      @ApiParam(defaultValue = "2000-01-01T04:00:00Z") @RequestParam Instant end,
-      @ApiParam(defaultValue = "300") @RequestParam Long step)
+      @Parameter(schema = @Schema(defaultValue = "us-east-1")) @RequestParam String location,
+      @Parameter(schema = @Schema(defaultValue = "2000-01-01T00:00:00Z")) @RequestParam Instant start,
+      @Parameter(schema = @Schema(defaultValue = "2000-01-01T04:00:00Z")) @RequestParam Instant end,
+      @Parameter(schema = @Schema(defaultValue = "300")) @RequestParam Long step)
       throws IOException {
     String resolvedMetricsAccountName =
         accountCredentialsRepository
