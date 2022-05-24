@@ -26,16 +26,14 @@ import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus;
 import com.netflix.spinnaker.orca.api.pipeline.models.PipelineExecution;
 import com.netflix.spinnaker.orca.pipeline.ExecutionLauncher;
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.CompositeHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -57,7 +55,7 @@ public class PipelineController {
   private final ExecutionRepository executionRepository;
   private final ObjectMapper kayentaObjectMapper;
   private final ConfigurableApplicationContext context;
-  private final HealthIndicator healthIndicator;
+  private final Map<String, HealthIndicator> healthIndicators;
   private final ScheduledAnnotationBeanPostProcessor postProcessor;
   private Boolean upAtLeastOnce = false;
 
@@ -67,22 +65,30 @@ public class PipelineController {
       ExecutionRepository executionRepository,
       ObjectMapper kayentaObjectMapper,
       ConfigurableApplicationContext context,
-      HealthIndicatorRegistry healthIndicators,
-      HealthAggregator healthAggregator,
+      Map<String, HealthIndicator> healthIndicators,
       ScheduledAnnotationBeanPostProcessor postProcessor) {
     this.executionLauncher = executionLauncher;
     this.executionRepository = executionRepository;
     this.kayentaObjectMapper = kayentaObjectMapper;
     this.context = context;
-    this.healthIndicator = new CompositeHealthIndicator(healthAggregator, healthIndicators);
+    this.healthIndicators = healthIndicators;
     this.postProcessor = postProcessor;
   }
   // TODO(duftler): Expose /inservice and /outofservice endpoints.
   @Scheduled(initialDelay = 10000, fixedDelay = 5000)
   void startOrcaQueueProcessing() {
     if (!upAtLeastOnce) {
-      Health health = healthIndicator.health();
-      if (health.getStatus() == Status.UP) {
+      // HealthContributor is an empty interface thus useless.
+      // HealthIndicator objects are not composable by default now.
+      // CompositeHealth doesn't aggregate statuses.
+      // To actually use the new health API composition you'd be using type casts, see org.springframework.boot.actuate.health.HealthEndpointSupport
+      // Can use StatusAggregator but it's pointless for the particular use case where only UP matters, and we need to print Health to logs.
+      // Avoiding it here by building the aggregated status from HealthIndicators directly.
+      List<Health> failingHealths = healthIndicators.values().stream()
+          .map(t -> t.getHealth(true))
+          .filter(health -> health.getStatus() != Status.UP)
+          .collect(Collectors.toList());
+      if (failingHealths.isEmpty()) {
         upAtLeastOnce = true;
         context.publishEvent(
             new RemoteStatusChangedEvent(new DiscoveryStatusChangeEvent(STARTING, UP)));
@@ -92,24 +98,24 @@ public class PipelineController {
       } else {
         log.warn(
             "Health indicators are still reporting DOWN; not starting orca queue processing yet: {}",
-            health);
+            failingHealths);
       }
     }
   }
 
-  @ApiOperation(value = "Initiate a pipeline execution")
+  @Operation(summary = "Initiate a pipeline execution")
   @RequestMapping(value = "/start", method = RequestMethod.POST)
   String start(@RequestBody Map map) throws Exception {
     return startPipeline(map);
   }
 
-  @ApiOperation(value = "Retrieve a pipeline execution")
+  @Operation(summary = "Retrieve a pipeline execution")
   @RequestMapping(value = "/{executionId}", method = RequestMethod.GET)
   PipelineExecution getPipeline(@PathVariable String executionId) {
     return executionRepository.retrieve(PIPELINE, executionId);
   }
 
-  @ApiOperation(value = "Cancel a pipeline execution")
+  @Operation(summary = "Cancel a pipeline execution")
   @RequestMapping(value = "/{executionId}/cancel", method = RequestMethod.PUT)
   @ResponseStatus(HttpStatus.ACCEPTED)
   void cancel(@PathVariable String executionId) {
@@ -126,7 +132,7 @@ public class PipelineController {
     executionRepository.updateStatus(PIPELINE, executionId, ExecutionStatus.CANCELED);
   }
 
-  @ApiOperation(value = "Delete a pipeline execution")
+  @Operation(summary = "Delete a pipeline execution")
   @RequestMapping(value = "/{executionId}", method = RequestMethod.DELETE)
   ResponseEntity delete(@PathVariable String executionId) {
     log.info("Deleting pipeline execution {}...", executionId);
@@ -139,7 +145,7 @@ public class PipelineController {
     return new ResponseEntity(HttpStatus.OK);
   }
 
-  @ApiOperation(value = "List all pipeline IDs")
+  @Operation(summary = "List all pipeline IDs")
   @RequestMapping(method = RequestMethod.GET)
   List<String> list() {
     return executionRepository.retrieveAllExecutionIds(PIPELINE);
