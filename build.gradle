@@ -34,7 +34,7 @@ subprojects { project ->
     apply plugin: "java-library"
     apply plugin: "groovy"
 
-    def localVersions = [orcaVersion].find { it.endsWith('-SNAPSHOT') }
+    def localVersions = [orcaVersion].find { it.endsWith('-SNAPSHOT') || it.endsWith('-PD') }
     if (localVersions) {
       logger.info("Enabling mavenLocal repo for $localVersions")
       repositories {
