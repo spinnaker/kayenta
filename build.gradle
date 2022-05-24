@@ -22,6 +22,9 @@ plugins {
 
 allprojects {
   apply plugin: "io.spinnaker.project"
+  spinnakerCodeStyle {
+    enabled = false
+  }
 }
 
 subprojects { project ->
