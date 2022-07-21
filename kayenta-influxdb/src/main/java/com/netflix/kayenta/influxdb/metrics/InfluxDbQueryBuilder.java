@@ -66,6 +66,7 @@ public class InfluxDbQueryBuilder {
     if (null == canaryScope.getStart() || null == canaryScope.getEnd()) {
       throw new IllegalArgumentException("Start and End times are required");
     }
+    // required variables when using customInlineTemplate
     if (!StringUtils.isEmpty(queryConfig.getCustomInlineTemplate())) {
       if (!queryConfig.getCustomInlineTemplate().contains("$\\{timeFilter}")) {
         throw new IllegalArgumentException("${timeFilter} is required in query");
@@ -164,8 +165,8 @@ public class InfluxDbQueryBuilder {
     blocked.add("SHOW SHARD");
     blocked.add("SHOW STATS");
     blocked.add("SHOW SUBSCRIPTIONS");
-    blocked.add(";");
-    blocked.add("--");
+    blocked.add(";"); // prevents having multiple queries that could lead to potential sql injection
+    blocked.add("--"); // prevents potential sql injection
 
     blocked.stream()
         .forEach(

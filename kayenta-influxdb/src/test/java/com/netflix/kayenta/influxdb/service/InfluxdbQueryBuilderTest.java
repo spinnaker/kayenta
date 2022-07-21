@@ -109,6 +109,7 @@ public class InfluxdbQueryBuilderTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testBuild_customInlineTemplateWithMissingRequiredVariables() {
+    // missing required variables are: {scope} and {timeFilter}
     String inLineQuery = "SELECT count FROM measurement";
 
     InfluxDbCanaryScope canaryScope = createScope();
