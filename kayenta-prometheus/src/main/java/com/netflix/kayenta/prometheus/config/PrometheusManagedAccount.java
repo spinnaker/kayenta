@@ -39,7 +39,7 @@ public class PrometheusManagedAccount extends AccountCredentials<PrometheusManag
   private String username;
 
   // Optional parameter for use when protecting prometheus with basic auth.
-  private String password;
+  @JsonIgnore private String password;
 
   // Optional parameter for use when protecting prometheus with basic auth.
   private String usernamePasswordFile;
