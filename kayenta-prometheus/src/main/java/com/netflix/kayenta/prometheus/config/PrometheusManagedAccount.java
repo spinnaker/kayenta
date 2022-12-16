@@ -49,7 +49,7 @@ public class PrometheusManagedAccount extends AccountCredentials<PrometheusManag
   }
 
   // Optional parameter for use when protecting prometheus with bearer token.
-  private String bearerToken;
+  @JsonIgnore private String bearerToken;
   @JsonIgnore transient PrometheusRemoteService prometheusRemoteService;
 
   @Override
