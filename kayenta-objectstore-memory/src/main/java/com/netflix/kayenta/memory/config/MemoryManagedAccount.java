@@ -17,14 +17,29 @@
 package com.netflix.kayenta.memory.config;
 
 import com.netflix.kayenta.security.AccountCredentials;
+import com.netflix.kayenta.storage.ObjectType;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Data
-public class MemoryManagedAccount {
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+public class MemoryManagedAccount extends AccountCredentials<MemoryManagedAccount> {
 
-  @NotNull private String name;
+  @NotNull private Map<ObjectType, Map<String, Object>> objects;
+
+  @NotNull private Map<ObjectType, Map<String, Map<String, Object>>> metadata;
 
   private List<AccountCredentials.Type> supportedTypes;
+
+  @Override
+  public String getType() {
+    return "memory";
+  }
 }

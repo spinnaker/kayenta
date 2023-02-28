@@ -20,8 +20,8 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.InfluxdbCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.influxdb.config.InfluxDbManagedAccount;
 import com.netflix.kayenta.influxdb.model.InfluxDbResult;
-import com.netflix.kayenta.influxdb.security.InfluxDbNamedAccountCredentials;
 import com.netflix.kayenta.influxdb.service.InfluxDbRemoteService;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricSet.MetricSetBuilder;
@@ -70,7 +70,7 @@ public class InfluxDbMetricsService implements MetricsService {
       CanaryMetricConfig canaryMetricConfig,
       CanaryScope canaryScope) {
 
-    InfluxDbNamedAccountCredentials accountCredentials =
+    InfluxDbManagedAccount accountCredentials =
         accountCredentialsRepository.getRequiredOne(accountName);
 
     InfluxDbRemoteService remoteService = accountCredentials.getInfluxDbRemoteService();

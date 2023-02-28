@@ -23,8 +23,7 @@ import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.wavefront.canary.WavefrontCanaryScope;
-import com.netflix.kayenta.wavefront.security.WavefrontCredentials;
-import com.netflix.kayenta.wavefront.security.WavefrontNamedAccountCredentials;
+import com.netflix.kayenta.wavefront.config.WavefrontManagedAccount;
 import com.netflix.kayenta.wavefront.service.WavefrontRemoteService;
 import com.netflix.kayenta.wavefront.service.WavefrontTimeSeries;
 import com.netflix.spectator.api.Registry;
@@ -92,9 +91,8 @@ public class WavefrontMetricsService implements MetricsService {
       CanaryScope canaryScope)
       throws IOException {
     WavefrontCanaryScope wavefrontCanaryScope = (WavefrontCanaryScope) canaryScope;
-    WavefrontNamedAccountCredentials accountCredentials =
+    WavefrontManagedAccount accountCredentials =
         accountCredentialsRepository.getRequiredOne(accountName);
-    WavefrontCredentials credentials = accountCredentials.getCredentials();
     WavefrontRemoteService wavefrontRemoteService = accountCredentials.getWavefrontRemoteService();
 
     WavefrontCanaryMetricSetQueryConfig queryConfig =
@@ -103,7 +101,7 @@ public class WavefrontMetricsService implements MetricsService {
 
     WavefrontTimeSeries timeSeries =
         wavefrontRemoteService.fetch(
-            credentials.getApiToken(),
+            "Bearer " + accountCredentials.getApiToken(),
             "Kayenta-Query",
             query,
             wavefrontCanaryScope.getStart().toEpochMilli(),

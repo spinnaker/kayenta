@@ -16,11 +16,8 @@
 
 package com.netflix.kayenta.configbin.config;
 
-import com.netflix.kayenta.configbin.security.ConfigBinAccountCredentials;
-import com.netflix.kayenta.configbin.security.ConfigBinNamedAccountCredentials;
 import com.netflix.kayenta.configbin.service.ConfigBinRemoteService;
 import com.netflix.kayenta.configbin.storage.ConfigBinStorageService;
-import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -60,24 +57,9 @@ public class ConfigBinConfiguration {
     for (ConfigBinManagedAccount configBinManagedAccount :
         configBinConfigurationProperties.getAccounts()) {
       String name = configBinManagedAccount.getName();
-      String ownerApp = configBinManagedAccount.getOwnerApp();
-      String configType = configBinManagedAccount.getConfigType();
-      RemoteService endpoint = configBinManagedAccount.getEndpoint();
       List<AccountCredentials.Type> supportedTypes = configBinManagedAccount.getSupportedTypes();
 
       log.info("Registering ConfigBin account {} with supported types {}.", name, supportedTypes);
-
-      ConfigBinAccountCredentials configbinAccountCredentials =
-          ConfigBinAccountCredentials.builder().build();
-      ConfigBinNamedAccountCredentials.ConfigBinNamedAccountCredentialsBuilder
-          configBinNamedAccountCredentialsBuilder =
-              ConfigBinNamedAccountCredentials.builder()
-                  .name(name)
-                  .ownerApp(ownerApp)
-                  .configType(configType)
-                  .endpoint(endpoint)
-                  .credentials(configbinAccountCredentials);
-
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         if (supportedTypes.contains(AccountCredentials.Type.CONFIGURATION_STORE)) {
           ConfigBinRemoteService configBinRemoteService =
@@ -86,14 +68,10 @@ public class ConfigBinConfiguration {
                   configBinConverter,
                   configBinManagedAccount.getEndpoint(),
                   okHttpClient);
-          configBinNamedAccountCredentialsBuilder.remoteService(configBinRemoteService);
+          configBinManagedAccount.setRemoteService(configBinRemoteService);
         }
-        configBinNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
       }
-
-      ConfigBinNamedAccountCredentials configbinNamedAccountCredentials =
-          configBinNamedAccountCredentialsBuilder.build();
-      accountCredentialsRepository.save(name, configbinNamedAccountCredentials);
+      accountCredentialsRepository.save(configBinManagedAccount);
       configbinStorageServiceBuilder.accountName(name);
     }
 

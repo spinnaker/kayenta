@@ -16,27 +16,44 @@
 
 package com.netflix.kayenta.newrelic.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Data
-public class NewRelicManagedAccount {
-
-  @NotNull private String name;
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+public class NewRelicManagedAccount extends AccountCredentials<NewRelicManagedAccount> {
+  private static final List<Type> SUPPORTED_TYPES =
+      Collections.singletonList(AccountCredentials.Type.METRICS_STORE);
   private String apiKey;
   private String applicationKey;
 
-  @NotNull private RemoteService endpoint;
+  @NotNull @Builder.Default
+  private RemoteService endpoint =
+      new RemoteService().setBaseUrl("https://insights-api.newrelic.com");
 
   @Nullable private String defaultScopeKey;
 
   @Nullable private String defaultLocationKey;
 
-  private List<AccountCredentials.Type> supportedTypes =
-      Collections.singletonList(AccountCredentials.Type.METRICS_STORE);
+  @Override
+  public List<AccountCredentials.Type> getSupportedTypes() {
+    return SUPPORTED_TYPES;
+  }
+
+  @Override
+  public String getType() {
+    return "newrelic";
+  }
+
+  @JsonIgnore private transient NewRelicRemoteService newRelicRemoteService;
 }

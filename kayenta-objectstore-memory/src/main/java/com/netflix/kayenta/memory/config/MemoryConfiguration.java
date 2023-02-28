@@ -16,8 +16,6 @@
 
 package com.netflix.kayenta.memory.config;
 
-import com.netflix.kayenta.memory.security.MemoryAccountCredentials;
-import com.netflix.kayenta.memory.security.MemoryNamedAccountCredentials;
 import com.netflix.kayenta.memory.storage.MemoryStorageService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -32,7 +30,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.CollectionUtils;
 
 @Configuration
 @ConditionalOnProperty("kayenta.memory.enabled")
@@ -59,27 +56,13 @@ public class MemoryConfiguration {
 
       log.info("Registering Memory account {} with supported types {}.", name, supportedTypes);
 
-      MemoryAccountCredentials memoryAccountCredentials =
-          MemoryAccountCredentials.builder().build();
-      MemoryNamedAccountCredentials.MemoryNamedAccountCredentialsBuilder
-          memoryNamedAccountCredentialsBuilder =
-              MemoryNamedAccountCredentials.builder()
-                  .name(name)
-                  .credentials(memoryAccountCredentials);
-
-      if (!CollectionUtils.isEmpty(supportedTypes)) {
-        memoryNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
-      }
-
       // Set up the data maps for this in-memory storage account
       Map<ObjectType, Map<String, Object>> objectStorage = new ConcurrentHashMap<>();
-      memoryNamedAccountCredentialsBuilder.objects(objectStorage);
+      memoryManagedAccount.setObjects(objectStorage);
       Map<ObjectType, Map<String, Map<String, Object>>> metadataStorage = new ConcurrentHashMap<>();
-      memoryNamedAccountCredentialsBuilder.metadata(metadataStorage);
+      memoryManagedAccount.setMetadata(metadataStorage);
 
-      MemoryNamedAccountCredentials memoryNamedAccountCredentials =
-          memoryNamedAccountCredentialsBuilder.build();
-      accountCredentialsRepository.save(name, memoryNamedAccountCredentials);
+      accountCredentialsRepository.save(memoryManagedAccount);
       memoryStorageServiceBuilder.accountName(name);
     }
 

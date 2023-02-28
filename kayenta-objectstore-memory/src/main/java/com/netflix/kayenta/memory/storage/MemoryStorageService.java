@@ -18,7 +18,7 @@ package com.netflix.kayenta.memory.storage;
 
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.index.CanaryConfigIndex;
-import com.netflix.kayenta.memory.security.MemoryNamedAccountCredentials;
+import com.netflix.kayenta.memory.config.MemoryManagedAccount;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
@@ -46,9 +46,8 @@ public class MemoryStorageService implements StorageService {
     return accountNames.contains(accountName);
   }
 
-  private MemoryNamedAccountCredentials getCredentials(String accountName, ObjectType objectType) {
-    MemoryNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+  private MemoryManagedAccount getCredentials(String accountName, ObjectType objectType) {
+    MemoryManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     credentials.getObjects().putIfAbsent(objectType, new ConcurrentHashMap<>());
     credentials.getMetadata().putIfAbsent(objectType, new ConcurrentHashMap<>());
     return credentials;
@@ -57,7 +56,7 @@ public class MemoryStorageService implements StorageService {
   @Override
   public <T> T loadObject(String accountName, ObjectType objectType, String objectKey)
       throws IllegalArgumentException {
-    MemoryNamedAccountCredentials credentials = getCredentials(accountName, objectType);
+    MemoryManagedAccount credentials = getCredentials(accountName, objectType);
     Object entry = credentials.getObjects().get(objectType).get(objectKey);
 
     if (entry == null) {
@@ -75,7 +74,7 @@ public class MemoryStorageService implements StorageService {
       T obj,
       String filename,
       boolean isAnUpdate) {
-    MemoryNamedAccountCredentials credentials = getCredentials(accountName, objectType);
+    MemoryManagedAccount credentials = getCredentials(accountName, objectType);
 
     long currentTimestamp = System.currentTimeMillis();
     Map<String, Object> objectMetadataMap = new HashMap<>();
@@ -123,7 +122,7 @@ public class MemoryStorageService implements StorageService {
 
   @Override
   public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
-    MemoryNamedAccountCredentials credentials = getCredentials(accountName, objectType);
+    MemoryManagedAccount credentials = getCredentials(accountName, objectType);
 
     Object oldValue = credentials.getObjects().get(objectType).remove(objectKey);
     credentials.getMetadata().get(objectType).remove(objectKey);
@@ -136,7 +135,7 @@ public class MemoryStorageService implements StorageService {
   @Override
   public List<Map<String, Object>> listObjectKeys(
       String accountName, ObjectType objectType, List<String> applications, boolean skipIndex) {
-    MemoryNamedAccountCredentials credentials = getCredentials(accountName, objectType);
+    MemoryManagedAccount credentials = getCredentials(accountName, objectType);
 
     boolean filterOnApplications = applications != null && applications.size() > 0;
     List<Map<String, Object>> result = new ArrayList<>();
