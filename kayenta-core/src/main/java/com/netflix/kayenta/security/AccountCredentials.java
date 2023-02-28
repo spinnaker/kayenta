@@ -58,7 +58,7 @@ public abstract class AccountCredentials<T> {
   }
 
   @Deprecated
-  /** Account types other than metric accounts are going away.  No longer relevant post SQL. */
+  /** Account types other than metric accounts are going away. No longer relevant post SQL. */
   public enum Type {
     METRICS_STORE,
     OBJECT_STORE,
