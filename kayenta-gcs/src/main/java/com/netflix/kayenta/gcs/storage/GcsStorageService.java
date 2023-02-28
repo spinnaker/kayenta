@@ -28,7 +28,7 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.netflix.kayenta.canary.CanaryConfig;
-import com.netflix.kayenta.google.security.GoogleNamedAccountCredentials;
+import com.netflix.kayenta.google.config.GoogleManagedAccount;
 import com.netflix.kayenta.index.CanaryConfigIndex;
 import com.netflix.kayenta.index.config.CanaryConfigIndexAction;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -66,8 +66,7 @@ public class GcsStorageService implements StorageService {
 
   /** Check to see if the bucket exists, creating it if it is not there. */
   public void ensureBucketExists(String accountName) {
-    GoogleNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    GoogleManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String projectName = credentials.getProject();
     String bucketName = credentials.getBucket();
@@ -113,8 +112,7 @@ public class GcsStorageService implements StorageService {
   @Override
   public <T> T loadObject(String accountName, ObjectType objectType, String objectKey)
       throws IllegalArgumentException, NotFoundException {
-    GoogleNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    GoogleManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String bucketName = credentials.getBucket();
     StorageObject item;
@@ -148,7 +146,7 @@ public class GcsStorageService implements StorageService {
   private StorageObject resolveSingularItem(
       ObjectType objectType,
       String objectKey,
-      GoogleNamedAccountCredentials credentials,
+      GoogleManagedAccount credentials,
       Storage storage,
       String bucketName) {
     String rootFolder = daoRoot(credentials, objectType.getGroup()) + "/" + objectKey;
@@ -194,8 +192,7 @@ public class GcsStorageService implements StorageService {
       T obj,
       String filename,
       boolean isAnUpdate) {
-    GoogleNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    GoogleManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String bucketName = credentials.getBucket();
     String path = keyToPath(credentials, objectType, objectKey, filename);
@@ -279,7 +276,7 @@ public class GcsStorageService implements StorageService {
   }
 
   private void checkForDuplicateCanaryConfig(
-      CanaryConfig canaryConfig, String canaryConfigId, GoogleNamedAccountCredentials credentials) {
+      CanaryConfig canaryConfig, String canaryConfigId, GoogleManagedAccount credentials) {
     String canaryConfigName = canaryConfig.getName();
     List<String> applications = canaryConfig.getApplications();
     String existingCanaryConfigId =
@@ -300,8 +297,7 @@ public class GcsStorageService implements StorageService {
 
   @Override
   public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
-    GoogleNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    GoogleManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     Storage storage = credentials.getStorage();
     String bucketName = credentials.getBucket();
     StorageObject item =
@@ -394,8 +390,7 @@ public class GcsStorageService implements StorageService {
   @Override
   public List<Map<String, Object>> listObjectKeys(
       String accountName, ObjectType objectType, List<String> applications, boolean skipIndex) {
-    GoogleNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    GoogleManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
 
     if (!skipIndex && objectType == ObjectType.CANARY_CONFIG) {
       Set<Map<String, Object>> canaryConfigSet =
@@ -458,15 +453,12 @@ public class GcsStorageService implements StorageService {
     }
   }
 
-  private String daoRoot(GoogleNamedAccountCredentials credentials, String daoTypeName) {
+  private String daoRoot(GoogleManagedAccount credentials, String daoTypeName) {
     return credentials.getRootFolder() + '/' + daoTypeName;
   }
 
   private String keyToPath(
-      GoogleNamedAccountCredentials credentials,
-      ObjectType objectType,
-      String objectKey,
-      String filename) {
+      GoogleManagedAccount credentials, ObjectType objectType, String objectKey, String filename) {
     if (filename == null) {
       filename = objectType.getDefaultFilename();
     }

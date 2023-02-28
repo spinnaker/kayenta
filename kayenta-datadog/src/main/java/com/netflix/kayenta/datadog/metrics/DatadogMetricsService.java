@@ -21,15 +21,13 @@ import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.DatadogCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
-import com.netflix.kayenta.datadog.security.DatadogCredentials;
-import com.netflix.kayenta.datadog.security.DatadogNamedAccountCredentials;
+import com.netflix.kayenta.datadog.config.DatadogManagedAccount;
 import com.netflix.kayenta.datadog.service.DatadogRemoteService;
 import com.netflix.kayenta.datadog.service.DatadogTimeSeries;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.model.DatadogMetricDescriptor;
 import com.netflix.kayenta.model.DatadogMetricDescriptorsResponse;
-import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.spectator.api.Registry;
 import java.io.IOException;
@@ -38,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -101,10 +98,9 @@ public class DatadogMetricsService implements MetricsService {
       CanaryMetricConfig canaryMetricConfig,
       CanaryScope canaryScope)
       throws IOException {
-    DatadogNamedAccountCredentials accountCredentials =
+    DatadogManagedAccount accountCredentials =
         accountCredentialsRepository.getRequiredOne(accountName);
 
-    DatadogCredentials credentials = accountCredentials.getCredentials();
     DatadogRemoteService remoteService = accountCredentials.getDatadogRemoteService();
 
     if (StringUtils.isEmpty(canaryScope.getStart())) {
@@ -118,8 +114,8 @@ public class DatadogMetricsService implements MetricsService {
     String query = buildQuery(accountName, canaryConfig, canaryMetricConfig, canaryScope);
     DatadogTimeSeries timeSeries =
         remoteService.getTimeSeries(
-            credentials.getApiKey(),
-            credentials.getApplicationKey(),
+            accountCredentials.getApiKey(),
+            accountCredentials.getApplicationKey(),
             (int) canaryScope.getStart().getEpochSecond(),
             (int) canaryScope.getEnd().getEpochSecond(),
             query);
@@ -178,47 +174,47 @@ public class DatadogMetricsService implements MetricsService {
 
   @Scheduled(fixedDelayString = "#{@datadogConfigurationProperties.metadataCachingIntervalMS}")
   public void updateMetricDescriptorsCache() {
-    Set<AccountCredentials> accountCredentialsSet =
-        accountCredentialsRepository.getAllOf(AccountCredentials.Type.METRICS_STORE);
+    accountCredentialsRepository.getAll().stream()
+        //            .filter(each ->
+        // each.getSupportedTypes().contains(AccountCredentials.Type.METRICS_STORE)) // ONLY metrics
+        // stores for datadog accounts...
+        .filter(DatadogManagedAccount.class::isInstance)
+        .map(DatadogManagedAccount.class::cast)
+        .forEach(
+            credentials -> {
+              DatadogRemoteService datadogRemoteService = credentials.getDatadogRemoteService();
+              // Retrieve all metrics actively reporting in the last hour.
+              long from = Instant.now().getEpochSecond() - 60 * 60;
+              DatadogMetricDescriptorsResponse datadogMetricDescriptorsResponse =
+                  datadogRemoteService.getMetrics(
+                      credentials.getApiKey(), credentials.getApplicationKey(), from);
 
-    for (AccountCredentials credentials : accountCredentialsSet) {
-      if (credentials instanceof DatadogNamedAccountCredentials) {
-        DatadogNamedAccountCredentials datadogCredentials =
-            (DatadogNamedAccountCredentials) credentials;
-        DatadogRemoteService datadogRemoteService = datadogCredentials.getDatadogRemoteService();
-        DatadogCredentials ddCredentials = datadogCredentials.getCredentials();
-        // Retrieve all metrics actively reporting in the last hour.
-        long from = Instant.now().getEpochSecond() - 60 * 60;
-        DatadogMetricDescriptorsResponse datadogMetricDescriptorsResponse =
-            datadogRemoteService.getMetrics(
-                ddCredentials.getApiKey(), ddCredentials.getApplicationKey(), from);
+              if (datadogMetricDescriptorsResponse != null) {
+                List<String> metrics = datadogMetricDescriptorsResponse.getMetrics();
 
-        if (datadogMetricDescriptorsResponse != null) {
-          List<String> metrics = datadogMetricDescriptorsResponse.getMetrics();
+                if (!CollectionUtils.isEmpty(metrics)) {
+                  // TODO(duftler): Should we instead be building the union across all accounts?
+                  // This
+                  // doesn't seem quite right yet.
+                  metricDescriptorsCache =
+                      metrics.stream()
+                          .map(metricName -> new DatadogMetricDescriptor(metricName))
+                          .collect(Collectors.toList());
 
-          if (!CollectionUtils.isEmpty(metrics)) {
-            // TODO(duftler): Should we instead be building the union across all accounts? This
-            // doesn't seem quite right yet.
-            metricDescriptorsCache =
-                metrics.stream()
-                    .map(metricName -> new DatadogMetricDescriptor(metricName))
-                    .collect(Collectors.toList());
-
-            log.debug(
-                "Updated cache with {} metric descriptors via account {}.",
-                metricDescriptorsCache.size(),
-                datadogCredentials.getName());
-          } else {
-            log.debug(
-                "While updating cache, found no metric descriptors via account {}.",
-                datadogCredentials.getName());
-          }
-        } else {
-          log.debug(
-              "While updating cache, found no metric descriptors via account {}.",
-              datadogCredentials.getName());
-        }
-      }
-    }
+                  log.debug(
+                      "Updated cache with {} metric descriptors via account {}.",
+                      metricDescriptorsCache.size(),
+                      credentials.getName());
+                } else {
+                  log.debug(
+                      "While updating cache, found no metric descriptors via account {}.",
+                      credentials.getName());
+                }
+              } else {
+                log.debug(
+                    "While updating cache, found no metric descriptors via account {}.",
+                    credentials.getName());
+              }
+            });
   }
 }

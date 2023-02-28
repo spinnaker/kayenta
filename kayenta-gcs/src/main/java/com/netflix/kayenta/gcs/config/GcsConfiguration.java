@@ -17,7 +17,7 @@
 package com.netflix.kayenta.gcs.config;
 
 import com.netflix.kayenta.gcs.storage.GcsStorageService;
-import com.netflix.kayenta.google.security.GoogleNamedAccountCredentials;
+import com.netflix.kayenta.google.config.GoogleManagedAccount;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class GcsConfiguration {
         GcsStorageService.builder();
 
     accountCredentialsRepository.getAll().stream()
-        .filter(c -> c instanceof GoogleNamedAccountCredentials)
+        .filter(GoogleManagedAccount.class::isInstance)
         .filter(c -> c.getSupportedTypes().contains(AccountCredentials.Type.OBJECT_STORE))
         .map(c -> c.getName())
         .forEach(gcsStorageServiceBuilder::accountName);

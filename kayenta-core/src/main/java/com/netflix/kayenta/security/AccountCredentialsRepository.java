@@ -55,5 +55,10 @@ public interface AccountCredentialsRepository {
 
   Set<? extends AccountCredentials> getAll();
 
+  @Deprecated
   AccountCredentials save(String name, AccountCredentials credentials);
+
+  default AccountCredentials save(AccountCredentials credentials) {
+    return save(credentials.getName(), credentials);
+  }
 }

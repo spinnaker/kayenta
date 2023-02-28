@@ -16,15 +16,20 @@
 
 package com.netflix.kayenta.aws.config;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.netflix.kayenta.security.AccountCredentials;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Data
-public class AwsManagedAccount {
-
-  @NotNull private String name;
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+public class AwsManagedAccount extends AccountCredentials<AwsManagedAccount> {
 
   private String bucket;
   private String region;
@@ -36,8 +41,6 @@ public class AwsManagedAccount {
   private String proxyProtocol;
   private ExplicitAwsCredentials explicitCredentials;
 
-  private List<AccountCredentials.Type> supportedTypes;
-
   @Data
   public static class ExplicitAwsCredentials {
 
@@ -45,4 +48,11 @@ public class AwsManagedAccount {
     String secretKey;
     String sessionToken;
   }
+
+  @Override
+  public String getType() {
+    return "aws";
+  }
+
+  @JsonIgnore private transient AmazonS3 amazonS3;
 }

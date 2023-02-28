@@ -16,7 +16,7 @@
 
 package com.netflix.kayenta.blobs.config;
 
-import com.netflix.kayenta.azure.security.AzureNamedAccountCredentials;
+import com.netflix.kayenta.azure.config.AzureManagedAccount;
 import com.netflix.kayenta.blobs.storage.BlobsStorageService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -43,7 +43,7 @@ public class BlobsConfiguration {
         BlobsStorageService.builder();
 
     accountCredentialsRepository.getAll().stream()
-        .filter(c -> c instanceof AzureNamedAccountCredentials)
+        .filter(c -> c instanceof AzureManagedAccount)
         .filter(c -> c.getSupportedTypes().contains(AccountCredentials.Type.OBJECT_STORE))
         .map(c -> c.getName())
         .forEach(blobsStorageServiceBuilder::accountName);

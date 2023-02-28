@@ -31,7 +31,8 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 public class PrometheusManagedAccount extends AccountCredentials<PrometheusManagedAccount> {
-
+  private static final List<Type> SUPPORTED_TYPES =
+      Collections.singletonList(AccountCredentials.Type.METRICS_STORE);
   // Location of prometheus server.
   @NotNull private RemoteService endpoint;
 
@@ -44,8 +45,9 @@ public class PrometheusManagedAccount extends AccountCredentials<PrometheusManag
   // Optional parameter for use when protecting prometheus with basic auth.
   private String usernamePasswordFile;
 
-  public List<Type> getSupportedTypes() {
-    return Collections.singletonList(AccountCredentials.Type.METRICS_STORE);
+  @Override
+  public List<AccountCredentials.Type> getSupportedTypes() {
+    return SUPPORTED_TYPES;
   }
 
   // Optional parameter for use when protecting prometheus with bearer token.
@@ -55,10 +57,5 @@ public class PrometheusManagedAccount extends AccountCredentials<PrometheusManag
   @Override
   public String getType() {
     return "prometheus";
-  }
-
-  @Override
-  public PrometheusManagedAccount getCredentials() {
-    return this;
   }
 }

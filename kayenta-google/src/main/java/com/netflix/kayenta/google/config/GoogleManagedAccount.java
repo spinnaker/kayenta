@@ -16,19 +16,19 @@
 
 package com.netflix.kayenta.google.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.api.services.monitoring.v3.Monitoring;
+import com.google.api.services.storage.Storage;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.netflix.kayenta.security.AccountCredentials;
 import java.io.*;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.util.StringUtils;
 
 @Data
-public class GoogleManagedAccount {
-
-  @NotNull private String name;
+public class GoogleManagedAccount extends AccountCredentials<GoogleManagedAccount> {
 
   @NotNull private String project;
   private String jsonPath;
@@ -37,7 +37,10 @@ public class GoogleManagedAccount {
   private String bucketLocation;
   private String rootFolder = "kayenta";
 
-  private List<AccountCredentials.Type> supportedTypes;
+  @Override
+  public String getType() {
+    return "google";
+  }
 
   private InputStream getInputStream() throws FileNotFoundException {
     if (StringUtils.hasLength(jsonPath)) {
@@ -58,4 +61,8 @@ public class GoogleManagedAccount {
         ? CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8))
         : null;
   }
+
+  @JsonIgnore private transient Monitoring monitoring;
+
+  @JsonIgnore private transient Storage storage;
 }

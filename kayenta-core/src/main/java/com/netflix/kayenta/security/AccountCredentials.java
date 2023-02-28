@@ -31,7 +31,8 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(of = "name")
 public abstract class AccountCredentials<T> {
   private String name;
-  @Builder.Default private List<Type> supportedTypes = new ArrayList<>();
+  /** Account types other than metric accounts are going away. */
+  @Deprecated @Builder.Default private List<Type> supportedTypes = new ArrayList<>();
 
   public abstract String getType();
 
@@ -52,7 +53,10 @@ public abstract class AccountCredentials<T> {
   @Builder.Default private List<String> recommendedLocations = Collections.emptyList();
 
   @JsonIgnore
-  public abstract T getCredentials();
+  public T getCredentials() {
+    return (T) this;
+  }
+  ;
 
   public enum Type {
     METRICS_STORE,

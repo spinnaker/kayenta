@@ -21,9 +21,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.microsoft.azure.storage.*;
-import com.microsoft.azure.storage.blob.*;
-import com.netflix.kayenta.azure.security.AzureNamedAccountCredentials;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.BlobProperties;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.azure.storage.blob.ListBlobItem;
+import com.netflix.kayenta.azure.config.AzureManagedAccount;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.index.CanaryConfigIndex;
 import com.netflix.kayenta.index.config.CanaryConfigIndexAction;
@@ -63,8 +66,7 @@ public class BlobsStorageService implements StorageService {
   @Override
   public <T> T loadObject(String accountName, ObjectType objectType, String objectKey)
       throws IllegalArgumentException, NotFoundException {
-    AzureNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AzureManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     CloudBlobContainer azureContainer = credentials.getAzureContainer();
     CloudBlockBlob blobItem;
     try {
@@ -83,7 +85,7 @@ public class BlobsStorageService implements StorageService {
   private CloudBlockBlob resolveSingularBlob(
       ObjectType objectType,
       String objectKey,
-      AzureNamedAccountCredentials credentials,
+      AzureManagedAccount credentials,
       CloudBlobContainer azureContainer) {
     String rootFolder = daoRoot(credentials, objectType.getGroup()) + "/" + objectKey;
 
@@ -135,8 +137,7 @@ public class BlobsStorageService implements StorageService {
       T obj,
       String filename,
       boolean isAnUpdate) {
-    AzureNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AzureManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     CloudBlobContainer azureContainer = credentials.getAzureContainer();
     String path = keyToPath(credentials, objectType, objectKey, filename);
 
@@ -226,7 +227,7 @@ public class BlobsStorageService implements StorageService {
   }
 
   private void checkForDuplicateCanaryConfig(
-      CanaryConfig canaryConfig, String canaryConfigId, AzureNamedAccountCredentials credentials) {
+      CanaryConfig canaryConfig, String canaryConfigId, AzureManagedAccount credentials) {
     String canaryConfigName = canaryConfig.getName();
     List<String> applications = canaryConfig.getApplications();
     String existingCanaryConfigId =
@@ -247,8 +248,7 @@ public class BlobsStorageService implements StorageService {
 
   @Override
   public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
-    AzureNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AzureManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     CloudBlobContainer azureContainer = credentials.getAzureContainer();
     CloudBlockBlob item = resolveSingularBlob(objectType, objectKey, credentials, azureContainer);
 
@@ -316,8 +316,7 @@ public class BlobsStorageService implements StorageService {
   @Override
   public List<Map<String, Object>> listObjectKeys(
       String accountName, ObjectType objectType, List<String> applications, boolean skipIndex) {
-    AzureNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AzureManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
 
     if (!skipIndex && objectType == ObjectType.CANARY_CONFIG) {
       Set<Map<String, Object>> canaryConfigSet =
@@ -373,7 +372,7 @@ public class BlobsStorageService implements StorageService {
     }
   }
 
-  private String daoRoot(AzureNamedAccountCredentials credentials, String daoTypeName) {
+  private String daoRoot(AzureManagedAccount credentials, String daoTypeName) {
     return credentials.getRootFolder() + '/' + daoTypeName;
   }
 
@@ -384,10 +383,7 @@ public class BlobsStorageService implements StorageService {
   }
 
   private String keyToPath(
-      AzureNamedAccountCredentials credentials,
-      ObjectType objectType,
-      String objectKey,
-      String filename) {
+      AzureManagedAccount credentials, ObjectType objectType, String objectKey, String filename) {
     if (filename == null) {
       filename = objectType.getDefaultFilename();
     }

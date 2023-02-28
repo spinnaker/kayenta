@@ -22,11 +22,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.atlas.backends.AtlasStorageDatabase;
 import com.netflix.kayenta.atlas.backends.BackendDatabase;
 import com.netflix.kayenta.atlas.canary.AtlasCanaryScope;
+import com.netflix.kayenta.atlas.config.AtlasManagedAccount;
 import com.netflix.kayenta.atlas.config.AtlasSSEConverter;
 import com.netflix.kayenta.atlas.model.AtlasResults;
 import com.netflix.kayenta.atlas.model.AtlasResultsHelper;
 import com.netflix.kayenta.atlas.model.Backend;
-import com.netflix.kayenta.atlas.security.AtlasNamedAccountCredentials;
 import com.netflix.kayenta.atlas.service.AtlasRemoteService;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
@@ -83,7 +83,7 @@ public class AtlasMetricsService implements MetricsService {
     return accountNames.contains(accountName);
   }
 
-  private AtlasNamedAccountCredentials getCredentials(String accountName) {
+  private AtlasManagedAccount getCredentials(String accountName) {
     return accountCredentialsRepository.getRequiredOne(accountName);
   }
 
@@ -107,7 +107,7 @@ public class AtlasMetricsService implements MetricsService {
     }
 
     AtlasCanaryScope atlasCanaryScope = (AtlasCanaryScope) canaryScope;
-    AtlasNamedAccountCredentials credentials = getCredentials(accountName);
+    AtlasManagedAccount credentials = getCredentials(accountName);
     BackendDatabase backendDatabase = credentials.getBackendUpdater().getBackendDatabase();
     String uri = backendDatabase.getUriForLocation(URI_SCHEME, atlasCanaryScope.getLocation());
 
