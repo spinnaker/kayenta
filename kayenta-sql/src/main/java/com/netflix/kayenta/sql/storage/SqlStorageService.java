@@ -92,7 +92,7 @@ public class SqlStorageService implements StorageService {
 
     if (objectType.equals(ObjectType.METRIC_SET_LIST)) {
       var record =
-          sqlMetricSetPairsRepo
+          sqlMetricSetsRepo
               .findById(objectKey)
               .orElseThrow(() -> new NotFoundException("Not found object for id: " + objectKey));
 
@@ -117,6 +117,7 @@ public class SqlStorageService implements StorageService {
       draftRecord.setCreatedAt(Instant.now());
       draftRecord.setUpdatedAt(Instant.now());
       sqlCanaryArchiveRepo.save(draftRecord);
+      return;
     }
 
     if (objectType.equals(ObjectType.CANARY_CONFIG)) {
@@ -126,6 +127,7 @@ public class SqlStorageService implements StorageService {
       draftRecord.setCreatedAt(Instant.now());
       draftRecord.setUpdatedAt(Instant.now());
       sqlCanaryConfigRepo.save(draftRecord);
+      return;
     }
 
     if (objectType.equals(ObjectType.METRIC_SET_PAIR_LIST)) {
@@ -135,6 +137,7 @@ public class SqlStorageService implements StorageService {
       draftRecord.setCreatedAt(Instant.now());
       draftRecord.setUpdatedAt(Instant.now());
       sqlMetricSetPairsRepo.save(draftRecord);
+      return;
     }
 
     if (objectType.equals(ObjectType.METRIC_SET_LIST)) {
@@ -144,6 +147,7 @@ public class SqlStorageService implements StorageService {
       draftRecord.setCreatedAt(Instant.now());
       draftRecord.setUpdatedAt(Instant.now());
       sqlMetricSetsRepo.save(draftRecord);
+      return;
     }
 
     throw new IllegalArgumentException("Unsupported object type: " + objectType);
@@ -153,18 +157,22 @@ public class SqlStorageService implements StorageService {
   public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
     if (objectType.equals(ObjectType.CANARY_RESULT_ARCHIVE)) {
       sqlCanaryArchiveRepo.deleteById(objectKey);
+      return;
     }
 
     if (objectType.equals(ObjectType.CANARY_CONFIG)) {
       sqlCanaryConfigRepo.deleteById(objectKey);
+      return;
     }
 
     if (objectType.equals(ObjectType.METRIC_SET_PAIR_LIST)) {
       sqlMetricSetPairsRepo.deleteById(objectKey);
+      return;
     }
 
     if (objectType.equals(ObjectType.METRIC_SET_LIST)) {
       sqlMetricSetsRepo.deleteById(objectKey);
+      return;
     }
 
     throw new IllegalArgumentException("Unsupported object type: " + objectType);
