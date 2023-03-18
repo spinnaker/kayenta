@@ -401,19 +401,24 @@ public class StackdriverMetricsService implements MetricsService {
       // TODO(duftler): What if there are no data points?
       List<Double> pointValues;
 
-      if(timeSeries.getValueType().equals("INT64")) {
-        pointValues = points.stream()
-              .map(point -> (double) point.getValue().getInt64Value())
-              .collect(Collectors.toList());
-      } else if(timeSeries.getValueType().equals("DOUBLE")) {
-        pointValues = points.stream()
-              .map(point -> point.getValue().getDoubleValue())
-              .collect(Collectors.toList());
+      if (timeSeries.getValueType().equals("INT64")) {
+        pointValues =
+            points.stream()
+                .map(point -> (double) point.getValue().getInt64Value())
+                .collect(Collectors.toList());
+      } else if (timeSeries.getValueType().equals("DOUBLE")) {
+        pointValues =
+            points.stream()
+                .map(point -> point.getValue().getDoubleValue())
+                .collect(Collectors.toList());
       } else {
-        log.warn("expected timeSeries value type to be either DOUBLE or INT64. Got {}.", timeSeries.getValueType());
-        pointValues = points.stream()
-              .map(point -> point.getValue().getDoubleValue())
-              .collect(Collectors.toList());
+        log.warn(
+            "expected timeSeries value type to be either DOUBLE or INT64. Got {}.",
+            timeSeries.getValueType());
+        pointValues =
+            points.stream()
+                .map(point -> point.getValue().getDoubleValue())
+                .collect(Collectors.toList());
       }
 
       MetricSet.MetricSetBuilder metricSetBuilder =
