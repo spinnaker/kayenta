@@ -16,7 +16,17 @@
 
 package com.netflix.kayenta.sql.storage.model;
 
-import javax.persistence.Table;
+import java.time.Instant;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import lombok.Data;
 
-@Table(name = "metric_sets")
-public class SqlMetricSets extends SqlBaseObject {}
+@Data
+@Entity
+public class SqlBaseObject {
+
+  @Id private String id;
+  private String content;
+  private Instant createdAt;
+  private Instant updatedAt;
+}
