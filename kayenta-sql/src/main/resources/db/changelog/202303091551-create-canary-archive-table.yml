@@ -14,7 +14,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: content
-                  type: TEXT
+                  type: JSON
                   constraints:
                     nullable: false
               - column:
