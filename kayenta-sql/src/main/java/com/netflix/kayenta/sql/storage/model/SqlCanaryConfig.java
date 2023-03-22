@@ -16,7 +16,9 @@
 
 package com.netflix.kayenta.sql.storage.model;
 
+import javax.persistence.Entity;
 import javax.persistence.Table;
 
+@Entity
 @Table(name = "canary_config")
 public class SqlCanaryConfig extends SqlBaseObject {}

@@ -16,7 +16,9 @@
 
 package com.netflix.kayenta.sql.storage.model;
 
+import javax.persistence.Entity;
 import javax.persistence.Table;
 
+@Entity
 @Table(name = "canary_archive")
 public class SqlCanaryArchive extends SqlBaseObject {}

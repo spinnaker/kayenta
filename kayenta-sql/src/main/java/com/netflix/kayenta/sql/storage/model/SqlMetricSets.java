@@ -16,7 +16,9 @@
 
 package com.netflix.kayenta.sql.storage.model;
 
+import javax.persistence.Entity;
 import javax.persistence.Table;
 
+@Entity
 @Table(name = "metric_sets")
 public class SqlMetricSets extends SqlBaseObject {}
