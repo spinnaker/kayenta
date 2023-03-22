@@ -11,3 +11,6 @@ databaseChangeLog:
   - include:
       file: changelog/202303091554-create-metric-set-pairs-table.yml
       relativeToChangelogFile: true
+  - include:
+      file: changelog/202303091555-adjust-tables-for-postgres.yml
+      relativeToChangelogFile: true
