@@ -58,6 +58,14 @@ public class StorageDataMigrator {
                     targetObjectKeys.stream()
                         .filter(targetObjectKey -> Objects.equals(targetObjectKey, sourceObjectKey))
                         .findFirst()
+                        .map(
+                            object -> {
+                              log.warn(
+                                  "Object for objectType: {}, key: {} already exists",
+                                  objectType,
+                                  sourceObjectKey);
+                              return object;
+                            })
                         .isEmpty())
             .collect(Collectors.toList());
 
