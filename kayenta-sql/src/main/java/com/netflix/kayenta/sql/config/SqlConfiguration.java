@@ -36,26 +36,27 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @ComponentScan({"com.netflix.kayenta.sql"})
 @EntityScan({"com.netflix.kayenta.sql"})
 @EnableJpaRepositories({"com.netflix.kayenta.sql"})
-@EnableConfigurationProperties(SqlProperties.class)
+@EnableConfigurationProperties(DataMigrationProperties.class)
 @RequiredArgsConstructor
 public class SqlConfiguration extends DataSourceAutoConfiguration {
 
-  private final SqlProperties sqlProperties;
+  private final DataMigrationProperties dataMigrationProperties;
   private final List<StorageService> storageServices;
 
   @Bean
-  @ConditionalOnProperty("kayenta.sql.migration.enabled")
+  @ConditionalOnProperty("kayenta.data-migration.enabled")
   public StorageDataMigrator storageDataMigrator() throws IOException {
-    var sourceStorageServiceClassName =
-        sqlProperties.getMigration().getSourceStorageServiceClassName();
-    var targetStorageServiceClassName =
-        sqlProperties.getMigration().getTargetStorageServiceClassName();
+    var sourceStorageServiceClassName = dataMigrationProperties.getSourceStorageServiceClassName();
+    var targetStorageServiceClassName = dataMigrationProperties.getTargetStorageServiceClassName();
 
     var sourceStorageService = findStorageService(sourceStorageServiceClassName);
     var targetStorageService = findStorageService(targetStorageServiceClassName);
 
     return new StorageDataMigrator(
-        sqlProperties, sourceStorageService, targetStorageService, Executors.newCachedThreadPool());
+        dataMigrationProperties,
+        sourceStorageService,
+        targetStorageService,
+        Executors.newCachedThreadPool());
   }
 
   private StorageService findStorageService(String className) throws IOException {

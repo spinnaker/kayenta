@@ -16,7 +16,7 @@
 
 package com.netflix.kayenta.sql.migration;
 
-import com.netflix.kayenta.sql.config.SqlProperties;
+import com.netflix.kayenta.sql.config.DataMigrationProperties;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import java.util.Objects;
@@ -30,7 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @RequiredArgsConstructor
 public class StorageDataMigrator {
 
-  private final SqlProperties sqlProperties;
+  private final DataMigrationProperties dataMigrationProperties;
   private final StorageService sourceStorageService;
   private final StorageService targetStorageService;
   private final ExecutorService executorService;
@@ -38,8 +38,8 @@ public class StorageDataMigrator {
   private void migrate(ObjectType objectType) {
     log.info("Migrating {}", objectType);
 
-    var sourceAccountName = sqlProperties.getMigration().getSourceAccountName();
-    var targetAccountName = sqlProperties.getMigration().getTargetAccountName();
+    var sourceAccountName = dataMigrationProperties.getSourceAccountName();
+    var targetAccountName = dataMigrationProperties.getTargetAccountName();
 
     var sourceObjectKeys =
         sourceStorageService.listObjectKeys(sourceAccountName, objectType).stream()
@@ -95,11 +95,6 @@ public class StorageDataMigrator {
 
   @Scheduled(fixedDelay = 60000)
   public void migrate() {
-    if (!sqlProperties.getMigration().isEnabled()) {
-      log.info("Migration is disabled");
-      return;
-    }
-
     log.info("Migration started");
     migrate(ObjectType.CANARY_RESULT_ARCHIVE);
     migrate(ObjectType.CANARY_CONFIG);

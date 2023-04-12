@@ -20,17 +20,12 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties("kayenta.sql")
-public class SqlProperties {
+@ConfigurationProperties("kayenta.data-migration")
+public class DataMigrationProperties {
 
-  private Migration migration = new Migration();
-
-  @Data
-  public static class Migration {
-    private boolean enabled;
-    private String sourceAccountName;
-    private String targetAccountName;
-    private String sourceStorageServiceClassName;
-    private String targetStorageServiceClassName;
-  }
+  private boolean enabled;
+  private String sourceAccountName;
+  private String targetAccountName;
+  private String sourceStorageServiceClassName;
+  private String targetStorageServiceClassName;
 }

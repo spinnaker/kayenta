@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import com.netflix.kayenta.canary.CanaryConfig;
-import com.netflix.kayenta.sql.config.SqlProperties;
+import com.netflix.kayenta.sql.config.DataMigrationProperties;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import java.util.ArrayList;
@@ -51,19 +51,20 @@ public class StorageDataMigratorTest {
     private StorageService targetStorageService;
 
     @Bean
-    public SqlProperties sqlProperties() {
-      var sqlProperties = new SqlProperties();
-      sqlProperties.getMigration().setEnabled(true);
-      sqlProperties.getMigration().setSourceAccountName(testSourceAccountName);
-      sqlProperties.getMigration().setTargetAccountName(testTargetAccountName);
+    public DataMigrationProperties dataMigrationProperties() {
+      var dataMigrationProperties = new DataMigrationProperties();
+      dataMigrationProperties.setEnabled(true);
+      dataMigrationProperties.setSourceAccountName(testSourceAccountName);
+      dataMigrationProperties.setTargetAccountName(testTargetAccountName);
 
-      return sqlProperties;
+      return dataMigrationProperties;
     }
 
     @Bean
-    public StorageDataMigrator storageDataMigrator(SqlProperties sqlProperties) {
+    public StorageDataMigrator storageDataMigrator(
+        DataMigrationProperties dataMigrationProperties) {
       return new StorageDataMigrator(
-          sqlProperties,
+          dataMigrationProperties,
           sourceStorageService,
           targetStorageService,
           MoreExecutors.newDirectExecutorService());
