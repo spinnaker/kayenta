@@ -16,17 +16,9 @@
 
 package com.netflix.kayenta.sql.config;
 
-import com.netflix.kayenta.sql.migration.StorageDataMigrator;
-import com.netflix.kayenta.storage.StorageService;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Executors;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -36,36 +28,4 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @ComponentScan({"com.netflix.kayenta.sql"})
 @EntityScan({"com.netflix.kayenta.sql"})
 @EnableJpaRepositories({"com.netflix.kayenta.sql"})
-@EnableConfigurationProperties(DataMigrationProperties.class)
-@RequiredArgsConstructor
-public class SqlConfiguration extends DataSourceAutoConfiguration {
-
-  private final DataMigrationProperties dataMigrationProperties;
-  private final List<StorageService> storageServices;
-
-  @Bean
-  @ConditionalOnProperty("kayenta.data-migration.enabled")
-  public StorageDataMigrator storageDataMigrator() throws IOException {
-    var sourceStorageServiceClassName = dataMigrationProperties.getSourceStorageServiceClassName();
-    var targetStorageServiceClassName = dataMigrationProperties.getTargetStorageServiceClassName();
-
-    var sourceStorageService = findStorageService(sourceStorageServiceClassName);
-    var targetStorageService = findStorageService(targetStorageServiceClassName);
-
-    return new StorageDataMigrator(
-        dataMigrationProperties,
-        sourceStorageService,
-        targetStorageService,
-        Executors.newCachedThreadPool());
-  }
-
-  private StorageService findStorageService(String className) throws IOException {
-    return storageServices.stream()
-        .filter(storageService -> storageService.getClass().getCanonicalName().equals(className))
-        .findFirst()
-        .orElseThrow(
-            () ->
-                new IOException(
-                    String.format("Failed to find storage service for class name: %s", className)));
-  }
-}
+public class SqlConfiguration extends DataSourceAutoConfiguration {}
