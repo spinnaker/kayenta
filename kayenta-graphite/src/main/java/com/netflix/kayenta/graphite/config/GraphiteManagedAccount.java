@@ -16,17 +16,29 @@
 
 package com.netflix.kayenta.graphite.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.graphite.service.GraphiteRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
-import java.util.List;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Data
-public class GraphiteManagedAccount {
-  @NotNull private String name;
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+public class GraphiteManagedAccount extends AccountCredentials<GraphiteManagedAccount> {
 
   @NotNull private RemoteService endpoint;
 
-  private List<AccountCredentials.Type> supportedTypes;
+  @Override
+  public String getType() {
+    return GraphiteCanaryMetricSetQueryConfig.SERVICE_TYPE;
+  }
+
+  @JsonIgnore private transient GraphiteRemoteService graphiteRemoteService;
 }

@@ -16,7 +16,7 @@
 
 package com.netflix.kayenta.stackdriver.config;
 
-import com.netflix.kayenta.google.security.GoogleNamedAccountCredentials;
+import com.netflix.kayenta.google.config.GoogleManagedAccount;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -56,7 +56,7 @@ public class StackdriverConfiguration {
         StackdriverMetricsService.builder();
 
     accountCredentialsRepository.getAll().stream()
-        .filter(c -> c instanceof GoogleNamedAccountCredentials)
+        .filter(GoogleManagedAccount.class::isInstance)
         .filter(c -> c.getSupportedTypes().contains(AccountCredentials.Type.METRICS_STORE))
         .map(c -> c.getName())
         .forEach(stackdriverMetricsServiceBuilder::accountName);

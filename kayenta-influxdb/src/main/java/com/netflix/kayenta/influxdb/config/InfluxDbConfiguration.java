@@ -16,10 +16,7 @@
 
 package com.netflix.kayenta.influxdb.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.influxdb.metrics.InfluxDbMetricsService;
-import com.netflix.kayenta.influxdb.security.InfluxDbNamedAccountCredentials;
-import com.netflix.kayenta.influxdb.security.InfluxdbCredentials;
 import com.netflix.kayenta.influxdb.service.InfluxDbRemoteService;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
@@ -59,7 +56,6 @@ public class InfluxDbConfiguration {
       InfluxDbResponseConverter influxDbResponseConverter,
       InfluxDbConfigurationProperties influxDbConfigurationProperties,
       RetrofitClientFactory retrofitClientFactory,
-      ObjectMapper objectMapper,
       OkHttpClient okHttpClient,
       AccountCredentialsRepository accountCredentialsRepository)
       throws IOException {
@@ -67,32 +63,20 @@ public class InfluxDbConfiguration {
         InfluxDbMetricsService.builder();
 
     for (InfluxDbManagedAccount account : influxDbConfigurationProperties.getAccounts()) {
-      String name = account.getName();
       List<AccountCredentials.Type> supportedTypes = account.getSupportedTypes();
-
-      InfluxdbCredentials credentials = InfluxdbCredentials.builder().build();
-
-      InfluxDbNamedAccountCredentials.InfluxDbNamedAccountCredentialsBuilder
-          accountCredentialsBuilder =
-              InfluxDbNamedAccountCredentials.builder()
-                  .name(name)
-                  .endpoint(account.getEndpoint())
-                  .credentials(credentials);
-
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
-          accountCredentialsBuilder.influxDbRemoteService(
+          account.setInfluxDbRemoteService(
               retrofitClientFactory.createClient(
                   InfluxDbRemoteService.class,
                   influxDbResponseConverter,
                   account.getEndpoint(),
                   okHttpClient));
         }
-        accountCredentialsBuilder.supportedTypes(supportedTypes);
       }
 
-      accountCredentialsRepository.save(name, accountCredentialsBuilder.build());
-      metricsServiceBuilder.accountName(name);
+      accountCredentialsRepository.save(account);
+      metricsServiceBuilder.accountName(account.getName());
     }
 
     log.info(

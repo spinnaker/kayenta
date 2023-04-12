@@ -18,19 +18,13 @@
 package com.netflix.kayenta.signalfx.config;
 
 import com.netflix.kayenta.metrics.MetricsService;
-import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
-import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.signalfx.metrics.SignalFxMetricsService;
-import com.netflix.kayenta.signalfx.security.SignalFxCredentials;
-import com.netflix.kayenta.signalfx.security.SignalFxNamedAccountCredentials;
 import com.netflix.kayenta.signalfx.service.SignalFxConverter;
 import com.netflix.kayenta.signalfx.service.SignalFxSignalFlowRemoteService;
 import com.squareup.okhttp.OkHttpClient;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,15 +32,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.CollectionUtils;
 
 @Configuration
 @ConditionalOnProperty("kayenta.signalfx.enabled")
 @ComponentScan({"com.netflix.kayenta.signalfx"})
 @Slf4j
 public class SignalFxConfiguration {
-
-  private static final String SIGNAL_FX_SIGNAL_FLOW_ENDPOINT_URI = "https://stream.signalfx.com";
 
   @Bean
   @ConfigurationProperties("kayenta.signalfx")
@@ -78,39 +69,19 @@ public class SignalFxConfiguration {
     SignalFxMetricsService.SignalFxMetricsServiceBuilder metricsServiceBuilder =
         SignalFxMetricsService.builder();
 
-    for (SignalFxManagedAccount signalFxManagedAccount :
-        signalFxConfigurationProperties.getAccounts()) {
-      String name = signalFxManagedAccount.getName();
-      List<AccountCredentials.Type> supportedTypes = signalFxManagedAccount.getSupportedTypes();
-      SignalFxCredentials signalFxCredentials =
-          new SignalFxCredentials(signalFxManagedAccount.getAccessToken());
+    signalFxConfigurationProperties.getAccounts().parallelStream()
+        .forEach(
+            signalFxManagedAccount -> {
+              signalFxManagedAccount.setSignalFlowService(
+                  retrofitClientFactory.createClient(
+                      SignalFxSignalFlowRemoteService.class,
+                      new SignalFxConverter(),
+                      signalFxManagedAccount.getEndpoint(),
+                      okHttpClient));
 
-      final RemoteService signalFxSignalFlowEndpoint =
-          Optional.ofNullable(signalFxManagedAccount.getEndpoint())
-              .orElse(new RemoteService().setBaseUrl(SIGNAL_FX_SIGNAL_FLOW_ENDPOINT_URI));
-
-      SignalFxNamedAccountCredentials.SignalFxNamedAccountCredentialsBuilder
-          accountCredentialsBuilder =
-              SignalFxNamedAccountCredentials.builder()
-                  .name(name)
-                  .endpoint(signalFxSignalFlowEndpoint)
-                  .credentials(signalFxCredentials);
-
-      if (!CollectionUtils.isEmpty(supportedTypes)) {
-        if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
-          accountCredentialsBuilder.signalFlowService(
-              retrofitClientFactory.createClient(
-                  SignalFxSignalFlowRemoteService.class,
-                  new SignalFxConverter(),
-                  signalFxSignalFlowEndpoint,
-                  okHttpClient));
-        }
-        accountCredentialsBuilder.supportedTypes(supportedTypes);
-      }
-
-      accountCredentialsRepository.save(name, accountCredentialsBuilder.build());
-      metricsServiceBuilder.accountName(name);
-    }
+              accountCredentialsRepository.save(signalFxManagedAccount);
+              metricsServiceBuilder.accountName(signalFxManagedAccount.getName());
+            });
 
     log.info(
         "Configured the SignalFx Metrics Service with the following accounts: {}",

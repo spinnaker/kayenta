@@ -29,7 +29,7 @@ import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.QueryConfigUtils;
 import com.netflix.kayenta.canary.providers.metrics.StackdriverCanaryMetricSetQueryConfig;
-import com.netflix.kayenta.google.security.GoogleNamedAccountCredentials;
+import com.netflix.kayenta.google.config.GoogleManagedAccount;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentials;
@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -276,7 +275,7 @@ public class StackdriverMetricsService implements MetricsService {
     }
 
     StackdriverCanaryScope stackdriverCanaryScope = (StackdriverCanaryScope) canaryScope;
-    GoogleNamedAccountCredentials stackdriverCredentials =
+    GoogleManagedAccount stackdriverCredentials =
         accountCredentialsRepository.getRequiredOne(metricsAccountName);
     Monitoring monitoring = stackdriverCredentials.getMonitoring();
     StackdriverCanaryMetricSetQueryConfig stackdriverMetricSetQuery =
@@ -454,7 +453,7 @@ public class StackdriverMetricsService implements MetricsService {
     String projectId = stackdriverCanaryScope.getProject();
 
     if (StringUtils.isEmpty(projectId)) {
-      GoogleNamedAccountCredentials stackdriverCredentials =
+      GoogleManagedAccount stackdriverCredentials =
           accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
       projectId = stackdriverCredentials.getProject();
@@ -480,38 +479,41 @@ public class StackdriverMetricsService implements MetricsService {
 
   @Scheduled(fixedDelayString = "#{@stackdriverConfigurationProperties.metadataCachingIntervalMS}")
   public void updateMetricDescriptorsCache() throws IOException {
-    Set<AccountCredentials> accountCredentialsSet =
-        accountCredentialsRepository.getAllOf(AccountCredentials.Type.METRICS_STORE);
+    accountCredentialsRepository.getAllOf(AccountCredentials.Type.METRICS_STORE).stream()
+        .filter(GoogleManagedAccount.class::isInstance)
+        .map(GoogleManagedAccount.class::cast)
+        .forEach(
+            stackdriverCredentials -> {
+              try {
+                ListMetricDescriptorsResponse listMetricDescriptorsResponse =
+                    stackdriverCredentials
+                        .getMonitoring()
+                        .projects()
+                        .metricDescriptors()
+                        .list("projects/" + stackdriverCredentials.getProject())
+                        .execute();
 
-    for (AccountCredentials credentials : accountCredentialsSet) {
-      if (credentials instanceof GoogleNamedAccountCredentials) {
-        GoogleNamedAccountCredentials stackdriverCredentials =
-            (GoogleNamedAccountCredentials) credentials;
-        ListMetricDescriptorsResponse listMetricDescriptorsResponse =
-            stackdriverCredentials
-                .getMonitoring()
-                .projects()
-                .metricDescriptors()
-                .list("projects/" + stackdriverCredentials.getProject())
-                .execute();
-        List<MetricDescriptor> metricDescriptors =
-            listMetricDescriptorsResponse.getMetricDescriptors();
+                List<MetricDescriptor> metricDescriptors =
+                    listMetricDescriptorsResponse.getMetricDescriptors();
 
-        if (!CollectionUtils.isEmpty(metricDescriptors)) {
-          // TODO(duftler): Should we instead be building the union across all accounts? This
-          // doesn't seem quite right yet.
-          metricDescriptorsCache = metricDescriptors;
+                if (!CollectionUtils.isEmpty(metricDescriptors)) {
+                  // TODO(duftler): Should we instead be building the union across all accounts?
+                  // This
+                  // doesn't seem quite right yet.
+                  metricDescriptorsCache = metricDescriptors;
 
-          log.debug(
-              "Updated cache with {} metric descriptors via account {}.",
-              metricDescriptors.size(),
-              stackdriverCredentials.getName());
-        } else {
-          log.debug(
-              "While updating cache, found no metric descriptors via account {}.",
-              stackdriverCredentials.getName());
-        }
-      }
-    }
+                  log.debug(
+                      "Updated cache with {} metric descriptors via account {}.",
+                      metricDescriptors.size(),
+                      stackdriverCredentials.getName());
+                } else {
+                  log.debug(
+                      "While updating cache, found no metric descriptors via account {}.",
+                      stackdriverCredentials.getName());
+                }
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
   }
 }

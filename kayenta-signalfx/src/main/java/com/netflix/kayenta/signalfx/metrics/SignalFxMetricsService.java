@@ -29,8 +29,8 @@ import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.signalfx.canary.SignalFxCanaryScope;
+import com.netflix.kayenta.signalfx.config.SignalFxManagedAccount;
 import com.netflix.kayenta.signalfx.config.SignalFxScopeConfiguration;
-import com.netflix.kayenta.signalfx.security.SignalFxNamedAccountCredentials;
 import com.netflix.kayenta.signalfx.service.ErrorResponse;
 import com.netflix.kayenta.signalfx.service.SignalFlowExecutionResult;
 import com.netflix.kayenta.signalfx.service.SignalFxRequestError;
@@ -38,11 +38,7 @@ import com.netflix.kayenta.signalfx.service.SignalFxSignalFlowRemoteService;
 import com.signalfx.signalflow.ChannelMessage;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -122,7 +118,7 @@ public class SignalFxMetricsService implements MetricsService {
     List<QueryPair> queryPairs =
         Optional.ofNullable(queryConfig.getQueryPairs()).orElse(new LinkedList<>());
 
-    SignalFxNamedAccountCredentials accountCredentials =
+    SignalFxManagedAccount accountCredentials =
         accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
     String accessToken = accountCredentials.getCredentials().getAccessToken();

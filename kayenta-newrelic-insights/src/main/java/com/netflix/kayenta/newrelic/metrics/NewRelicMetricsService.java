@@ -23,9 +23,8 @@ import com.netflix.kayenta.canary.providers.metrics.NewRelicCanaryMetricSetQuery
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.newrelic.canary.NewRelicCanaryScope;
+import com.netflix.kayenta.newrelic.config.NewRelicManagedAccount;
 import com.netflix.kayenta.newrelic.config.NewRelicScopeConfiguration;
-import com.netflix.kayenta.newrelic.security.NewRelicCredentials;
-import com.netflix.kayenta.newrelic.security.NewRelicNamedAccountCredentials;
 import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
 import com.netflix.kayenta.newrelic.service.NewRelicTimeSeries;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -94,10 +93,10 @@ public class NewRelicMetricsService implements MetricsService {
       CanaryMetricConfig canaryMetricConfig,
       CanaryScope canaryScope)
       throws IOException {
-    NewRelicNamedAccountCredentials accountCredentials =
+    NewRelicManagedAccount accountCredentials =
         accountCredentialsRepository.getRequiredOne(accountName);
 
-    NewRelicCredentials credentials = accountCredentials.getCredentials();
+    NewRelicManagedAccount credentials = accountCredentials.getCredentials();
     NewRelicRemoteService remoteService = accountCredentials.getNewRelicRemoteService();
 
     String query = buildQuery(accountName, canaryConfig, canaryMetricConfig, canaryScope);

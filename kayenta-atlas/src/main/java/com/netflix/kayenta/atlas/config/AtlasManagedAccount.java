@@ -16,21 +16,35 @@
 
 package com.netflix.kayenta.atlas.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.netflix.kayenta.atlas.backends.AtlasStorageUpdater;
+import com.netflix.kayenta.atlas.backends.BackendUpdater;
 import com.netflix.kayenta.security.AccountCredentials;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AtlasManagedAccount {
-
-  @NotNull private String name;
-
-  private List<AccountCredentials.Type> supportedTypes;
+public class AtlasManagedAccount extends AccountCredentials<AtlasManagedAccount> {
 
   @NotNull private String backendsJsonBaseUrl;
 
   private String fetchId;
 
-  private List<String> recommendedLocations;
+  private List<String> recommendedLocations = new ArrayList<>();
+
+  @Override
+  public List<String> getLocations() {
+    return getBackendUpdater().getBackendDatabase().getLocations();
+  }
+
+  @JsonIgnore private transient BackendUpdater backendUpdater;
+
+  @JsonIgnore private transient AtlasStorageUpdater atlasStorageUpdater;
+
+  @Override
+  public String getType() {
+    return "atlas";
+  }
 }

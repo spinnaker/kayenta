@@ -24,7 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.netflix.kayenta.aws.security.AwsNamedAccountCredentials;
+import com.netflix.kayenta.aws.config.AwsManagedAccount;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.index.CanaryConfigIndex;
 import com.netflix.kayenta.index.config.CanaryConfigIndexAction;
@@ -70,8 +70,7 @@ public class S3StorageService implements StorageService {
 
   /** Check to see if the bucket exists, creating it if it is not there. */
   public void ensureBucketExists(String accountName) {
-    AwsNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AwsManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
 
     AmazonS3 amazonS3 = credentials.getAmazonS3();
     String bucket = credentials.getBucket();
@@ -100,8 +99,7 @@ public class S3StorageService implements StorageService {
   @Override
   public <T> T loadObject(String accountName, ObjectType objectType, String objectKey)
       throws IllegalArgumentException, NotFoundException {
-    AwsNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AwsManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     AmazonS3 amazonS3 = credentials.getAmazonS3();
     String bucket = credentials.getBucket();
     String path;
@@ -130,7 +128,7 @@ public class S3StorageService implements StorageService {
   private String resolveSingularPath(
       ObjectType objectType,
       String objectKey,
-      AwsNamedAccountCredentials credentials,
+      AwsManagedAccount credentials,
       AmazonS3 amazonS3,
       String bucket) {
     String rootFolder = daoRoot(credentials, objectType.getGroup()) + "/" + objectKey;
@@ -164,8 +162,7 @@ public class S3StorageService implements StorageService {
       T obj,
       String filename,
       boolean isAnUpdate) {
-    AwsNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AwsManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     AmazonS3 amazonS3 = credentials.getAmazonS3();
     String bucket = credentials.getBucket();
     String group = objectType.getGroup();
@@ -260,7 +257,7 @@ public class S3StorageService implements StorageService {
   }
 
   private void checkForDuplicateCanaryConfig(
-      CanaryConfig canaryConfig, String canaryConfigId, AwsNamedAccountCredentials credentials) {
+      CanaryConfig canaryConfig, String canaryConfigId, AwsManagedAccount credentials) {
     String canaryConfigName = canaryConfig.getName();
     List<String> applications = canaryConfig.getApplications();
     String existingCanaryConfigId =
@@ -281,8 +278,7 @@ public class S3StorageService implements StorageService {
 
   @Override
   public void deleteObject(String accountName, ObjectType objectType, String objectKey) {
-    AwsNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AwsManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
     AmazonS3 amazonS3 = credentials.getAmazonS3();
     String bucket = credentials.getBucket();
     String path = resolveSingularPath(objectType, objectKey, credentials, amazonS3, bucket);
@@ -354,8 +350,7 @@ public class S3StorageService implements StorageService {
   @Override
   public List<Map<String, Object>> listObjectKeys(
       String accountName, ObjectType objectType, List<String> applications, boolean skipIndex) {
-    AwsNamedAccountCredentials credentials =
-        accountCredentialsRepository.getRequiredOne(accountName);
+    AwsManagedAccount credentials = accountCredentialsRepository.getRequiredOne(accountName);
 
     if (!skipIndex && objectType == ObjectType.CANARY_CONFIG) {
       Set<Map<String, Object>> canaryConfigSet =
@@ -415,12 +410,12 @@ public class S3StorageService implements StorageService {
     }
   }
 
-  private String daoRoot(AwsNamedAccountCredentials credentials, String daoTypeName) {
+  private String daoRoot(AwsManagedAccount credentials, String daoTypeName) {
     return credentials.getRootFolder() + '/' + daoTypeName;
   }
 
   private String buildS3Key(
-      AwsNamedAccountCredentials credentials,
+      AwsManagedAccount credentials,
       ObjectType objectType,
       String group,
       String objectKey,
@@ -437,7 +432,7 @@ public class S3StorageService implements StorageService {
         .replace("//", "/");
   }
 
-  private String buildTypedFolder(AwsNamedAccountCredentials credentials, String type) {
+  private String buildTypedFolder(AwsManagedAccount credentials, String type) {
     return daoRoot(credentials, type).replaceAll("//", "/");
   }
 }

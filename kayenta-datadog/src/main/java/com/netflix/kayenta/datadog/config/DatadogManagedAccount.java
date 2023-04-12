@@ -16,21 +16,39 @@
 
 package com.netflix.kayenta.datadog.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.netflix.kayenta.datadog.service.DatadogRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Data
-public class DatadogManagedAccount {
-  @NotNull private String name;
-  private String apiKey;
-  private String applicationKey;
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+public class DatadogManagedAccount extends AccountCredentials<DatadogManagedAccount> {
+  private static final List<Type> SUPPORTED_TYPES =
+      Collections.singletonList(AccountCredentials.Type.METRICS_STORE);
+  @JsonIgnore private String apiKey;
+  @JsonIgnore private String applicationKey;
 
   @NotNull private RemoteService endpoint;
 
-  private List<AccountCredentials.Type> supportedTypes =
-      Collections.singletonList(AccountCredentials.Type.METRICS_STORE);
+  @Override
+  public String getType() {
+    return "datadog";
+  }
+
+  @Override
+  public List<AccountCredentials.Type> getSupportedTypes() {
+    return SUPPORTED_TYPES;
+  }
+
+  @JsonIgnore private transient DatadogRemoteService datadogRemoteService;
 }

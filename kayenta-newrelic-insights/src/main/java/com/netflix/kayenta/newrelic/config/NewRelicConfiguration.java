@@ -19,15 +19,10 @@ package com.netflix.kayenta.newrelic.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.metrics.MetricsService;
 import com.netflix.kayenta.newrelic.metrics.NewRelicMetricsService;
-import com.netflix.kayenta.newrelic.security.NewRelicCredentials;
-import com.netflix.kayenta.newrelic.security.NewRelicNamedAccountCredentials;
 import com.netflix.kayenta.newrelic.service.NewRelicRemoteService;
-import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
-import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.squareup.okhttp.OkHttpClient;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +31,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.CollectionUtils;
 import retrofit.converter.JacksonConverter;
 
 @Configuration
@@ -92,44 +86,16 @@ public class NewRelicConfiguration {
 
     NewRelicMetricsService.NewRelicMetricsServiceBuilder metricsServiceBuilder =
         NewRelicMetricsService.builder();
-
     for (NewRelicManagedAccount account : newrelicConfigurationProperties.getAccounts()) {
-      String name = account.getName();
-      List<AccountCredentials.Type> supportedTypes = account.getSupportedTypes();
+      account.setNewRelicRemoteService(
+          retrofitClientFactory.createClient(
+              NewRelicRemoteService.class,
+              new JacksonConverter(objectMapper),
+              account.getEndpoint(),
+              okHttpClient));
 
-      NewRelicCredentials credentials =
-          NewRelicCredentials.builder()
-              .apiKey(account.getApiKey())
-              .applicationKey(account.getApplicationKey())
-              .build();
-
-      RemoteService endpoint = account.getEndpoint();
-
-      if (endpoint == null) {
-        endpoint = new RemoteService().setBaseUrl("https://insights-api.newrelic.com");
-      }
-
-      NewRelicNamedAccountCredentials.NewRelicNamedAccountCredentialsBuilder
-          accountCredentialsBuilder =
-              NewRelicNamedAccountCredentials.builder()
-                  .name(name)
-                  .endpoint(endpoint)
-                  .credentials(credentials);
-
-      if (!CollectionUtils.isEmpty(supportedTypes)) {
-        if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
-          accountCredentialsBuilder.newRelicRemoteService(
-              retrofitClientFactory.createClient(
-                  NewRelicRemoteService.class,
-                  new JacksonConverter(objectMapper),
-                  endpoint,
-                  okHttpClient));
-        }
-        accountCredentialsBuilder.supportedTypes(supportedTypes);
-      }
-
-      accountCredentialsRepository.save(name, accountCredentialsBuilder.build());
-      metricsServiceBuilder.accountName(name);
+      accountCredentialsRepository.save(account);
+      metricsServiceBuilder.accountName(account.getName());
     }
 
     log.info(

@@ -21,10 +21,10 @@ import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
 import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.GraphiteCanaryMetricSetQueryConfig;
+import com.netflix.kayenta.graphite.config.GraphiteManagedAccount;
 import com.netflix.kayenta.graphite.model.GraphiteMetricDescriptor;
 import com.netflix.kayenta.graphite.model.GraphiteMetricDescriptorsResponse;
 import com.netflix.kayenta.graphite.model.GraphiteResults;
-import com.netflix.kayenta.graphite.security.GraphiteNamedAccountCredentials;
 import com.netflix.kayenta.graphite.service.GraphiteRemoteService;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.metrics.MetricsService;
@@ -32,13 +32,7 @@ import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.spectator.api.Registry;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -106,7 +100,7 @@ public class GraphiteMetricsService implements MetricsService {
       CanaryMetricConfig canaryMetricConfig,
       CanaryScope canaryScope)
       throws IOException {
-    GraphiteNamedAccountCredentials accountCredentials =
+    GraphiteManagedAccount accountCredentials =
         accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
     GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();
@@ -155,7 +149,7 @@ public class GraphiteMetricsService implements MetricsService {
     if (needSpecialDescriptors) {
       result.addAll(getSpecialMetricDescriptors(baseFilter));
     } else {
-      GraphiteNamedAccountCredentials accountCredentials =
+      GraphiteManagedAccount accountCredentials =
           accountCredentialsRepository.getRequiredOne(metricsAccountName);
 
       GraphiteRemoteService remoteService = accountCredentials.getGraphiteRemoteService();

@@ -16,16 +16,21 @@
 
 package com.netflix.kayenta.configbin.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.netflix.kayenta.configbin.service.ConfigBinRemoteService;
 import com.netflix.kayenta.retrofit.config.RemoteService;
 import com.netflix.kayenta.security.AccountCredentials;
-import java.util.List;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Data
-public class ConfigBinManagedAccount {
-
-  @NotNull private String name;
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+public class ConfigBinManagedAccount extends AccountCredentials<ConfigBinManagedAccount> {
 
   @NotNull private RemoteService endpoint;
 
@@ -33,5 +38,10 @@ public class ConfigBinManagedAccount {
 
   @NotNull private String configType;
 
-  private List<AccountCredentials.Type> supportedTypes;
+  @Override
+  public String getType() {
+    return "configbin";
+  }
+
+  @JsonIgnore private transient ConfigBinRemoteService remoteService;
 }

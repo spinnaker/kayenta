@@ -19,8 +19,7 @@ package com.netflix.kayenta.blobs.storage;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.kayenta.azure.security.AzureCredentials;
-import com.netflix.kayenta.azure.security.AzureNamedAccountCredentials;
+import com.netflix.kayenta.azure.config.AzureManagedAccount;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.index.CanaryConfigIndex;
 import com.netflix.kayenta.security.AccountCredentials;
@@ -28,14 +27,16 @@ import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.security.MapBackedAccountCredentialsRepository;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
-import com.tngtech.java.junit.dataprovider.*;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.*;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 @RunWith(DataProviderRunner.class)
@@ -56,17 +57,18 @@ public class TestableBlobsStorageServiceTest {
     String azureAccountName = "AzDev_Testing_Account_1";
     String accountAccessKey = "testAccessKey";
 
-    AzureNamedAccountCredentials.AzureNamedAccountCredentialsBuilder credentialsBuilder =
-        AzureNamedAccountCredentials.builder();
-    credentialsBuilder.name(kayenataAccountName);
-    credentialsBuilder.credentials(
-        new AzureCredentials(azureAccountName, accountAccessKey, "core.windows.net"));
-    credentialsBuilder.rootFolder(rootFolder);
-    credentialsBuilder.azureContainer(null);
-    accountCredentials = credentialsBuilder.build();
+    accountCredentials =
+        AzureManagedAccount.builder()
+            .name(kayenataAccountName)
+            .storageAccountName(azureAccountName)
+            .accountAccessKey(accountAccessKey)
+            .rootFolder(rootFolder)
+            .azureContainer(null)
+            .endpointSuffix("core.windows.net")
+            .build();
 
     credentialsRepository = new MapBackedAccountCredentialsRepository();
-    credentialsRepository.save(kayenataAccountName, accountCredentials);
+    credentialsRepository.save(accountCredentials);
 
     ObjectMapper kayentaObjectMapper = new ObjectMapper();
     this.mockedCanaryConfigIndex = mock(CanaryConfigIndex.class);

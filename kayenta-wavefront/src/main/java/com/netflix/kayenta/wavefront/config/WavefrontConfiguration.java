@@ -21,8 +21,6 @@ import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.wavefront.metrics.WavefrontMetricsService;
-import com.netflix.kayenta.wavefront.security.WavefrontCredentials;
-import com.netflix.kayenta.wavefront.security.WavefrontNamedAccountCredentials;
 import com.netflix.kayenta.wavefront.service.WavefrontRemoteService;
 import com.squareup.okhttp.OkHttpClient;
 import java.io.IOException;
@@ -62,18 +60,7 @@ public class WavefrontConfiguration {
         wavefrontConfigurationProperties.getAccounts()) {
       String name = wavefrontManagedAccount.getName();
       List<AccountCredentials.Type> supportedTypes = wavefrontManagedAccount.getSupportedTypes();
-
       log.info("Registering Wavefront account {} with supported types {}.", name, supportedTypes);
-
-      WavefrontCredentials wavefrontCredentials =
-          WavefrontCredentials.builder().apiToken(wavefrontManagedAccount.getApiToken()).build();
-      WavefrontNamedAccountCredentials.WavefrontNamedAccountCredentialsBuilder
-          wavefrontNamedAccountCredentialsBuilder =
-              WavefrontNamedAccountCredentials.builder()
-                  .name(name)
-                  .endpoint(wavefrontManagedAccount.getEndpoint())
-                  .credentials(wavefrontCredentials);
-
       if (!CollectionUtils.isEmpty(supportedTypes)) {
         if (supportedTypes.contains(AccountCredentials.Type.METRICS_STORE)) {
           WavefrontRemoteService wavefrontRemoteService =
@@ -83,15 +70,11 @@ public class WavefrontConfiguration {
                   wavefrontManagedAccount.getEndpoint(),
                   okHttpClient);
 
-          wavefrontNamedAccountCredentialsBuilder.wavefrontRemoteService(wavefrontRemoteService);
+          wavefrontManagedAccount.setWavefrontRemoteService(wavefrontRemoteService);
         }
-
-        wavefrontNamedAccountCredentialsBuilder.supportedTypes(supportedTypes);
       }
 
-      WavefrontNamedAccountCredentials wavefrontNamedAccountCredentials =
-          wavefrontNamedAccountCredentialsBuilder.build();
-      accountCredentialsRepository.save(name, wavefrontNamedAccountCredentials);
+      accountCredentialsRepository.save(wavefrontManagedAccount);
       wavefrontMetricsServiceBuilder.accountName(name);
     }
 

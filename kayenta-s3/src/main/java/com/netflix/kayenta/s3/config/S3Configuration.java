@@ -17,7 +17,8 @@
 package com.netflix.kayenta.s3.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.kayenta.aws.security.AwsNamedAccountCredentials;
+import com.netflix.kayenta.aws.config.AwsManagedAccount;
+import com.netflix.kayenta.index.CanaryConfigIndex;
 import com.netflix.kayenta.s3.storage.S3StorageService;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
@@ -40,14 +41,17 @@ public class S3Configuration {
   @Bean
   @DependsOn({"registerAwsCredentials"})
   public S3StorageService s3StorageService(
-      AccountCredentialsRepository accountCredentialsRepository) {
+      AccountCredentialsRepository accountCredentialsRepository, CanaryConfigIndex configIndex) {
     S3StorageService.S3StorageServiceBuilder s3StorageServiceBuilder = S3StorageService.builder();
 
     accountCredentialsRepository.getAll().stream()
-        .filter(c -> c instanceof AwsNamedAccountCredentials)
+        .filter(AwsManagedAccount.class::isInstance)
         .filter(c -> c.getSupportedTypes().contains(AccountCredentials.Type.OBJECT_STORE))
         .map(c -> c.getName())
         .forEach(s3StorageServiceBuilder::accountName);
+
+    s3StorageServiceBuilder.accountCredentialsRepository(accountCredentialsRepository);
+    s3StorageServiceBuilder.canaryConfigIndex(configIndex);
 
     S3StorageService s3StorageService =
         s3StorageServiceBuilder.objectMapper(kayentaObjectMapper).build();
