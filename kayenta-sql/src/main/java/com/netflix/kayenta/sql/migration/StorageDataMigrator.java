@@ -20,6 +20,7 @@ import com.netflix.kayenta.sql.config.DataMigrationProperties;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +79,8 @@ public class StorageDataMigrator {
       return;
     }
 
+    var errors = new ConcurrentLinkedQueue<String>();
+
     for (var objectKey : objectKeysToMigrate) {
       executorService.submit(
           () -> {
@@ -86,10 +89,13 @@ public class StorageDataMigrator {
                   sourceStorageService.loadObject(sourceAccountName, objectType, objectKey);
               targetStorageService.storeObject(targetAccountName, objectType, objectKey, object);
             } catch (Exception e) {
-              log.error(
-                  "Unable to migrate objectType: {}, objectKey: {}", objectType, objectKey, e);
+              errors.add(String.format("[objectType: %s, objectKey: %s]", objectType, objectKey));
             }
           });
+    }
+
+    if (!errors.isEmpty()) {
+      log.error("Unable to migrate objects for {}", String.join(",", errors));
     }
   }
 
