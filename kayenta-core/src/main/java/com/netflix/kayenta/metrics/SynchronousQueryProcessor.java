@@ -24,6 +24,8 @@ import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
 import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
 import com.netflix.spinnaker.orca.api.pipeline.TaskResult;
 import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus;
 import java.io.IOException;
@@ -34,9 +36,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import retrofit.RetrofitError;
 
 @Component
 @Slf4j
@@ -88,10 +88,8 @@ public class SynchronousQueryProcessor {
             metricsService.queryMetrics(
                 metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
         success = true;
-      } catch (RetrofitError e) {
-
-        boolean retryable = isRetryable(e);
-        if (retryable) {
+      } catch (SpinnakerHttpException e) {
+        if (e.getRetryable()) {
           retries++;
           if (retries >= retryConfiguration.getAttempts()) {
             throw e;
@@ -101,18 +99,38 @@ public class SynchronousQueryProcessor {
             Thread.sleep(backoffPeriod);
           } catch (InterruptedException ignored) {
           }
-          Object error = e.getResponse() != null ? e.getResponse().getStatus() : e.getCause();
           log.warn(
               "Got {} result when querying for metrics. Retrying request (current attempt: "
                   + "{}, max attempts: {}, last backoff period: {}ms)",
-              error,
+              e.getResponseCode(),
               retries,
               retryConfiguration.getAttempts(),
               backoffPeriod);
         } else {
           throw e;
         }
-      } catch (IOException | UncheckedIOException | RetryableQueryException e) {
+      } catch (SpinnakerNetworkException e) {
+        if (e.getRetryable()) {
+          retries++;
+          if (retries >= retryConfiguration.getAttempts()) {
+            throw e;
+          }
+          long backoffPeriod = getBackoffPeriodMs(retries);
+          try {
+            Thread.sleep(backoffPeriod);
+          } catch (InterruptedException ignored) {
+          }
+          log.warn(
+                  "Got network error when querying for metrics. Retrying request (current attempt: "
+                          + "{}, max attempts: {}, last backoff period: {}ms)",
+                  retries,
+                  retryConfiguration.getAttempts(),
+                  backoffPeriod);
+        } else {
+          throw e;
+        }
+      }
+      catch (IOException | UncheckedIOException | RetryableQueryException e) {
         retries++;
         if (retries >= retryConfiguration.getAttempts()) {
           throw e;
@@ -144,28 +162,6 @@ public class SynchronousQueryProcessor {
     // 0)..Math.pow(2, max-1).
     return (long) Math.pow(2, (retryAttemptNumber - 1))
         * retryConfiguration.getBackoffPeriodMultiplierMs();
-  }
-
-  private boolean isRetryable(RetrofitError e) {
-    if (isNetworkError(e)) {
-      // retry in case of network errors
-      return true;
-    }
-    if (e.getResponse() == null) {
-      // We don't have a network error, but the response is null. It's better to not retry these.
-      return false;
-    }
-    HttpStatus responseStatus = HttpStatus.resolve(e.getResponse().getStatus());
-    if (responseStatus == null) {
-      return false;
-    }
-    return retryConfiguration.getStatuses().contains(responseStatus)
-        || retryConfiguration.getSeries().contains(responseStatus.series());
-  }
-
-  private boolean isNetworkError(RetrofitError e) {
-    return e.getKind() == RetrofitError.Kind.NETWORK
-        || (e.getResponse() == null && e.getCause() instanceof IOException);
   }
 
   public Map<String, ?> processQueryAndReturnMap(
