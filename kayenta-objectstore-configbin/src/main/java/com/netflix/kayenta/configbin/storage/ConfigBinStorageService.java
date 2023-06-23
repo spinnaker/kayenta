@@ -30,6 +30,9 @@ import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.util.Retry;
+import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
 import com.squareup.okhttp.MediaType;
@@ -45,7 +48,6 @@ import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import retrofit.RetrofitError;
 
 @Builder
 @Slf4j
@@ -87,7 +89,7 @@ public class ConfigBinStorageService implements StorageService {
                       () -> remoteService.get(ownerApp, configType, objectKey),
                       MAX_RETRIES,
                       RETRY_BACKOFF));
-    } catch (RetrofitError e) {
+    } catch (SpinnakerServerException e) {
       throw new NotFoundException("No such object named " + objectKey);
     }
 
@@ -337,7 +339,7 @@ public class ConfigBinStorageService implements StorageService {
                       () -> remoteService.get(ownerApp, configType, id),
                       MAX_RETRIES,
                       RETRY_BACKOFF));
-    } catch (RetrofitError e) {
+    } catch (SpinnakerServerException e) {
       throw new IllegalArgumentException("No such object named " + id);
     }
 

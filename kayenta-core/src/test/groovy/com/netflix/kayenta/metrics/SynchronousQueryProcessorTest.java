@@ -45,6 +45,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
