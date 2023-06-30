@@ -90,7 +90,7 @@ public class ConfigBinStorageService implements StorageService {
                       MAX_RETRIES,
                       RETRY_BACKOFF));
     } catch (SpinnakerServerException e) {
-      throw new NotFoundException("No such object named " + objectKey);
+      throw e.newInstance("No such object named " + objectKey);
     }
 
     try {

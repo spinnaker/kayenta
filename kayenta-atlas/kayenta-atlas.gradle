@@ -9,5 +9,5 @@ dependencies {
 
   api "org.apache.commons:commons-io:1.3.2"
 
-  api "io.spinnaker.kork:kork-retrofit"
+  implementation "io.spinnaker.kork:kork-retrofit"
 }

@@ -35,7 +35,6 @@ import com.netflix.kayenta.signalfx.service.ErrorResponse;
 import com.netflix.kayenta.signalfx.service.SignalFlowExecutionResult;
 import com.netflix.kayenta.signalfx.service.SignalFxRequestError;
 import com.netflix.kayenta.signalfx.service.SignalFxSignalFlowRemoteService;
-import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
 import com.signalfx.signalflow.ChannelMessage;
 import java.time.Duration;
 import java.time.Instant;
@@ -51,6 +50,7 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import retrofit.RetrofitError;
 
 @Builder
 @Slf4j
@@ -144,9 +144,10 @@ public class SignalFxMetricsService implements MetricsService {
       signalFlowExecutionResult =
           signalFlowService.executeSignalFlowProgram(
               accessToken, startEpochMilli, endEpochMilli, stepMilli, maxDelay, immediate, program);
-    } catch (SpinnakerServerException e) {
-      ErrorResponse errorResponse = new ErrorResponse();
-      errorResponse.setMessage(e.getMessage());
+      //TODO: replace with SpinnakerServerException/SpinnakerHttpException
+      // once an accessor for json response bodies as a Map is available
+    } catch (RetrofitError e) {
+      ErrorResponse errorResponse = (ErrorResponse) e.getBodyAs(ErrorResponse.class);
       throw new SignalFxRequestError(
           errorResponse, program, startEpochMilli, endEpochMilli, stepMilli, metricsAccountName);
     }
