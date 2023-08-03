@@ -121,16 +121,15 @@ public class SynchronousQueryProcessor {
           } catch (InterruptedException ignored) {
           }
           log.warn(
-                  "Got network error when querying for metrics. Retrying request (current attempt: "
-                          + "{}, max attempts: {}, last backoff period: {}ms)",
-                  retries,
-                  retryConfiguration.getAttempts(),
-                  backoffPeriod);
+              "Got network error when querying for metrics. Retrying request (current attempt: "
+                  + "{}, max attempts: {}, last backoff period: {}ms)",
+              retries,
+              retryConfiguration.getAttempts(),
+              backoffPeriod);
         } else {
           throw e;
         }
-      }
-      catch (IOException | UncheckedIOException | RetryableQueryException e) {
+      } catch (IOException | UncheckedIOException | RetryableQueryException e) {
         retries++;
         if (retries >= retryConfiguration.getAttempts()) {
           throw e;
