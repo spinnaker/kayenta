@@ -26,6 +26,7 @@ import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
 import com.netflix.spinnaker.orca.api.pipeline.TaskResult;
 import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus;
 import java.io.IOException;
@@ -36,7 +37,9 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import retrofit.RetrofitError;
 
 @Component
 @Slf4j
@@ -48,10 +51,10 @@ public class SynchronousQueryProcessor {
 
   @Autowired
   public SynchronousQueryProcessor(
-      MetricsServiceRepository metricsServiceRepository,
-      StorageServiceRepository storageServiceRepository,
-      Registry registry,
-      MetricsRetryConfigurationProperties retryConfiguration) {
+          MetricsServiceRepository metricsServiceRepository,
+          StorageServiceRepository storageServiceRepository,
+          Registry registry,
+          MetricsRetryConfigurationProperties retryConfiguration) {
     this.metricsServiceRepository = metricsServiceRepository;
     this.storageServiceRepository = storageServiceRepository;
     this.registry = registry;
@@ -59,20 +62,20 @@ public class SynchronousQueryProcessor {
   }
 
   public String executeQuery(
-      String metricsAccountName,
-      String storageAccountName,
-      CanaryConfig canaryConfig,
-      int metricIndex,
-      CanaryScope canaryScope)
-      throws IOException {
+          String metricsAccountName,
+          String storageAccountName,
+          CanaryConfig canaryConfig,
+          int metricIndex,
+          CanaryScope canaryScope)
+          throws IOException {
     MetricsService metricsService = metricsServiceRepository.getRequiredOne(metricsAccountName);
 
     StorageService storageService = storageServiceRepository.getRequiredOne(storageAccountName);
 
     Id queryId =
-        registry
-            .createId("canary.telemetry.query")
-            .withTag("metricsStore", metricsService.getType());
+            registry
+                    .createId("canary.telemetry.query")
+                    .withTag("metricsStore", metricsService.getType());
 
     CanaryMetricConfig canaryMetricConfig = canaryConfig.getMetrics().get(metricIndex);
     List<MetricSet> metricSetList = null;
@@ -85,32 +88,31 @@ public class SynchronousQueryProcessor {
       try {
         registry.counter(queryId.withTag("retries", retries + "")).increment();
         metricSetList =
-            metricsService.queryMetrics(
-                metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
+                metricsService.queryMetrics(
+                        metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
         success = true;
-      } catch (SpinnakerHttpException e) {
-        if (e.getRetryable()) {
-          retries++;
-          if (retries >= retryConfiguration.getAttempts()) {
-            throw e;
-          }
-          long backoffPeriod = getBackoffPeriodMs(retries);
-          try {
-            Thread.sleep(backoffPeriod);
-          } catch (InterruptedException ignored) {
-          }
-          log.warn(
-              "Got {} result when querying for metrics. Retrying request (current attempt: "
-                  + "{}, max attempts: {}, last backoff period: {}ms)",
-              e.getResponseCode(),
-              retries,
-              retryConfiguration.getAttempts(),
-              backoffPeriod);
-        } else {
+      } catch(SpinnakerNetworkException e) {
+        retries++;
+        if (retries >= retryConfiguration.getAttempts()) {
           throw e;
         }
-      } catch (SpinnakerNetworkException e) {
-        if (e.getRetryable()) {
+        long backoffPeriod = getBackoffPeriodMs(retries);
+        try {
+          Thread.sleep(backoffPeriod);
+        } catch (InterruptedException ignored) {
+        }
+        Object error = e.getCause();
+        log.warn(
+                "Got {} result when querying for metrics. Retrying request (current attempt: "
+                        + "{}, max attempts: {}, last backoff period: {}ms)",
+                error,
+                retries,
+                retryConfiguration.getAttempts(),
+                backoffPeriod);
+      }
+      catch (SpinnakerHttpException e) {
+        boolean retryable = isRetryable(e);
+        if (retryable) {
           retries++;
           if (retries >= retryConfiguration.getAttempts()) {
             throw e;
@@ -120,12 +122,14 @@ public class SynchronousQueryProcessor {
             Thread.sleep(backoffPeriod);
           } catch (InterruptedException ignored) {
           }
+          Object error = e.getResponseCode();
           log.warn(
-              "Got network error when querying for metrics. Retrying request (current attempt: "
-                  + "{}, max attempts: {}, last backoff period: {}ms)",
-              retries,
-              retryConfiguration.getAttempts(),
-              backoffPeriod);
+                  "Got {} result when querying for metrics. Retrying request (current attempt: "
+                          + "{}, max attempts: {}, last backoff period: {}ms)",
+                  error,
+                  retries,
+                  retryConfiguration.getAttempts(),
+                  backoffPeriod);
         } else {
           throw e;
         }
@@ -140,18 +144,18 @@ public class SynchronousQueryProcessor {
         } catch (InterruptedException ignored) {
         }
         log.warn(
-            "Got error when querying for metrics. Retrying request (current attempt: {}, max "
-                + "attempts: {}, last backoff period: {}ms)",
-            retries,
-            retryConfiguration.getAttempts(),
-            backoffPeriod,
-            e);
+                "Got error when querying for metrics. Retrying request (current attempt: {}, max "
+                        + "attempts: {}, last backoff period: {}ms)",
+                retries,
+                retryConfiguration.getAttempts(),
+                backoffPeriod,
+                e);
       }
     }
     String metricSetListId = UUID.randomUUID() + "";
 
     storageService.storeObject(
-        storageAccountName, ObjectType.METRIC_SET_LIST, metricSetListId, metricSetList);
+            storageAccountName, ObjectType.METRIC_SET_LIST, metricSetListId, metricSetList);
 
     return metricSetListId;
   }
@@ -160,18 +164,27 @@ public class SynchronousQueryProcessor {
     // The retries range from 1..max, but we want the backoff periods to range from Math.pow(2,
     // 0)..Math.pow(2, max-1).
     return (long) Math.pow(2, (retryAttemptNumber - 1))
-        * retryConfiguration.getBackoffPeriodMultiplierMs();
+            * retryConfiguration.getBackoffPeriodMultiplierMs();
+  }
+
+  private boolean isRetryable(SpinnakerHttpException e) {
+    HttpStatus responseStatus = HttpStatus.resolve(e.getResponseCode());
+    if (responseStatus == null) {
+      return false;
+    }
+    return retryConfiguration.getStatuses().contains(responseStatus)
+            || retryConfiguration.getSeries().contains(responseStatus.series());
   }
 
   public Map<String, ?> processQueryAndReturnMap(
-      String metricsAccountName,
-      String storageAccountName,
-      CanaryConfig canaryConfig,
-      CanaryMetricConfig canaryMetricConfig,
-      int metricIndex,
-      CanaryScope canaryScope,
-      boolean dryRun)
-      throws IOException {
+          String metricsAccountName,
+          String storageAccountName,
+          CanaryConfig canaryConfig,
+          CanaryMetricConfig canaryMetricConfig,
+          int metricIndex,
+          CanaryScope canaryScope,
+          boolean dryRun)
+          throws IOException {
     if (canaryConfig == null) {
       canaryConfig = CanaryConfig.builder().metric(canaryMetricConfig).build();
     }
@@ -180,35 +193,35 @@ public class SynchronousQueryProcessor {
       MetricsService metricsService = metricsServiceRepository.getRequiredOne(metricsAccountName);
 
       String query =
-          metricsService.buildQuery(
-              metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
+              metricsService.buildQuery(
+                      metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
 
       return Collections.singletonMap("query", query);
     } else {
       String metricSetListId =
-          executeQuery(
-              metricsAccountName, storageAccountName, canaryConfig, metricIndex, canaryScope);
+              executeQuery(
+                      metricsAccountName, storageAccountName, canaryConfig, metricIndex, canaryScope);
 
       return Collections.singletonMap("metricSetListId", metricSetListId);
     }
   }
 
   public TaskResult executeQueryAndProduceTaskResult(
-      String metricsAccountName,
-      String storageAccountName,
-      CanaryConfig canaryConfig,
-      int metricIndex,
-      CanaryScope canaryScope) {
+          String metricsAccountName,
+          String storageAccountName,
+          CanaryConfig canaryConfig,
+          int metricIndex,
+          CanaryScope canaryScope) {
     try {
       Map<String, ?> outputs =
-          processQueryAndReturnMap(
-              metricsAccountName,
-              storageAccountName,
-              canaryConfig,
-              null /* canaryMetricConfig */,
-              metricIndex,
-              canaryScope,
-              false /* dryRun */);
+              processQueryAndReturnMap(
+                      metricsAccountName,
+                      storageAccountName,
+                      canaryConfig,
+                      null /* canaryMetricConfig */,
+                      metricIndex,
+                      canaryScope,
+                      false /* dryRun */);
 
       return TaskResult.builder(ExecutionStatus.SUCCEEDED).outputs(outputs).build();
 

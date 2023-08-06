@@ -30,8 +30,6 @@ import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.util.Retry;
-import com.netflix.spinnaker.kork.exceptions.SpinnakerException;
-import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
 import com.netflix.spinnaker.security.AuthenticatedRequest;
@@ -340,7 +338,7 @@ public class ConfigBinStorageService implements StorageService {
                       MAX_RETRIES,
                       RETRY_BACKOFF));
     } catch (SpinnakerServerException e) {
-      throw new IllegalArgumentException("No such object named " + id);
+      throw new IllegalArgumentException("No such object named " + id, e);
     }
 
     CanaryConfig config;
