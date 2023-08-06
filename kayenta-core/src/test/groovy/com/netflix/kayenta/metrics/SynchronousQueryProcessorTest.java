@@ -39,15 +39,14 @@ import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import com.netflix.kayenta.storage.StorageServiceRepository;
 import com.netflix.spectator.api.Registry;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-
-import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
-import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -255,7 +254,11 @@ public class SynchronousQueryProcessorTest {
   }
 
   private SpinnakerHttpException getSpinnakerHttpException(int status) {
-    return new SpinnakerHttpException(RetrofitError.httpError(
-        "url", new Response("url", status, "reason", Collections.emptyList(), null), null, null));
+    return new SpinnakerHttpException(
+        RetrofitError.httpError(
+            "url",
+            new Response("url", status, "reason", Collections.emptyList(), null),
+            null,
+            null));
   }
 }
