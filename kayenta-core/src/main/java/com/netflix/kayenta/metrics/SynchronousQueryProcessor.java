@@ -26,6 +26,7 @@ import com.netflix.spectator.api.Id;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerHttpException;
 import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerNetworkException;
+import com.netflix.spinnaker.kork.retrofit.exceptions.SpinnakerServerException;
 import com.netflix.spinnaker.orca.api.pipeline.TaskResult;
 import com.netflix.spinnaker.orca.api.pipeline.models.ExecutionStatus;
 import java.io.IOException;
@@ -89,25 +90,7 @@ public class SynchronousQueryProcessor {
             metricsService.queryMetrics(
                 metricsAccountName, canaryConfig, canaryMetricConfig, canaryScope);
         success = true;
-      } catch (SpinnakerNetworkException e) {
-        retries++;
-        if (retries >= retryConfiguration.getAttempts()) {
-          throw e;
-        }
-        long backoffPeriod = getBackoffPeriodMs(retries);
-        try {
-          Thread.sleep(backoffPeriod);
-        } catch (InterruptedException ignored) {
-        }
-        Object error = e.getCause();
-        log.warn(
-            "Got {} result when querying for metrics. Retrying request (current attempt: "
-                + "{}, max attempts: {}, last backoff period: {}ms)",
-            error,
-            retries,
-            retryConfiguration.getAttempts(),
-            backoffPeriod);
-      } catch (SpinnakerHttpException e) {
+      } catch (SpinnakerServerException e) {
         boolean retryable = isRetryable(e);
         if (retryable) {
           retries++;
@@ -119,7 +102,13 @@ public class SynchronousQueryProcessor {
             Thread.sleep(backoffPeriod);
           } catch (InterruptedException ignored) {
           }
-          Object error = e.getResponseCode();
+          Object error;
+          if (isNetworkError(e)) {
+            error = e.getCause();
+          } else {
+            SpinnakerHttpException httpError = (SpinnakerHttpException) e;
+            error = httpError.getResponseCode();
+          }
           log.warn(
               "Got {} result when querying for metrics. Retrying request (current attempt: "
                   + "{}, max attempts: {}, last backoff period: {}ms)",
@@ -164,13 +153,21 @@ public class SynchronousQueryProcessor {
         * retryConfiguration.getBackoffPeriodMultiplierMs();
   }
 
-  private boolean isRetryable(SpinnakerHttpException e) {
-    HttpStatus responseStatus = HttpStatus.resolve(e.getResponseCode());
+  private boolean isRetryable(SpinnakerServerException e) {
+    if (isNetworkError(e)) {
+      return true;
+    }
+    SpinnakerHttpException httpError = (SpinnakerHttpException) e;
+    HttpStatus responseStatus = HttpStatus.resolve(httpError.getResponseCode());
     if (responseStatus == null) {
       return false;
     }
     return retryConfiguration.getStatuses().contains(responseStatus)
         || retryConfiguration.getSeries().contains(responseStatus.series());
+  }
+
+  private boolean isNetworkError(SpinnakerServerException e) {
+    return e instanceof SpinnakerNetworkException || (e.getCause() instanceof IOException);
   }
 
   public Map<String, ?> processQueryAndReturnMap(
