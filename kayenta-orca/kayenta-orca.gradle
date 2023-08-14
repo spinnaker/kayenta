@@ -9,4 +9,6 @@ dependencies {
   testImplementation "io.spinnaker.orca:orca-test"
 
   testImplementation "com.natpryce:hamkrest"
+
+  compileOnly "org.springframework.cloud:spring-cloud-commons"
 }
