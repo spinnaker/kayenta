@@ -10,5 +10,5 @@ dependencies {
 
   testImplementation "com.natpryce:hamkrest"
 
-  compileOnly "org.springframework.cloud:spring-cloud-commons:3.0.6"
+  compileOnly "org.springframework.cloud:spring-cloud-commons"
 }
