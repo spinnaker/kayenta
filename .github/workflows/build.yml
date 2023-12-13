@@ -16,23 +16,25 @@ jobs:
     if: startsWith(github.repository, 'spinnaker/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - uses: actions/setup-java@v2
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/setup-java@v4
         with:
-          java-version: 11
+          java-version: |
+            17
+            11
           distribution: 'zulu'
           cache: 'gradle'
       - name: Prepare build variables
         id: build_variables
         run: |
-          echo ::set-output name=REPO::${GITHUB_REPOSITORY##*/}
-          echo ::set-output name=VERSION::"$(git describe --tags --abbrev=0 --match="v[0-9]*" | cut -c2-)-dev-${GITHUB_REF_NAME}-${GITHUB_SHA::8}-$(date --utc +'%Y%m%d%H%M')"
+          echo REPO="${GITHUB_REPOSITORY##*/}" >> $GITHUB_OUTPUT
+          echo VERSION="$(git describe --tags --abbrev=0 --match='v[0-9]*' | cut -c2-)-dev-${GITHUB_REF_NAME}-$(git rev-parse --short HEAD)-$(date --utc +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
       - name: Build
         env:
           ORG_GRADLE_PROJECT_version: ${{ steps.build_variables.outputs.VERSION }}
@@ -40,7 +42,7 @@ jobs:
       - name: Login to GAR
         # Only run this on repositories in the 'spinnaker' org, not on forks.
         if: startsWith(github.repository, 'spinnaker/')
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         # use service account flow defined at: https://github.com/docker/login-action#service-account-based-authentication-1
         with:
           registry: us-docker.pkg.dev
@@ -49,7 +51,7 @@ jobs:
       - name: Build and publish slim container image
         # Only run this on repositories in the 'spinnaker' org, not on forks.
         if: startsWith(github.repository, 'spinnaker/')
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.slim
@@ -63,7 +65,7 @@ jobs:
       - name: Build and publish ubuntu container image
         # Only run this on repositories in the 'spinnaker' org, not on forks.
         if: startsWith(github.repository, 'spinnaker/')
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.ubuntu
@@ -72,3 +74,28 @@ jobs:
           tags: |
             "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ github.ref_name }}-latest-unvalidated-ubuntu"
             "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ steps.build_variables.outputs.VERSION }}-unvalidated-ubuntu"
+      - name: Build and publish slim JRE 11 container image
+        # Only run this on repositories in the 'spinnaker' org, not on forks.
+        if: startsWith(github.repository, 'spinnaker/')
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.java11.slim
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ github.ref_name }}-latest-java11-unvalidated"
+            "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ steps.build_variables.outputs.VERSION }}-java11-unvalidated"
+            "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ github.ref_name }}-latest-java11-unvalidated-slim"
+            "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ steps.build_variables.outputs.VERSION }}-java11-unvalidated-slim"
+      - name: Build and publish ubuntu JRE 11 container image
+        # Only run this on repositories in the 'spinnaker' org, not on forks.
+        if: startsWith(github.repository, 'spinnaker/')
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.java11.ubuntu
+          push: true
+          tags: |
+            "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ github.ref_name }}-latest-java11-unvalidated-ubuntu"
+            "${{ env.CONTAINER_REGISTRY }}/${{ steps.build_variables.outputs.REPO }}:${{ steps.build_variables.outputs.VERSION }}-java11-unvalidated-ubuntu"
