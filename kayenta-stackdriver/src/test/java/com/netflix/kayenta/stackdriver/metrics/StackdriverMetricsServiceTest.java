@@ -1,8 +1,8 @@
 package com.netflix.kayenta.stackdriver.metrics;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Answers.RETURNS_DEEP_STUBS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.api.services.monitoring.v3.Monitoring;
@@ -15,14 +15,13 @@ import com.google.api.services.monitoring.v3.model.TimeSeries;
 import com.google.api.services.monitoring.v3.model.TypedValue;
 import com.netflix.kayenta.canary.CanaryConfig;
 import com.netflix.kayenta.canary.CanaryMetricConfig;
-import com.netflix.kayenta.canary.CanaryScope;
 import com.netflix.kayenta.canary.providers.metrics.StackdriverCanaryMetricSetQueryConfig;
 import com.netflix.kayenta.google.security.GoogleNamedAccountCredentials;
 import com.netflix.kayenta.metrics.MetricSet;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.stackdriver.canary.StackdriverCanaryScope;
-import com.netflix.spectator.api.Registry;
+import com.netflix.spectator.api.DefaultRegistry;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,42 +29,40 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 
-@ExtendWith(MockitoExtension.class)
 public class StackdriverMetricsServiceTest {
 
   private static final String ACCOUNT = "test-account";
 
-  @Mock AccountCredentialsRepository accountCredentialsRepoMock;
+  private AccountCredentialsRepository accountCredentialsRepoMock;
 
-  @Mock(answer = RETURNS_DEEP_STUBS)
-  GoogleNamedAccountCredentials googleAccountCredentialsMock;
+  private StackdriverMetricsService stackdriverMetricsService;
 
-  @Mock GoogleNamedAccountCredentials stackdriverCredentialsMock;
-  @Mock ListMetricDescriptorsResponse listMetricDescriptorsResponseMock;
-  @Mock StackdriverCanaryScope canaryScopeMock;
-
-  @Mock(answer = RETURNS_DEEP_STUBS)
-  Monitoring monitoringMock;
-
-  @Mock Monitoring.Projects.TimeSeries.List timeSeriesListMock;
-  @Mock ListTimeSeriesResponse responseMock;
-
-  @Mock(answer = RETURNS_DEEP_STUBS)
-  Registry registry;
-
-  @InjectMocks StackdriverMetricsService stackdriverMetricsService;
+  @BeforeEach
+  void setup() {
+    StackdriverMetricsService.StackdriverMetricsServiceBuilder stackdriverMetricsServiceBuilder =
+        StackdriverMetricsService.builder();
+    accountCredentialsRepoMock = mock(AccountCredentialsRepository.class);
+    stackdriverMetricsServiceBuilder
+        .accountCredentialsRepository(accountCredentialsRepoMock)
+        .registry(new DefaultRegistry());
+    stackdriverMetricsService = stackdriverMetricsServiceBuilder.build();
+  }
 
   @Test
-  public void readsInt64Metrics() throws IOException {
+  void readsInt64Metrics() throws IOException {
+    GoogleNamedAccountCredentials stackdriverCredentialsMock =
+        mock(GoogleNamedAccountCredentials.class);
     when(accountCredentialsRepoMock.getRequiredOne(ACCOUNT)).thenReturn(stackdriverCredentialsMock);
 
+    Monitoring monitoringMock = mock(Monitoring.class, Mockito.RETURNS_DEEP_STUBS);
     when(stackdriverCredentialsMock.getMonitoring()).thenReturn(monitoringMock);
+
+    Monitoring.Projects.TimeSeries.List timeSeriesListMock =
+        mock(Monitoring.Projects.TimeSeries.List.class);
 
     when(monitoringMock
             .projects()
@@ -79,6 +76,7 @@ public class StackdriverMetricsServiceTest {
             .setIntervalEndTime(anyString()))
         .thenReturn(timeSeriesListMock);
 
+    ListTimeSeriesResponse responseMock = mock(ListTimeSeriesResponse.class);
     when(timeSeriesListMock.execute()).thenReturn(responseMock);
 
     List<TimeSeries> timeSeriesListWithInt64Points = new ArrayList<TimeSeries>();
@@ -109,11 +107,9 @@ public class StackdriverMetricsServiceTest {
                     .build())
             .build();
 
-    CanaryScope canaryScope =
-        new StackdriverCanaryScope()
-            .setStart(Instant.EPOCH)
-            .setEnd(Instant.EPOCH.plusSeconds(1))
-            .setStep(1l);
+    StackdriverCanaryScope canaryScope = new StackdriverCanaryScope();
+    canaryScope.setStart(Instant.EPOCH).setEnd(Instant.EPOCH.plusSeconds(1)).setStep(1l);
+    canaryScope.setProject("my-project");
     List<MetricSet> queriedMetrics =
         stackdriverMetricsService.queryMetrics(
             ACCOUNT, canaryConfig, canaryMetricConfig, canaryScope);
@@ -122,13 +118,18 @@ public class StackdriverMetricsServiceTest {
   }
 
   @Test
-  public void returnsSingleMetricDescriptorInCache() throws IOException {
+  void returnsSingleMetricDescriptorInCache() throws IOException {
+    GoogleNamedAccountCredentials googleAccountCredentialsMock =
+        mock(GoogleNamedAccountCredentials.class, Mockito.RETURNS_DEEP_STUBS);
+
     Set<AccountCredentials> accountCredentialsSetMock = new HashSet<>();
     accountCredentialsSetMock.add(googleAccountCredentialsMock);
 
     when(accountCredentialsRepoMock.getAllOf(AccountCredentials.Type.METRICS_STORE))
         .thenReturn(accountCredentialsSetMock);
 
+    ListMetricDescriptorsResponse listMetricDescriptorsResponseMock =
+        mock(ListMetricDescriptorsResponse.class);
     when(googleAccountCredentialsMock
             .getMonitoring()
             .projects()

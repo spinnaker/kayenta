@@ -3,5 +3,5 @@ dependencies {
   implementation project(":kayenta-google")
   api "com.google.apis:google-api-services-monitoring"
 
-  testImplementation 'org.mockito:mockito-inline:2.13.0'
+  testImplementation 'org.mockito:mockito-inline'
 }
