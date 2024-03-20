@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -136,7 +137,10 @@ public class S3StorageService implements StorageService {
     String rootFolder = daoRoot(credentials, objectType.getGroup()) + "/" + objectKey;
     ObjectListing bucketListing =
         amazonS3.listObjects(new ListObjectsRequest(bucket, rootFolder, null, null, 10000));
-    List<S3ObjectSummary> summaries = bucketListing.getObjectSummaries();
+    List<S3ObjectSummary> summaries =
+        bucketListing.getObjectSummaries().stream()
+            .filter(summary -> !summary.getKey().endsWith("/"))
+            .collect(Collectors.toList());
 
     if (summaries != null && summaries.size() == 1) {
       return summaries.get(0).getKey();
@@ -387,6 +391,10 @@ public class S3StorageService implements StorageService {
 
       if (summaries != null) {
         for (S3ObjectSummary summary : summaries) {
+          if (summary.getKey().endsWith("/")) {
+            continue;
+          }
+
           String itemName = summary.getKey();
           int indexOfLastSlash = itemName.lastIndexOf("/");
           Map<String, Object> objectMetadataMap = new HashMap<>();
