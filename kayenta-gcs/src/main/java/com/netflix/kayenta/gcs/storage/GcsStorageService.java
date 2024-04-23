@@ -34,11 +34,17 @@ import com.netflix.kayenta.index.config.CanaryConfigIndexAction;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
+import com.netflix.kayenta.util.Retry;
 import com.netflix.spinnaker.kork.web.exceptions.NotFoundException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -50,6 +56,9 @@ import org.springframework.util.StringUtils;
 @Builder
 @Slf4j
 public class GcsStorageService implements StorageService {
+
+  public final int MAX_RETRIES = 10;
+  public final long RETRY_BACKOFF = 1000;
 
   @Autowired private ObjectMapper kayentaObjectMapper;
 
@@ -63,6 +72,8 @@ public class GcsStorageService implements StorageService {
   public boolean servicesAccount(String accountName) {
     return accountNames.contains(accountName);
   }
+
+  private final Retry retry = new Retry();
 
   /** Check to see if the bucket exists, creating it if it is not there. */
   public void ensureBucketExists(String accountName) {
@@ -251,7 +262,16 @@ public class GcsStorageService implements StorageService {
       StorageObject object = new StorageObject().setBucket(bucketName).setName(path);
       ByteArrayContent content = new ByteArrayContent("application/json", bytes);
 
-      storage.objects().insert(bucketName, object, content).execute();
+      retry.retry(
+          () -> {
+            try {
+              storage.objects().insert(bucketName, object, content).execute();
+            } catch (IOException e) {
+              throw new IllegalArgumentException(e);
+            }
+          },
+          MAX_RETRIES,
+          RETRY_BACKOFF);
 
       if (objectType == ObjectType.CANARY_CONFIG) {
         // This will be true if the canary config is renamed.
@@ -262,7 +282,7 @@ public class GcsStorageService implements StorageService {
         canaryConfigIndex.finishPendingUpdate(
             credentials, CanaryConfigIndexAction.UPDATE, correlationId);
       }
-    } catch (IOException e) {
+    } catch (Exception e) {
       log.error("Update failed on path {}: {}", path, e);
 
       if (objectType == ObjectType.CANARY_CONFIG) {
