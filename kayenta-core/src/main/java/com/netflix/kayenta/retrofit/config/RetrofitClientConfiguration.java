@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.kayenta.atlas.config.KayentaSerializationConfigurationProperties;
 import com.netflix.kayenta.config.KayentaConfiguration;
 import com.netflix.spinnaker.config.OkHttpClientConfiguration;
-import com.netflix.spinnaker.orca.retrofit.exceptions.RetrofitExceptionHandler;
+import com.netflix.spinnaker.orca.retrofit.exceptions.SpinnakerServerExceptionHandler;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.OkHttpClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,8 +53,8 @@ public class RetrofitClientConfiguration {
 
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  RetrofitExceptionHandler retrofitExceptionHandler() {
-    return new RetrofitExceptionHandler();
+  SpinnakerServerExceptionHandler spinnakerServerExceptionHandler() {
+    return new SpinnakerServerExceptionHandler();
   }
 
   @Bean
