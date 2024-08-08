@@ -399,10 +399,44 @@ public class StackdriverMetricsService implements MetricsService {
               : stackdriverCanaryScope.getEnd();
 
       // TODO(duftler): What if there are no data points?
+<<<<<<< HEAD
       List<Double> pointValues =
           points.stream()
               .map(point -> point.getValue().getDoubleValue())
               .collect(Collectors.toList());
+=======
+      List<Double> pointValues;
+
+      if (points.isEmpty()) {
+        log.warn("No data points available.");
+        pointValues = Collections.emptyList();
+      } else {
+        if (timeSeries.getValueType() != null) {
+          if (timeSeries.getValueType().equals("INT64")) {
+            pointValues =
+                points.stream()
+                    .map(point -> (double) point.getValue().getInt64Value())
+                    .collect(Collectors.toList());
+          } else if (timeSeries.getValueType().equals("DOUBLE")) {
+            pointValues =
+                points.stream()
+                    .map(point -> point.getValue().getDoubleValue())
+                    .collect(Collectors.toList());
+          } else {
+            log.warn(
+                "Expected timeSeries value type to be either DOUBLE or INT64. Got {}.",
+                timeSeries.getValueType());
+            pointValues =
+                points.stream()
+                    .map(point -> point.getValue().getDoubleValue())
+                    .collect(Collectors.toList());
+          }
+        } else {
+          log.warn("timeSeries valueType is null.");
+          pointValues = Collections.emptyList(); // Handle null valueType case as well
+        }
+      }
+>>>>>>> 6684f9dd (fix(stackdriver): handle null timeSeries and empty points (#1047))
 
       MetricSet.MetricSetBuilder metricSetBuilder =
           MetricSet.builder()
