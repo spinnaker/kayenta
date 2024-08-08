@@ -398,13 +398,6 @@ public class StackdriverMetricsService implements MetricsService {
               ? Instant.parse(points.get(points.size() - 1).getInterval().getEndTime())
               : stackdriverCanaryScope.getEnd();
 
-      // TODO(duftler): What if there are no data points?
-<<<<<<< HEAD
-      List<Double> pointValues =
-          points.stream()
-              .map(point -> point.getValue().getDoubleValue())
-              .collect(Collectors.toList());
-=======
       List<Double> pointValues;
 
       if (points.isEmpty()) {
@@ -436,7 +429,6 @@ public class StackdriverMetricsService implements MetricsService {
           pointValues = Collections.emptyList(); // Handle null valueType case as well
         }
       }
->>>>>>> 6684f9dd (fix(stackdriver): handle null timeSeries and empty points (#1047))
 
       MetricSet.MetricSetBuilder metricSetBuilder =
           MetricSet.builder()
