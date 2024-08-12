@@ -398,7 +398,6 @@ public class StackdriverMetricsService implements MetricsService {
               ? Instant.parse(points.get(points.size() - 1).getInterval().getEndTime())
               : stackdriverCanaryScope.getEnd();
 
-
       List<Double> pointValues;
 
       if (points.isEmpty()) {
