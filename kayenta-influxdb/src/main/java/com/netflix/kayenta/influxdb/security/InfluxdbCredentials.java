@@ -28,4 +28,5 @@ public class InfluxdbCredentials {
           .orElse("Unknown");
 
   private String dbName;
+  private String apiToken;
 }

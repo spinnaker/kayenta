@@ -17,7 +17,7 @@
 package com.netflix.kayenta.metrics
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.netflix.kayenta.atlas.config.KayentaSerializationConfigurationProperties
+import com.netflix.kayenta.config.KayentaSerializationConfigurationProperties
 import com.netflix.kayenta.canary.CanaryScope
 import com.netflix.kayenta.config.KayentaConfiguration
 import spock.lang.Shared

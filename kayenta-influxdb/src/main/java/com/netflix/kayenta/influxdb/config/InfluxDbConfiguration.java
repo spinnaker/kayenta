@@ -70,7 +70,8 @@ public class InfluxDbConfiguration {
       String name = account.getName();
       List<AccountCredentials.Type> supportedTypes = account.getSupportedTypes();
 
-      InfluxdbCredentials credentials = InfluxdbCredentials.builder().build();
+      InfluxdbCredentials credentials =
+          InfluxdbCredentials.builder().apiToken(account.getApiKey()).build();
 
       InfluxDbNamedAccountCredentials.InfluxDbNamedAccountCredentialsBuilder
           accountCredentialsBuilder =
@@ -86,7 +87,12 @@ public class InfluxDbConfiguration {
                   InfluxDbRemoteService.class,
                   influxDbResponseConverter,
                   account.getEndpoint(),
-                  okHttpClient));
+                  okHttpClient,
+                  null,
+                  null,
+                  null,
+                  null,
+                  credentials.getApiToken()));
         }
         accountCredentialsBuilder.supportedTypes(supportedTypes);
       }

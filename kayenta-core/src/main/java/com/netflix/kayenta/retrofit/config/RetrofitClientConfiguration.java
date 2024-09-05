@@ -17,8 +17,8 @@
 package com.netflix.kayenta.retrofit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.kayenta.atlas.config.KayentaSerializationConfigurationProperties;
 import com.netflix.kayenta.config.KayentaConfiguration;
+import com.netflix.kayenta.config.KayentaSerializationConfigurationProperties;
 import com.netflix.spinnaker.config.OkHttpClientConfiguration;
 import com.netflix.spinnaker.orca.retrofit.exceptions.SpinnakerServerExceptionHandler;
 import com.squareup.okhttp.ConnectionPool;
