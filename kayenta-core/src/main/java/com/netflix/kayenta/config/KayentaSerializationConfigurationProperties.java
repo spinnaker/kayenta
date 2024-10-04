@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.netflix.kayenta.atlas.config;
+package com.netflix.kayenta.config;
 
 import lombok.Data;
 

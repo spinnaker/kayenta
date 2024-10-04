@@ -27,7 +27,6 @@ import com.netflix.kayenta.retrofit.config.RetrofitClientFactory;
 import com.netflix.kayenta.security.AccountCredentials;
 import com.netflix.kayenta.security.AccountCredentialsRepository;
 import com.squareup.okhttp.OkHttpClient;
-import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -104,7 +103,7 @@ public class PrometheusConfiguration {
 
         accountCredentialsRepository.save(name, prometheusManagedAccount);
         prometheusMetricsServiceBuilder.accountName(name);
-      } catch (IOException e) {
+      } catch (RuntimeException e) {
         log.error("Problem registering Prometheus account {}:", name, e);
       }
     }

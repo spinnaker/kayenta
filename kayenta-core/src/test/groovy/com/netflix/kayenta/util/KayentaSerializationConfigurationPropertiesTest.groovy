@@ -18,7 +18,7 @@
 package com.netflix.kayenta.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.netflix.kayenta.atlas.config.KayentaSerializationConfigurationProperties
+import com.netflix.kayenta.config.KayentaSerializationConfigurationProperties
 import com.netflix.kayenta.config.KayentaConfiguration
 import spock.lang.Specification
 import spock.lang.Unroll

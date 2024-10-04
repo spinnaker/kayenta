@@ -61,7 +61,8 @@ public class RetrofitClientFactory {
   public <T> T createClient(
       Class<T> type, Converter converter, RemoteService remoteService, OkHttpClient okHttpClient) {
     try {
-      return createClient(type, converter, remoteService, okHttpClient, null, null, null, null);
+      return createClient(
+          type, converter, remoteService, okHttpClient, null, null, null, null, null);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -84,6 +85,7 @@ public class RetrofitClientFactory {
           username,
           password,
           usernamePasswordFile,
+          null,
           null);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -98,7 +100,33 @@ public class RetrofitClientFactory {
       String username,
       String password,
       String usernamePasswordFile,
-      String bearerToken)
+      String bearerToken) {
+    try {
+      return createClient(
+          type,
+          converter,
+          remoteService,
+          okHttpClient,
+          username,
+          password,
+          usernamePasswordFile,
+          bearerToken,
+          null);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public <T> T createClient(
+      Class<T> type,
+      Converter converter,
+      RemoteService remoteService,
+      OkHttpClient okHttpClient,
+      String username,
+      String password,
+      String usernamePasswordFile,
+      String bearerToken,
+      String apiToken)
       throws IOException {
     String baseUrl = remoteService.getBaseUrl();
 
@@ -109,9 +137,11 @@ public class RetrofitClientFactory {
     if (!(StringUtils.isEmpty(username)
         && StringUtils.isEmpty(password)
         && StringUtils.isEmpty(usernamePasswordFile)
-        && StringUtils.isEmpty(bearerToken))) {
+        && StringUtils.isEmpty(bearerToken)
+        && StringUtils.isEmpty(apiToken))) {
       okHttpClient =
-          createAuthenticatedClient(username, password, usernamePasswordFile, bearerToken);
+          createAuthenticatedClient(
+              username, password, usernamePasswordFile, bearerToken, apiToken);
     }
 
     Slf4jRetrofitLogger logger = createRetrofitLogger.apply(type);
@@ -128,7 +158,11 @@ public class RetrofitClientFactory {
   }
 
   private static OkHttpClient createAuthenticatedClient(
-      String username, String password, String usernamePasswordFile, String bearerToken)
+      String username,
+      String password,
+      String usernamePasswordFile,
+      String bearerToken,
+      String apiToken)
       throws IOException {
     final String credential;
 
@@ -139,6 +173,8 @@ public class RetrofitClientFactory {
       credential = "Basic " + Base64.encodeBase64String(trimmedFileContent.getBytes());
     } else if (StringUtils.isNotEmpty(bearerToken)) {
       credential = "Bearer " + bearerToken;
+    } else if (StringUtils.isNotEmpty(apiToken)) {
+      credential = "Token " + apiToken;
     } else {
       credential = Credentials.basic(username, password);
     }
