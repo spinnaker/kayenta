@@ -86,7 +86,7 @@ jobs:
       - name: Build
         env:
           ORG_GRADLE_PROJECT_version: ${{ steps.build_variables.outputs.VERSION }}
-        run: ./gradlew -PenableCrossCompilerPlugin=true build ${{ steps.build_variables.outputs.REPO }}-web:installDist $GRADLE_ARGS
+        run: ./gradlew build ${{ steps.build_variables.outputs.REPO }}-web:installDist $GRADLE_ARGS
 
       - name: Build slim container image
         uses: docker/build-push-action@v6
