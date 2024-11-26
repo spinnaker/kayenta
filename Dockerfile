@@ -19,11 +19,11 @@ RUN tar -xf /tmp/workdir/kayenta-web/build/distributions/kayenta.tar -C /opt
 #
 # Release Image
 #
-FROM alpine:3.16
+FROM alpine:3.20
 
 LABEL maintainer="delivery-engineering@netflix.com"
 
-RUN apk --no-cache add --update openjdk11-jre
+RUN apk --no-cache add --update openjdk17-jre
 
 # Set where to look for config from
 ENV KAYENTA_OPTS=-Dspring.config.location=file:/opt/kayenta/config/kayenta.yml
