@@ -20,6 +20,7 @@ import com.netflix.kayenta.sql.config.DataMigrationProperties;
 import com.netflix.kayenta.storage.ObjectType;
 import com.netflix.kayenta.storage.StorageService;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -81,17 +82,31 @@ public class StorageDataMigrator {
 
     var errors = new ConcurrentLinkedQueue<String>();
 
-    for (var objectKey : objectKeysToMigrate) {
-      executorService.submit(
-          () -> {
-            try {
-              var object =
-                  sourceStorageService.loadObject(sourceAccountName, objectType, objectKey);
-              targetStorageService.storeObject(targetAccountName, objectType, objectKey, object);
-            } catch (Exception e) {
-              errors.add(String.format("[objectType: %s, objectKey: %s]", objectType, objectKey));
-            }
-          });
+    var tasks =
+        objectKeysToMigrate.stream()
+            .map(
+                objectKey ->
+                    (Callable<Void>)
+                        () -> {
+                          try {
+                            var object =
+                                sourceStorageService.loadObject(
+                                    sourceAccountName, objectType, objectKey);
+                            targetStorageService.storeObject(
+                                targetAccountName, objectType, objectKey, object);
+                          } catch (Exception e) {
+                            errors.add(
+                                String.format(
+                                    "[objectType: %s, objectKey: %s]", objectType, objectKey));
+                          }
+                          return null;
+                        })
+            .collect(Collectors.toList());
+
+    try {
+      executorService.invokeAll(tasks);
+    } catch (InterruptedException e) {
+      log.error("Unable to migrate objects", e);
     }
 
     if (!errors.isEmpty()) {
