@@ -26,11 +26,6 @@ import org.springframework.http.HttpStatus;
 @Slf4j
 public class ManagementTest extends BaseIntegrationTest {
 
-//  @Value("${embedded.prometheus.port}")
-//  int prometheusPort;
-
-  private static final int PORT = 9090;
-
   @Test
   public void prometheusTargetsAreAllReportingUp() throws InterruptedException {
     int retries = 30; // wait up to 30 seconds
