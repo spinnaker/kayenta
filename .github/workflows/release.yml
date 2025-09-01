@@ -24,7 +24,7 @@ jobs:
           image: tonistiigi/binfmt:qemu-v7.0.0-28
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           java-version: |
             17
